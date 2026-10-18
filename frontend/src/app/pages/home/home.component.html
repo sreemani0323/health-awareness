@@ -1,0 +1,476 @@
+<div class="splash-page">
+  <!-- ===================================================================
+       Section One: Oppia-Faithful Hero with Clear Starting Points
+       Reference: core/templates/pages/splash-page/splash-page.component.html (.oppia-splash-section-one)
+       =================================================================== -->
+  <section class="oppia-splash-section-one" id="hero-section" aria-label="Hero introduction">
+    <!-- Left Column: Heading, Subtitle, Responsive Starting Actions -->
+    <div class="oppia-splash-section-one-left">
+      <h1 class="oppia-splash-h1">Everyday Health Knowledge for Everyone</h1>
+      <div class="oppia-splash-h2-container">
+        <h2 class="oppia-splash-h2">
+          Discover practical, easy-to-follow health guidance that helps individuals, families, and communities make informed everyday health decisions.
+        </h2>
+      </div>
+
+      <!-- Action 1: Continue Learning (Displayed ONLY when a valid saved position exists) -->
+      @if (hasResume && resumeState; as r) {
+        <div class="oppia-splash-resume-card" id="hero-resume-container">
+          <div class="resume-card-header">
+            <span class="resume-badge">Saved Progress</span>
+            <span class="resume-step">Card {{ r.cardIndex + 1 }} of {{ r.totalCards }}</span>
+          </div>
+          <div class="resume-title">{{ r.lessonTitle }}</div>
+          <div class="resume-actions">
+            <a
+              [routerLink]="['/lessons', r.lessonId]"
+              [queryParams]="{ step: r.cardIndex + 1 }"
+              class="btn oppia-splash-button resume-btn"
+              id="hero-continue-learning-btn"
+            >
+              <span>Continue Learning</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <button
+              type="button"
+              class="resume-clear-link"
+              (click)="clearProgress()"
+              id="hero-clear-resume-btn"
+              title="Clear saved progress on this shared device"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Action 2: Explore Health Topics -->
+      <div class="oppia-splash-button-container">
+        <a
+          routerLink="/topics"
+          class="btn oppia-splash-button oppia-splash-button-browse"
+          id="hero-explore-btn"
+        >
+          Explore Health Topics
+        </a>
+      </div>
+
+      <!-- Action 3: Try a Small Health Activity (Anchor or direct action) -->
+      <div class="oppia-splash-button-container">
+        <a
+          href="#family-activities"
+          class="btn oppia-splash-button oppia-splash-button-activity"
+          id="hero-activity-btn"
+        >
+          Try a Small Health Activity
+        </a>
+      </div>
+
+      <!-- Action 4: Report a Concern -->
+      <div class="oppia-splash-button-container">
+        <a
+          routerLink="/report"
+          class="btn oppia-splash-button oppia-splash-button-report"
+          id="hero-report-btn"
+        >
+          📢 Report a Community Concern
+        </a>
+      </div>
+
+      <!-- Secondary: Android App (Preserved) -->
+      <div class="oppia-splash-button-container app-link-container">
+        <button
+          type="button"
+          class="oppia-splash-app-link"
+          id="hero-android-btn"
+          (click)="showComingSoon('Android App')"
+        >
+          <span>📱 Access the Android App</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Column: User-Provided Health Education Photograph -->
+    <div class="oppia-splash-section-one-right">
+      <div class="oppia-splash-main-image">
+        <img
+          src="/assets/images/splash/main_photo.jpg"
+          width="3000"
+          height="3000"
+          alt="Community health workers and students conducting health awareness activities at an Anganwadi center"
+          class="splash-main-img-desktop"
+        >
+      </div>
+      <div class="oppia-splash-main-image-mobile">
+        <img
+          src="/assets/images/splash/main_photo.jpg"
+          width="3000"
+          height="3000"
+          alt="Community health workers and students conducting health awareness activities at an Anganwadi center"
+          class="splash-main-img-mobile"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Notice when progress is cleared -->
+  @if (progressClearedNotice()) {
+    <div class="progress-cleared-banner" role="status">
+      <span>ℹ️ {{ progressClearedNotice() }}</span>
+    </div>
+  }
+
+  <!-- ===================================================================
+       Section Two: Highlights Strip
+       Reference: core/templates/pages/splash-page/splash-page.component.html (.oppia-splash-section-two)
+       =================================================================== -->
+  <section class="oppia-splash-section-two" aria-label="Platform highlights">
+    <div class="oppia-splash-icon-1-container">
+      <img
+        src="/assets/images/splash/userIcon.svg"
+        class="oppia-splash-icon-1"
+        width="35"
+        height="35"
+        alt=""
+        aria-hidden="true"
+      >
+      <div class="splash-icon-text-container">
+        <span class="splash-icon-text">Practical Health Guidance</span>
+      </div>
+    </div>
+
+    <div class="oppia-splash-icon-2-container">
+      <img
+        src="/assets/images/splash/languageIcon.svg"
+        class="oppia-splash-icon-2"
+        width="35"
+        height="35"
+        alt=""
+        aria-hidden="true"
+      >
+      <div class="splash-icon-text-container">
+        <span class="splash-icon-text">Community-Focused Learning</span>
+      </div>
+    </div>
+
+    <div class="oppia-splash-icon-3-container">
+      <img
+        src="/assets/images/splash/lessonIcon.svg"
+        class="oppia-splash-icon-3"
+        width="35"
+        height="35"
+        alt=""
+        aria-hidden="true"
+      >
+      <div class="splash-icon-text-container">
+        <span class="splash-icon-text">Evidence-Informed Resources</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       Featured Lesson & Practical Tip of the Day
+       Genuine published content from HealthAware
+       =================================================================== -->
+  <section class="featured-tip-section" aria-labelledby="featured-lesson-heading">
+    <div class="container featured-tip-grid">
+      <div class="featured-lesson-card">
+        <div class="featured-tag">
+          <span>RECOMMENDED STARTING LESSON</span>
+        </div>
+        <h2 id="featured-lesson-heading" class="featured-lesson-title">Effective Handwashing Techniques</h2>
+        <p class="featured-lesson-desc">
+          Learn the science-backed 20-second handwashing method with soap and running water to lift pathogens, protect family members, and prevent infections.
+        </p>
+        <div class="featured-lesson-meta">
+          <span>⏱ 5 minutes</span>
+          <span>·</span>
+          <span>📄 3 interactive cards</span>
+          <span>·</span>
+          <span>🏛 WHO & CDC guidance</span>
+        </div>
+        <div class="featured-lesson-action">
+          <a routerLink="/lessons/lesson-handwashing" class="oppia-learner-confirm-button" id="start-featured-lesson-btn">
+            <span>Start This Lesson</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="practical-tip-card">
+        <div class="tip-icon-header" aria-hidden="true">
+          <span class="tip-icon">💡</span>
+          <span class="tip-badge">PRACTICAL HEALTH TIP</span>
+        </div>
+        <h3 class="tip-title">Lather Friction Removes Microbes</h3>
+        <p class="tip-body">
+          Rinsing alone does not remove oily dirt and pathogens. Scrubbing with soap for <strong>at least 20 seconds</strong> creates the mechanical friction needed to loosen microbes from between fingers, backs of hands, and under nails.
+        </p>
+        <div class="family-challenge-entry-box">
+          <span class="challenge-sparkle" aria-hidden="true">⭐</span>
+          <div class="challenge-entry-content">
+            <span class="challenge-entry-title">Try with your family:</span>
+            <p class="challenge-entry-desc">Answer 4 quick health questions together in our Family Learning Challenge.</p>
+            <a routerLink="/challenge" class="challenge-link" id="home-family-challenge-btn">
+              <span>Start Family Challenge</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       “Try This at Home” — Restrained Practical Family Activities
+       Safe, realistic, grounded in published topics
+       =================================================================== -->
+  <section class="family-activities-section" id="family-activities" aria-labelledby="activities-heading">
+    <div class="container">
+      <div class="section-intro-center">
+        <span class="section-eyebrow">PRACTICAL EVERYDAY ROUTINES</span>
+        <h2 id="activities-heading" class="section-main-heading">Try This at Home with Your Family</h2>
+        <p class="section-main-subheading">
+          Small, safe actions you can do together today to put health knowledge into practice around your home.
+        </p>
+      </div>
+
+      <div class="activities-grid">
+        @for (act of practicalActivities; track act.id) {
+          <article class="activity-card" [class.activity-card--completed]="isActivityCompleted(act.id)">
+            <div class="activity-card-header">
+              <span class="activity-icon" aria-hidden="true">{{ act.icon }}</span>
+              <button
+                type="button"
+                class="activity-toggle-btn"
+                [class.activity-toggle-btn--active]="isActivityCompleted(act.id)"
+                (click)="toggleActivity(act.id)"
+                [id]="'toggle-' + act.id"
+                [attr.aria-pressed]="isActivityCompleted(act.id)"
+              >
+                <span>{{ isActivityCompleted(act.id) ? '✓ Completed Today' : 'Mark as Practiced' }}</span>
+              </button>
+            </div>
+
+            <h3 class="activity-title">{{ act.title }}</h3>
+            <p class="activity-instruction">{{ act.instruction }}</p>
+
+            <div class="activity-safety-note">
+              <span aria-hidden="true">🛡️</span>
+              <span><strong>Safety note:</strong> {{ act.safetyNote }}</span>
+            </div>
+
+            <div class="activity-footer">
+              <a [routerLink]="['/lessons', act.relatedLessonId]" class="activity-lesson-link" [id]="'act-lesson-link-' + act.id">
+                <span>Related lesson guidance</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       Learner Progress on This Device (Positive milestones & privacy)
+       =================================================================== -->
+  @if (completedCount > 0 || activitiesCount > 0 || achievedMilestones.length > 0) {
+    <section class="device-progress-section" aria-labelledby="progress-section-heading">
+      <div class="container">
+        <div class="device-progress-card">
+          <div class="progress-card-top">
+            <div>
+              <span class="progress-eyebrow">SAVED ON THIS DEVICE</span>
+              <h2 id="progress-section-heading" class="progress-heading">Your Learning Milestones</h2>
+              <p class="progress-subtext">
+                Stored privately in your browser for family members using this phone or computer.
+              </p>
+            </div>
+            <button
+              type="button"
+              class="clear-device-btn"
+              (click)="clearProgress()"
+              id="clear-all-device-progress-btn"
+            >
+              <span>Clear Saved Progress</span>
+            </button>
+          </div>
+
+          <div class="progress-stats-row">
+            <div class="stat-box">
+              <span class="stat-number">{{ completedCount }}</span>
+              <span class="stat-label">Lessons Completed</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-number">{{ activitiesCount }}</span>
+              <span class="stat-label">Home Actions Practiced</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-number">{{ achievedMilestones.length }}</span>
+              <span class="stat-label">Milestones Reached</span>
+            </div>
+          </div>
+
+          @if (achievedMilestones.length > 0) {
+            <div class="milestones-row">
+              @for (m of achievedMilestones; track m.id) {
+                <div class="milestone-pill" [title]="m.description">
+                  <span class="milestone-icon" aria-hidden="true">{{ m.icon }}</span>
+                  <div class="milestone-details">
+                    <span class="milestone-name">{{ m.title }}</span>
+                    <span class="milestone-desc">{{ m.description }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ===================================================================
+       Section Three: Benefits Section
+       Reference: core/templates/pages/splash-page/splash-page.component.html (.oppia-splash-section-three)
+       =================================================================== -->
+  <section class="oppia-splash-section-three" aria-labelledby="benefits-heading">
+    <div class="oppia-splash-section-three-left">
+      <img
+        class="splash-matthew-image"
+        src="/assets/images/illustrations/health-benefits.svg"
+        width="600"
+        height="420"
+        loading="lazy"
+        alt="Practical health education essentials: clean water, handwashing, and preventive health"
+      >
+    </div>
+    <div class="oppia-splash-section-three-right">
+      <h3 id="benefits-heading">Health Knowledge Made Easier</h3>
+      <div class="splash-benefits-list">
+        <div class="splash-benefit-bullets-column" aria-hidden="true">
+          <img src="/assets/images/splash/bullet1.svg" width="17" height="33" loading="lazy" alt="">
+          <img src="/assets/images/splash/bullet2.svg" width="25" height="33" loading="lazy" alt="">
+          <img src="/assets/images/splash/bullet3.svg" width="39" height="33" loading="lazy" alt="">
+        </div>
+        <div class="splash-benefit-text-items-column">
+          <h2 class="splash-benefits">Simple, understandable explanations</h2>
+          <h2 class="splash-benefits">Practical everyday prevention guidance</h2>
+          <h2 class="splash-benefits">Information for caregivers and communities</h2>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       Section Four: For Communities and Caregivers
+       Reference: core/templates/pages/splash-page/splash-page.component.html (.oppia-splash-section-four)
+       =================================================================== -->
+  <section class="oppia-splash-section-four" aria-labelledby="students-heading">
+    <div class="oppia-splash-section-four-left">
+      <h2 class="splash-subheading">FOR COMMUNITIES AND CAREGIVERS</h2>
+      <h3 id="students-heading">Small Steps Toward Healthier Communities</h3>
+      <p>
+        People can learn about hygiene, safe water, mosquito prevention, and vaccination awareness
+        through interactive, card-based lessons that fit into everyday life.
+      </p>
+      <div class="oppia-splash-button-container">
+        <a
+          routerLink="/topics"
+          class="btn oppia-splash-button oppia-splash-button-browse"
+          id="students-start-learning-btn"
+        >
+          Explore All Topics
+        </a>
+      </div>
+    </div>
+    <div class="oppia-splash-section-four-right">
+      <img
+        class="splash-community-image"
+        src="/assets/images/illustrations/community-care.svg"
+        width="520"
+        height="480"
+        loading="lazy"
+        alt="Caregiver helping a young child practice handwashing with clean water at home"
+      >
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       Section Six: For Community Educators and Health Workers
+       Reference: core/templates/pages/splash-page/splash-page.component.html (.oppia-splash-section-six)
+       =================================================================== -->
+  <section class="oppia-splash-section-six" id="educators-section" aria-labelledby="teachers-heading">
+    <div class="oppia-splash-section-six-left">
+      <img
+        class="splash-educator-image"
+        src="/assets/images/illustrations/health-educator.svg"
+        width="520"
+        height="420"
+        loading="lazy"
+        alt="Community health educator presenting preventive health guidance to local learners"
+      >
+    </div>
+    <div class="oppia-splash-section-six-right">
+      <h2 class="splash-subheading">FOR COMMUNITY EDUCATORS AND HEALTH WORKERS</h2>
+      <h3 id="teachers-heading">Share Health Knowledge With Your Community</h3>
+      <p>
+        Future resources are planned to help community educators, health workers, and teachers
+        explain health topics and support awareness activities in schools, clinics, and neighborhoods.
+      </p>
+      <div class="oppia-splash-button-container">
+        <button
+          type="button"
+          class="btn oppia-splash-button oppia-splash-button-browse"
+          id="educator-resources-btn"
+          (click)="showComingSoon('Educator resources')"
+        >
+          Explore Educator Resources
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===================================================================
+       Newsletter Strip (Immediately above footer)
+       Reference: core/templates/base-components/oppia-footer.component.html (.oppia-footer-newsletter-container)
+       =================================================================== -->
+  <section class="oppia-footer-newsletter-container" id="newsletter-section" aria-labelledby="newsletter-heading">
+    <div class="oppia-footer-newsletter container">
+      <div class="oppia-newsletter-content">
+        <h2 id="newsletter-heading">Stay Updated on Health Topics</h2>
+        <p>Get notified when new lessons, topics, and community features are available.</p>
+      </div>
+      <div class="oppia-footer-newsletter-input">
+        <div class="oppia-newsletter-input-group">
+          <input
+            type="email"
+            class="oppia-newsletter-input"
+            placeholder="Enter your email address"
+            [ngModel]="newsletterEmail()"
+            (ngModelChange)="newsletterEmail.set($event)"
+            aria-label="Email address for health updates"
+            id="newsletter-email-input"
+          >
+          <button
+            type="button"
+            class="oppia-footer-newsletter-button"
+            id="newsletter-subscribe-btn"
+            (click)="onSubscribeNewsletter()"
+          >
+            <span>Subscribe</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Reusable Coming Soon Toast Notification -->
+@if (comingSoonMessage()) {
+  <div class="coming-soon-toast" role="alert" aria-live="polite" id="coming-soon-toast">
+    <span class="coming-soon-toast__icon" aria-hidden="true">🚧</span>
+    <span class="coming-soon-toast__text">{{ comingSoonMessage() }} — Coming Soon!</span>
+  </div>
+}

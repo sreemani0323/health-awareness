@@ -1,0 +1,376 @@
+<div class="report-container">
+  <div class="report-header">
+    <div class="header-badge">HealthAware Community Care</div>
+    <h1 class="report-title">Report a Community Sanitation Concern</h1>
+    <p class="report-subtitle">
+      Alert HealthAware to local environmental and sanitation conditions. Submissions are reviewed by trained health coordinators.
+    </p>
+  </div>
+
+  @if (currentStep() < 5) {
+    <!-- Step Progress Indicator -->
+    <div class="progress-bar-wrapper">
+      <div class="progress-step" [class.active]="currentStep() >= 1" [class.current]="currentStep() === 1">
+        <span class="step-num">1</span>
+        <span class="step-text">Concern</span>
+      </div>
+      <div class="step-divider" [class.filled]="currentStep() >= 2"></div>
+      <div class="progress-step" [class.active]="currentStep() >= 2" [class.current]="currentStep() === 2">
+        <span class="step-num">2</span>
+        <span class="step-text">Location</span>
+      </div>
+      <div class="step-divider" [class.filled]="currentStep() >= 3"></div>
+      <div class="progress-step" [class.active]="currentStep() >= 3" [class.current]="currentStep() === 3">
+        <span class="step-num">3</span>
+        <span class="step-text">Details</span>
+      </div>
+      <div class="step-divider" [class.filled]="currentStep() >= 4"></div>
+      <div class="progress-step" [class.active]="currentStep() >= 4" [class.current]="currentStep() === 4">
+        <span class="step-num">4</span>
+        <span class="step-text">Review</span>
+      </div>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert-error" role="alert" id="report-error-banner">
+      <span class="alert-icon">⚠️</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <div class="report-card">
+    <!-- STEP 1: CATEGORY SELECTION -->
+    @if (currentStep() === 1) {
+      <div class="step-content">
+        <h2 class="step-heading">Step 1 — What type of issue are you reporting?</h2>
+        <p class="step-description">Select the category that best matches the sanitation or vector hazard.</p>
+
+        <div class="categories-grid" role="radiogroup" aria-label="Concern categories">
+          @for (cat of categories; track cat.id) {
+            <div
+              class="category-card"
+              [class.selected]="selectedCategory() === cat.id"
+              (click)="selectCategory(cat.id)"
+              role="radio"
+              [attr.aria-checked]="selectedCategory() === cat.id"
+              tabindex="0"
+              (keydown.enter)="selectCategory(cat.id)"
+              (keydown.space)="selectCategory(cat.id)"
+              [id]="'category-opt-' + cat.id"
+            >
+              <div class="category-icon">{{ cat.icon }}</div>
+              <div class="category-info">
+                <div class="category-title">{{ cat.title }}</div>
+                <div class="category-subtitle">{{ cat.subtitle }}</div>
+              </div>
+              <div class="category-check">
+                @if (selectedCategory() === cat.id) {
+                  <span class="check-mark">✓</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <div></div>
+          <button type="button" class="btn btn-primary" (click)="nextStep()" id="step1-next-btn">
+            Continue to Location →
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 2: LOCATION -->
+    @if (currentStep() === 2) {
+      <div class="step-content">
+        <h2 class="step-heading">Step 2 — Where is the issue located?</h2>
+        <p class="step-description">Provide enough location detail so our team can verify and map the situation.</p>
+
+        <div class="form-group">
+          <label for="state-select" class="form-label">State <span class="required">*</span></label>
+          <select id="state-select" class="form-control" [ngModel]="state()" (ngModelChange)="state.set($event)">
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Telangana">Telangana</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="district-input" class="form-label">District <span class="required">*</span></label>
+          <input
+            id="district-input"
+            type="text"
+            class="form-control"
+            placeholder="e.g. Visakhapatnam, Hyderabad, Guntur, Warangal"
+            [ngModel]="district()"
+            (ngModelChange)="district.set($event)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="municipality-input" class="form-label">Municipality / Local Body Area (optional)</label>
+          <input
+            id="municipality-input"
+            type="text"
+            class="form-control"
+            placeholder="e.g. GVMC, GHMC, or Gram Panchayat"
+            [disabled]="municipalityNotSure()"
+            [ngModel]="municipality()"
+            (ngModelChange)="municipality.set($event)"
+          />
+          <div class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              id="municipality-not-sure"
+              [ngModel]="municipalityNotSure()"
+              (ngModelChange)="municipalityNotSure.set($event)"
+            />
+            <label for="municipality-not-sure">I am not sure of the exact municipal jurisdiction</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="locality-input" class="form-label">Locality, Street, or Landmark <span class="required">*</span></label>
+          <textarea
+            id="locality-input"
+            class="form-control"
+            rows="2"
+            placeholder="e.g. Beside Water Tank on Ward 12 Main Road, near High School"
+            [ngModel]="locality()"
+            (ngModelChange)="locality.set($event)"
+          ></textarea>
+        </div>
+
+        <div class="form-group gps-group">
+          <div class="gps-label-row">
+            <label class="form-label">GPS Coordinates (optional)</label>
+            <button type="button" class="btn btn-outline-sm" (click)="requestGps()" [disabled]="gpsLocating()" id="use-gps-btn">
+              @if (gpsLocating()) {
+                <span>Detecting GPS...</span>
+              } @else {
+                <span>📍 Use My Device Location</span>
+              }
+            </button>
+          </div>
+          @if (latitude() && longitude()) {
+            <div class="gps-detected-badge" id="gps-coords-display">
+              ✓ Coordinates recorded: {{ latitude() | number:'1.4-4' }}, {{ longitude() | number:'1.4-4' }}
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="prevStep()" id="step2-back-btn">
+            ← Back
+          </button>
+          <button type="button" class="btn btn-primary" (click)="nextStep()" id="step2-next-btn">
+            Continue to Details →
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 3: PROBLEM DESCRIPTION & PHOTO -->
+    @if (currentStep() === 3) {
+      <div class="step-content">
+        <h2 class="step-heading">Step 3 — Describe the Problem</h2>
+        <p class="step-description">Tell us how long the issue has persisted and provide a brief description.</p>
+
+        <div class="form-group">
+          <label class="form-label">How long has this issue been observed? <span class="required">*</span></label>
+          <div class="duration-pills">
+            @for (dur of durations; track dur) {
+              <button
+                type="button"
+                class="duration-pill"
+                [class.selected]="duration() === dur"
+                (click)="duration.set(dur)"
+                [id]="'dur-' + dur"
+              >
+                {{ dur }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description-input" class="form-label">Detailed Description <span class="required">*</span></label>
+          <textarea
+            id="description-input"
+            class="form-control"
+            rows="4"
+            placeholder="Describe what you see, any noticeable health impacts (e.g. mosquito clouds, odor, contaminated runoff)..."
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+          ></textarea>
+          <div class="char-count">{{ description().length }} / 2000 characters</div>
+        </div>
+
+        <!-- Safe Photo Evidence -->
+        <div class="form-group photo-upload-box">
+          <label class="form-label">Optional Photo Evidence (JPEG, PNG, WebP — max 5 MB)</label>
+          <div class="privacy-notice">
+            <span class="notice-icon">🔒</span>
+            <span>
+              <strong>Privacy Protection:</strong> Please avoid photographing recognizable faces, vehicle number plates, or the interior of private homes. Photos are scrubbed of metadata and kept strictly private.
+            </span>
+          </div>
+
+          @if (!photoPreview()) {
+            <div class="upload-dropzone">
+              <input
+                type="file"
+                id="photo-file-input"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onPhotoSelected($event)"
+                class="file-input-hidden"
+              />
+              <label for="photo-file-input" class="dropzone-label">
+                <span class="upload-icon">📷</span>
+                <span class="upload-text">Click to browse or take a photo</span>
+                <span class="upload-hint">Supported formats: JPG, PNG, WebP (Max 5MB)</span>
+              </label>
+            </div>
+          } @else {
+            <div class="preview-wrapper">
+              <img [src]="photoPreview()" alt="Uploaded evidence preview" class="evidence-preview-img" />
+              <button type="button" class="btn btn-danger-sm" (click)="removePhoto()" id="remove-photo-btn">
+                Remove Photo
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="prevStep()" id="step3-back-btn">
+            ← Back
+          </button>
+          <button type="button" class="btn btn-primary" (click)="nextStep()" id="step3-next-btn">
+            Review Submission →
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 4: REVIEW & CONFIRM -->
+    @if (currentStep() === 4) {
+      <div class="step-content">
+        <h2 class="step-heading">Step 4 — Review Your Submission</h2>
+        <p class="step-description">Please double-check the details before submitting to HealthAware.</p>
+
+        <div class="review-card">
+          <div class="review-row">
+            <div class="review-label">Category:</div>
+            <div class="review-value font-bold">{{ getCategoryLabel(selectedCategory()) }}</div>
+          </div>
+          <div class="review-row">
+            <div class="review-label">Location:</div>
+            <div class="review-value">
+              {{ locality() }}, {{ district() }}, {{ state() }}
+              @if (municipality() && !municipalityNotSure()) {
+                <span class="text-muted">({{ municipality() }})</span>
+              }
+            </div>
+          </div>
+          @if (latitude() && longitude()) {
+            <div class="review-row">
+              <div class="review-label">GPS:</div>
+              <div class="review-value">{{ latitude() | number:'1.4-4' }}, {{ longitude() | number:'1.4-4' }}</div>
+            </div>
+          }
+          <div class="review-row">
+            <div class="review-label">Observed Duration:</div>
+            <div class="review-value">{{ duration() }}</div>
+          </div>
+          <div class="review-row">
+            <div class="review-label">Description:</div>
+            <div class="review-value">{{ description() }}</div>
+          </div>
+          @if (selectedPhoto()) {
+            <div class="review-row">
+              <div class="review-label">Attached Photo:</div>
+              <div class="review-value">1 photo attached ({{ selectedPhoto()?.name }})</div>
+            </div>
+          }
+        </div>
+
+        <div class="intake-disclaimer">
+          <strong>Important Notice:</strong> HealthAware is a community health education and civil monitoring initiative. Submitting this report alerts HealthAware case coordinators; it does <em>not</em> constitute a legal municipal government filing or emergency dispatch request.
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="prevStep()" [disabled]="submitting()" id="step4-back-btn">
+            ← Back
+          </button>
+          <button
+            type="button"
+            class="btn btn-success"
+            (click)="submitReport()"
+            [disabled]="submitting()"
+            id="submit-concern-btn"
+          >
+            @if (submitting()) {
+              <span>Submitting to HealthAware...</span>
+            } @else {
+              <span>Confirm & Submit Concern ✓</span>
+            }
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 5: SUBMISSION CONFIRMATION -->
+    @if (currentStep() === 5 && submissionResult(); as res) {
+      <div class="confirmation-content" id="report-confirmation-container">
+        <div class="success-icon-banner">✓</div>
+        <h2 class="confirmation-title">Your concern has been received by HealthAware.</h2>
+        <p class="confirmation-subtitle">
+          Thank you for reporting. Your submission has been registered with our case management team.
+        </p>
+
+        <div class="credentials-card">
+          <div class="card-warning-label">
+            ⚠️ IMPORTANT: Save these credentials now. They will not be displayed again.
+          </div>
+
+          <div class="cred-item">
+            <span class="cred-label">Public Reference ID:</span>
+            <span class="cred-value" id="confirmed-reference-id">{{ res.data.reference_id }}</span>
+          </div>
+
+          <div class="cred-item">
+            <span class="cred-label">Private Tracking Token:</span>
+            <span class="cred-token" id="confirmed-tracking-token">{{ res.data.tracking_token }}</span>
+          </div>
+
+          <p class="cred-hint">
+            You will need both your Reference ID and Tracking Token to check review progress or provide additional information privately.
+          </p>
+
+          <div class="cred-actions">
+            <button type="button" class="btn btn-primary" (click)="copyCredentials()" id="copy-credentials-btn">
+              @if (copied()) {
+                <span>✓ Copied to Clipboard!</span>
+              } @else {
+                <span>📋 Copy Reference & Token</span>
+              }
+            </button>
+            <button type="button" class="btn btn-outline" (click)="printConfirmation()" id="print-credentials-btn">
+              🖨️ Print / Save as PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="confirmation-links">
+          <a routerLink="/track" class="btn btn-secondary" id="track-link-btn">
+            Track This Concern Now →
+          </a>
+          <a routerLink="/" class="home-link" id="back-home-btn">
+            Return to HealthAware Home
+          </a>
+        </div>
+      </div>
+    }
+  </div>
+</div>

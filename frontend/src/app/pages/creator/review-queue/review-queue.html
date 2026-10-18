@@ -1,0 +1,317 @@
+<div class="studio-workspace">
+  <app-creator-navbar currentSection="reviews" [pendingReviewCount]="items.length"></app-creator-navbar>
+
+  <main class="studio-main">
+    <div class="studio-container">
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+          <li class="breadcrumb-item"><a routerLink="/creator" class="breadcrumb-link">My Content</a></li>
+          <li class="breadcrumb-separator">/</li>
+          <li class="breadcrumb-item active" aria-current="page">Review Queue</li>
+        </ol>
+      </nav>
+
+      <!-- Alert Banners -->
+      @if (successMessage) {
+        <div class="alert-banner success" role="alert">
+          <span class="alert-icon">✓</span>
+          <span>{{ successMessage }}</span>
+        </div>
+      }
+      @if (errorMessage) {
+        <div class="alert-banner error" role="alert">
+          <span class="alert-icon">⚠️</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <!-- Queue Header -->
+      <header class="queue-header-card">
+        <div class="queue-titles">
+          <div class="badge-row">
+            <span class="reviewer-badge">Quality Assurance</span>
+            <span class="count-pill">{{ items.length }} Awaiting Review</span>
+          </div>
+          <h1 class="queue-title">Peer Review & Quality Verification</h1>
+          <p class="queue-subtitle">
+            Inspect pending chapter drafts, evaluate clinical accuracy and medical references, test question answer keys, and approve for public publication.
+          </p>
+        </div>
+        <button class="btn-refresh" (click)="loadQueue()" [disabled]="isLoading" title="Refresh review submissions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </header>
+
+      <!-- Submissions List -->
+      @if (isLoading) {
+        <div class="loading-panel">
+          <div class="spinner-teal"></div>
+          <p class="loading-label">Loading submitted versions…</p>
+        </div>
+      } @else if (items.length === 0) {
+        <div class="empty-queue-card">
+          <div class="empty-circle-green">✓</div>
+          <h2 class="empty-queue-title">Review Queue is Clear!</h2>
+          <p class="empty-queue-desc">
+            All submitted chapters have been processed. When authors submit draft chapters for verification, they will appear here.
+          </p>
+          <a routerLink="/creator" class="btn-cancel">Return to My Content</a>
+        </div>
+      } @else {
+        <div class="submissions-grid" role="list">
+          @for (item of items; track item.id) {
+            <article class="submission-card" role="listitem">
+              <div class="submission-meta-bar">
+                <span class="tag-version">Version {{ item.version_number }}</span>
+                <span class="status-pill status-submitted">Submitted for Review</span>
+                <span class="lesson-id-tag">ID: {{ item.lesson_id }}</span>
+              </div>
+
+              <h2 class="submission-title">{{ item.title }}</h2>
+              <p class="submission-summary">{{ item.summary }}</p>
+
+              <!-- Metrics -->
+              <div class="metrics-row">
+                <span class="meta-metric">
+                  <strong>{{ item.cards.length }}</strong> Content Cards
+                </span>
+                <span class="meta-metric">
+                  <strong>{{ item.source_ids.length }}</strong> Medical Sources
+                </span>
+                <span class="meta-metric">
+                  <strong>{{ item.estimated_duration_minutes }}</strong> min Duration
+                </span>
+                <span class="meta-metric">
+                  Language: <strong>{{ item.language | uppercase }}</strong>
+                </span>
+              </div>
+
+              <!-- Review Actions -->
+              <div class="submission-actions">
+                <button type="button" class="btn-inspect" (click)="inspectVersion(item)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="9" y1="3" x2="9" y2="21"/>
+                  </svg>
+                  <span>Inspect Details</span>
+                </button>
+
+                <a [routerLink]="['/creator/preview', item.id]" class="btn-preview-link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <span>Learner Preview</span>
+                </a>
+
+                <button type="button" class="btn-request-changes" (click)="openChangeNotes(item)">
+                  Request Changes
+                </button>
+
+                <button type="button" class="btn-approve" (click)="openApproveModal(item)">
+                  ✓ Approve & Publish
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- ========================================================
+       MODAL 1: FULL SUBMISSION INSPECTION DRAWER
+       ======================================================== -->
+  @if (inspectedVersion) {
+    <div class="modal-backdrop" (click)="closeInspect()">
+      <div class="modal-dialog inspect-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div>
+            <span class="dialog-subtitle">Chapter Inspection (v{{ inspectedVersion.version_number }})</span>
+            <h2 class="modal-title">{{ inspectedVersion.title }}</h2>
+          </div>
+          <button class="modal-close-btn" (click)="closeInspect()" aria-label="Close dialog">×</button>
+        </header>
+
+        <div class="modal-body inspect-scroll-body">
+          <p class="inspect-summary-text">{{ inspectedVersion.summary }}</p>
+
+          @if (inspectedVersion.review_feedback) {
+            <div class="inspect-previous-feedback">
+              <span class="feedback-badge-mini">Previous Review Feedback:</span>
+              <p class="feedback-text">"{{ inspectedVersion.review_feedback }}"</p>
+            </div>
+          }
+
+          <!-- Cards Outline in Inspection -->
+          <div class="inspect-section">
+            <h3 class="inspect-heading">Content Cards ({{ inspectedVersion.cards.length }})</h3>
+            <div class="inspect-cards-list">
+              @for (card of inspectedVersion.cards; track card.id; let i = $index) {
+                <div class="inspect-card-item">
+                  <div class="inspect-card-header">
+                    <span class="card-badge">Card {{ i + 1 }}</span>
+                    <span class="type-tag">{{ card.card_type | uppercase }}</span>
+                  </div>
+
+                  @if (card.card_type === 'explanation' || card.card_type === 'recap') {
+                    <div class="blocks-preview">
+                      @for (block of card.content_blocks; track $index) {
+                        @if (block.block_type === 'heading') {
+                          <h4 class="block-preview-heading">{{ block.body }}</h4>
+                        } @else {
+                          <p class="block-preview-text">{{ block.body }}</p>
+                        }
+                      }
+                    </div>
+                  } @else if (card.card_type === 'interaction' && card.interaction) {
+                    <div class="quiz-preview">
+                      <p class="quiz-preview-prompt"><strong>Question:</strong> {{ card.interaction.question_prompt }}</p>
+                      <div class="quiz-choices-box">
+                        @for (opt of card.interaction.options; track opt.id) {
+                          <div class="choice-item" [class.correct]="opt.is_correct">
+                            <span class="choice-marker">{{ opt.is_correct ? '✓ [CORRECT]' : '○' }}</span>
+                            <span class="choice-label">{{ opt.label }}</span>
+                            @if (opt.feedback) {
+                              <span class="choice-feedback">Feedback: "{{ opt.feedback }}"</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Medical Sources in Inspection -->
+          <div class="inspect-section">
+            <h3 class="inspect-heading">Medical Sources & Evidence ({{ inspectedVersion.source_ids.length }})</h3>
+            @if (inspectedVersion.source_ids.length === 0) {
+              <p class="empty-notice">⚠️ No medical sources attached. Consider requesting verification citations.</p>
+            } @else {
+              <ul class="sources-list">
+                @for (srcId of inspectedVersion.source_ids; track srcId) {
+                  <li>📚 {{ srcId }}</li>
+                }
+              </ul>
+            }
+          </div>
+
+          <footer class="modal-footer">
+            <a [routerLink]="['/creator/preview', inspectedVersion.id]" class="btn-preview-link">
+              👁 Full Interactive Learner Preview
+            </a>
+            <button type="button" class="btn-request-changes" (click)="openChangeNotes(inspectedVersion)">
+              Request Changes
+            </button>
+            <button type="button" class="btn-approve" (click)="openApproveModal(inspectedVersion)">
+              ✓ Approve & Publish
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 2: REQUEST CHANGES WITH REQUIRED NOTES
+       ======================================================== -->
+  @if (showChangeNotesModal && versionForChanges) {
+    <div class="modal-backdrop" (click)="closeChangeNotesModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Request Changes for "{{ versionForChanges.title }}"</h2>
+          <button class="modal-close-btn" (click)="closeChangeNotesModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <form (ngSubmit)="submitChangeNotes()" class="modal-body">
+          <p class="modal-subtext">
+            Reverting to draft status allows the author to make revisions and address your feedback.
+          </p>
+
+          <div class="field-item">
+            <label for="change-notes-input" class="field-label required">
+              Reviewer Feedback & Instructions
+            </label>
+            <textarea
+              id="change-notes-input"
+              [(ngModel)]="changeNotes"
+              name="notes"
+              rows="4"
+              placeholder="Clearly explain what needs modification (e.g. clarify question feedback on card 2, add citation for handwashing duration)…"
+              class="field-textarea"
+              required
+              autofocus
+            ></textarea>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeChangeNotesModal()">Cancel</button>
+            <button
+              type="submit"
+              class="btn-submit-feedback"
+              [disabled]="isSubmittingDecision || !changeNotes.trim()"
+            >
+              @if (isSubmittingDecision) {
+                Submitting…
+              } @else {
+                Send Feedback & Revert to Draft
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 3: APPROVE & PUBLISH CONFIRMATION
+       ======================================================== -->
+  @if (showApproveModal && versionToApprove) {
+    <div class="modal-backdrop" (click)="closeApproveModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title approve-title">Approve & Publish Live?</h2>
+          <button class="modal-close-btn" (click)="closeApproveModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="publish-warning-text">
+            You are approving <strong>"{{ versionToApprove.title }}"</strong> (Version {{ versionToApprove.version_number }}).
+          </p>
+          <div class="publish-implications-box">
+            <h4>Publication Effects:</h4>
+            <ul>
+              <li>This chapter will immediately become available to public community learners.</li>
+              <li>This version will become immutable; subsequent edits will require a new draft revision.</li>
+              <li>System rule verified: Contributors cannot approve their own submissions.</li>
+            </ul>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeApproveModal()">Cancel</button>
+            <button
+              type="button"
+              class="btn-approve-confirm"
+              [disabled]="isSubmittingDecision"
+              (click)="confirmApprove()"
+            >
+              @if (isSubmittingDecision) {
+                Publishing…
+              } @else {
+                Confirm & Publish Live
+              }
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+</div>

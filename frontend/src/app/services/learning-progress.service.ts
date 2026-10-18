@@ -1,0 +1,328 @@
+import { Injectable, signal, computed } from '@angular/core';
+
+export interface LessonResumeState {
+  lessonId: string;
+  lessonTitle: string;
+  topicId: string;
+  cardIndex: number;
+  totalCards: number;
+  updatedAt: string;
+}
+
+export interface Milestone {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  achievedAt: string;
+}
+
+export interface PracticalActivity {
+  id: string;
+  topicId: string;
+  title: string;
+  instruction: string;
+  safetyNote: string;
+  relatedLessonId: string;
+  icon: string;
+}
+
+export interface StoredProgressData {
+  version: number;
+  lastLesson: LessonResumeState | null;
+  completedLessonIds: string[];
+  completedActivityIds: string[];
+  achievedMilestones: Milestone[];
+}
+
+export const PRACTICAL_ACTIVITIES: PracticalActivity[] = [
+  {
+    id: 'act-handwashing-practice',
+    topicId: 'topic-hygiene',
+    title: '5-Step Handwashing Routine',
+    instruction: 'Practice the full 20-second handwashing routine with soap and clean water together before your next meal.',
+    safetyNote: 'Use clean running water (warm or cool) and regular soap; avoid scalding water which irritates skin.',
+    relatedLessonId: 'lesson-handwashing',
+    icon: '🧼',
+  },
+  {
+    id: 'act-covered-water-check',
+    topicId: 'topic-water',
+    title: 'Covered Water Storage Inspection',
+    instruction: 'Check that household drinking-water vessels are covered with tight lids and that cups or ladles are kept clean.',
+    safetyNote: 'Never dip unwashed hands or cups directly into stored drinking water.',
+    relatedLessonId: 'lesson-water-purification',
+    icon: '🚰',
+  },
+  {
+    id: 'act-dry-day-check',
+    topicId: 'topic-mosquito',
+    title: 'Weekly Mosquito "Dry-Day" Check',
+    instruction: 'Inspect flowerpots, cooler trays, buckets, and coconut shells around your home. Tip and dry any standing water.',
+    safetyNote: 'Only inspect safe, accessible areas around your home. Do not climb into unsafe locations.',
+    relatedLessonId: 'lesson-mosquito-control',
+    icon: '🦟',
+  },
+  {
+    id: 'act-vaccine-schedule-check',
+    topicId: 'topic-vaccine',
+    title: 'Family Immunization Record Check',
+    instruction: 'Locate your family vaccination or maternal-child health card and review upcoming routine vaccination dates.',
+    safetyNote: 'Consult your local primary health center (PHC) or Anganwadi worker for official immunization schedules.',
+    relatedLessonId: 'lesson-vaccine-basics',
+    icon: '🛡️',
+  },
+];
+
+const STORAGE_KEY = 'healthaware_progress_v1';
+
+@Injectable({ providedIn: 'root' })
+export class LearningProgressService {
+  private readonly storageKey = STORAGE_KEY;
+
+  readonly resumeState = signal<LessonResumeState | null>(null);
+  readonly completedLessonIds = signal<string[]>([]);
+  readonly completedActivityIds = signal<string[]>([]);
+  readonly achievedMilestones = signal<Milestone[]>([]);
+
+  readonly hasResume = computed(() => this.resumeState() !== null);
+  readonly completedCount = computed(() => this.completedLessonIds().length);
+  readonly activitiesCount = computed(() => this.completedActivityIds().length);
+
+  constructor() {
+    this.loadFromStorage();
+  }
+
+  /**
+   * Record progressive step inside a lesson.
+   * Does NOT mark the lesson as completed; only updates current card position.
+   */
+  saveLessonProgress(
+    lessonId: string,
+    lessonTitle: string,
+    topicId: string,
+    cardIndex: number,
+    totalCards: number,
+  ): void {
+    if (!lessonId) return;
+
+    const resume: LessonResumeState = {
+      lessonId,
+      lessonTitle: lessonTitle || 'Lesson',
+      topicId: topicId || '',
+      cardIndex: Math.max(0, cardIndex),
+      totalCards: Math.max(1, totalCards),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.resumeState.set(resume);
+    this.persist();
+  }
+
+  /**
+   * Mark a lesson as fully completed.
+   * Triggered only when the learner explicitly reaches and clicks completion.
+   */
+  markLessonCompleted(lessonId: string, topicId: string): void {
+    if (!lessonId) return;
+
+    const currentCompleted = this.completedLessonIds();
+    if (!currentCompleted.includes(lessonId)) {
+      const updated = [...currentCompleted, lessonId];
+      this.completedLessonIds.set(updated);
+      this.checkAndAwardMilestones(lessonId, topicId, updated);
+      this.persist();
+    }
+  }
+
+  /**
+   * Check whether a specific lesson has been completed on this device.
+   */
+  isLessonCompleted(lessonId: string): boolean {
+    return this.completedLessonIds().includes(lessonId);
+  }
+
+  /**
+   * Toggle completion of a practical family activity.
+   */
+  toggleActivity(activityId: string): boolean {
+    const current = this.completedActivityIds();
+    let updated: string[];
+    let isNowCompleted = false;
+
+    if (current.includes(activityId)) {
+      updated = current.filter((id) => id !== activityId);
+      isNowCompleted = false;
+    } else {
+      updated = [...current, activityId];
+      isNowCompleted = true;
+      this.checkActivityMilestone(updated);
+    }
+
+    this.completedActivityIds.set(updated);
+    this.persist();
+    return isNowCompleted;
+  }
+
+  /**
+   * Check whether an activity is marked completed.
+   */
+  isActivityCompleted(activityId: string): boolean {
+    return this.completedActivityIds().includes(activityId);
+  }
+
+  /**
+   * Clear all locally saved learning progress.
+   * Crucial for privacy on shared family and community devices.
+   */
+  clearAllProgress(): void {
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch (e) {
+      console.warn('Unable to clear localStorage:', e);
+    }
+    this.resumeState.set(null);
+    this.completedLessonIds.set([]);
+    this.completedActivityIds.set([]);
+    this.achievedMilestones.set([]);
+  }
+
+  /**
+   * Get all defined practical activities.
+   */
+  getPracticalActivities(): PracticalActivity[] {
+    return PRACTICAL_ACTIVITIES;
+  }
+
+  /**
+   * Load stored state from localStorage safely.
+   */
+  private loadFromStorage(): void {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (!raw) return;
+
+      const parsed: StoredProgressData = JSON.parse(raw);
+      if (parsed && parsed.version === 1) {
+        if (parsed.lastLesson && typeof parsed.lastLesson === 'object') {
+          this.resumeState.set(parsed.lastLesson);
+        }
+        if (Array.isArray(parsed.completedLessonIds)) {
+          this.completedLessonIds.set(parsed.completedLessonIds);
+        }
+        if (Array.isArray(parsed.completedActivityIds)) {
+          this.completedActivityIds.set(parsed.completedActivityIds);
+        }
+        if (Array.isArray(parsed.achievedMilestones)) {
+          this.achievedMilestones.set(parsed.achievedMilestones);
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading learning progress from localStorage:', e);
+    }
+  }
+
+  /**
+   * Persist current state into localStorage safely.
+   */
+  private persist(): void {
+    try {
+      const payload: StoredProgressData = {
+        version: 1,
+        lastLesson: this.resumeState(),
+        completedLessonIds: this.completedLessonIds(),
+        completedActivityIds: this.completedActivityIds(),
+        achievedMilestones: this.achievedMilestones(),
+      };
+      localStorage.setItem(this.storageKey, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('Error saving learning progress to localStorage:', e);
+    }
+  }
+
+  /**
+   * Evaluates friendly positive milestones without shame or pressure.
+   */
+  private checkAndAwardMilestones(
+    lessonId: string,
+    topicId: string,
+    completedList: string[],
+  ): void {
+    const current = [...this.achievedMilestones()];
+    const hasMilestone = (id: string) => current.some((m) => m.id === id);
+    const now = new Date().toISOString();
+
+    // 1. First lesson completed
+    if (completedList.length >= 1 && !hasMilestone('first-lesson')) {
+      current.push({
+        id: 'first-lesson',
+        title: 'First Step in Health Learning',
+        description: 'Completed your first interactive lesson on HealthAware.',
+        icon: '🌱',
+        achievedAt: now,
+      });
+    }
+
+    // 2. Handwashing lesson
+    if (lessonId === 'lesson-handwashing' && !hasMilestone('hygiene-mastery')) {
+      current.push({
+        id: 'hygiene-mastery',
+        title: 'Hand Hygiene Champion',
+        description: 'Completed the 5-step, 20-second handwashing technique lesson.',
+        icon: '🧼',
+        achievedAt: now,
+      });
+    }
+
+    // 3. Water purification lesson
+    if (lessonId === 'lesson-water-purification' && !hasMilestone('safe-water-mastery')) {
+      current.push({
+        id: 'safe-water-mastery',
+        title: 'Safe Water Guardian',
+        description: 'Completed household water treatment and storage principles.',
+        icon: '🚰',
+        achievedAt: now,
+      });
+    }
+
+    // 4. Mosquito prevention completed
+    if (topicId === 'topic-mosquito' && !hasMilestone('mosquito-prevention')) {
+      current.push({
+        id: 'mosquito-prevention',
+        title: 'Mosquito Defense Learner',
+        description: 'Learned vector habitat reduction and household bite prevention.',
+        icon: '🦟',
+        achievedAt: now,
+      });
+    }
+
+    // 5. Vaccines lesson
+    if (lessonId === 'lesson-vaccine-basics' && !hasMilestone('vaccine-informed')) {
+      current.push({
+        id: 'vaccine-informed',
+        title: 'Community Immunity Supporter',
+        description: 'Learned how vaccines prime immune defenses and protect communities.',
+        icon: '🛡️',
+        achievedAt: now,
+      });
+    }
+
+    this.achievedMilestones.set(current);
+  }
+
+  private checkActivityMilestone(activityList: string[]): void {
+    const current = [...this.achievedMilestones()];
+    const hasMilestone = (id: string) => current.some((m) => m.id === id);
+
+    if (activityList.length >= 1 && !hasMilestone('first-activity')) {
+      current.push({
+        id: 'first-activity',
+        title: 'Family Action Taken',
+        description: 'Practiced a healthy family routine at home.',
+        icon: '🏡',
+        achievedAt: new Date().toISOString(),
+      });
+      this.achievedMilestones.set(current);
+    }
+  }
+}

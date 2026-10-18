@@ -1,0 +1,298 @@
+<!-- Creator Draft Preview Page -->
+<div class="preview-page">
+
+  <!-- Top Preview Control Bar -->
+  <aside class="preview-banner" role="complementary" aria-label="Draft preview bar">
+    <div class="banner-inner">
+      <div class="banner-status">
+        <span class="preview-tag">👁 PREVIEW MODE</span>
+        @if (version(); as v) {
+          <span class="version-status-pill" [ngClass]="'status-' + v.status">
+            {{ v.status.replace('_', ' ') | uppercase }}
+          </span>
+          <span class="version-name"><strong>{{ v.title }}</strong> (<code>{{ v.id }}</code>)</span>
+        }
+      </div>
+
+      <div class="banner-actions">
+        @if (actionMessage()) {
+          <span class="action-alert">{{ actionMessage() }}</span>
+        }
+
+        @if (version(); as v) {
+          <a [routerLink]="['/creator/lessons', v.lesson_id]" class="banner-btn edit-btn">
+            ✏️ Back to Editor
+          </a>
+
+          @if (v.status === 'draft') {
+            <button class="banner-btn submit-btn" (click)="submitForReview()">
+              📤 Submit for Review
+            </button>
+          }
+
+          @if (v.status === 'submitted_for_review') {
+            <button class="banner-btn approve-btn" (click)="approveAndPublish()">
+              ✓ Approve & Publish
+            </button>
+          }
+        }
+
+        <a routerLink="/creator/reviews" class="banner-btn queue-btn">
+          📋 Review Queue
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Learner Interface Representation -->
+  <section class="lesson-player-page preview-player">
+    <div class="conversation-skin-cards-container">
+
+      @if (loading()) {
+        <div class="lesson-skeleton" aria-busy="true">
+          <div class="skeleton" style="height: 32px; width: 60%; margin-bottom: 1rem;"></div>
+          <div class="skeleton" style="height: 16px; width: 40%; margin-bottom: 2rem;"></div>
+          <div class="skeleton" style="height: 340px; border-radius: 4px;"></div>
+        </div>
+      } @else if (error()) {
+        <div class="error-state" role="alert">
+          <span class="error-state__icon" aria-hidden="true">⚠️</span>
+          <p class="error-state__message">{{ error() }}</p>
+          <a routerLink="/creator" class="btn btn--outline">Back to Studio Dashboard</a>
+        </div>
+      } @else if (version(); as v) {
+
+        <div class="conversation-skin-tutor-card-container">
+
+          <!-- Breadcrumb & Top Info -->
+          <header class="lesson-header">
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+              <a routerLink="/creator" class="breadcrumb__link">Creator Studio</a>
+              <span class="breadcrumb__sep" aria-hidden="true">›</span>
+              <a [routerLink]="['/creator/lessons', v.lesson_id]" class="breadcrumb__link">Lesson {{ v.lesson_id }}</a>
+              <span class="breadcrumb__sep" aria-hidden="true">›</span>
+              <span class="breadcrumb__current" aria-current="page">{{ v.title }} (Draft)</span>
+            </nav>
+
+            <div class="lesson-header__title-row">
+              <h1 class="lesson-header__title">{{ v.title }}</h1>
+              <div class="lesson-header__meta">
+                <span class="lesson-meta__item">
+                  <span aria-hidden="true">⏱</span> {{ v.estimated_duration_minutes }} min
+                </span>
+                <span class="lesson-meta__item">
+                  <span aria-hidden="true">📄</span> {{ totalCards() }} cards
+                </span>
+                <span class="lesson-meta__item">
+                  <span aria-hidden="true">🌐</span> {{ v.language | uppercase }}
+                </span>
+              </div>
+            </div>
+          </header>
+
+          <!-- Milestone Progress Bar -->
+          <div class="oppia-milestone-progress-bar"
+               role="progressbar"
+               [attr.aria-valuenow]="progressPercent()"
+               aria-valuemin="0"
+               aria-valuemax="100"
+               [attr.aria-label]="'Lesson progress: ' + progressPercent() + '%'">
+            <div class="oppia-progress-bar-track">
+              <div class="oppia-progress-bar-fill" [style.width.%]="progressPercent()"></div>
+            </div>
+            <div class="oppia-progress-bar-meta">
+              <span class="oppia-progress-bar-label">Card {{ currentCardIndex() + 1 }} of {{ totalCards() }}</span>
+              <span class="oppia-progress-bar-percentage">{{ progressPercent() }}% completed</span>
+            </div>
+          </div>
+
+          <!-- Tutor Card (.oppia-learner-view-card) -->
+          @if (currentCard(); as card) {
+            <article class="oppia-learner-view-card lesson-card" [id]="'lesson-card-' + card.id">
+
+              <!-- Card Category & Step Badge -->
+              <div class="oppia-card-top-bar">
+                <span class="oppia-card-badge lesson-card__type-badge">
+                  {{ getCardTypeLabel(card.card_type) }}
+                </span>
+                <span class="oppia-card-step-badge">
+                  STEP {{ currentCardIndex() + 1 }}
+                </span>
+              </div>
+
+              <!-- Mint Tutor Content -->
+              <div class="oppia-learner-view-card-top-content">
+                @for (block of card.content_blocks; track $index) {
+                  @if (block.block_type === 'heading') {
+                    <h2 class="card-heading oppia-content-heading">{{ block.body }}</h2>
+                  } @else if (block.block_type === 'text') {
+                    <p class="card-text oppia-content-paragraph">{{ block.body }}</p>
+                  } @else if (block.block_type === 'image_ref') {
+                    <figure class="card-image oppia-content-image">
+                      <div class="card-image__placeholder">
+                        <span aria-hidden="true">🖼️</span>
+                        <span>{{ block.body }}</span>
+                      </div>
+                    </figure>
+                  }
+                }
+              </div>
+
+              <!-- Multiple-Choice Interaction -->
+              @if (card.card_type === 'interaction' && card.interaction) {
+                <div class="oppia-learner-interaction interaction-block" id="interaction-block">
+                  <p class="interaction-prompt">{{ card.interaction.question_prompt }}</p>
+
+                  <div class="multiple-choice-container">
+                    @for (option of card.interaction.options; track option.id; let idx = $index) {
+                      <div class="oppia-multiple-choice-option-container"
+                           [class.selected]="selectedOptionId() === option.id"
+                           [class.option--correct]="answerSubmitted() && option.is_correct"
+                           [class.option--incorrect]="answerSubmitted() && selectedOptionId() === option.id && !option.is_correct">
+                        <button
+                          type="button"
+                          class="oppia-multiple-choice-option"
+                          [disabled]="answerSubmitted()"
+                          (click)="selectOption(option.id)">
+                          <span class="option-index-badge">{{ idx + 1 }}</span>
+                          <span class="option-label-text">{{ option.label }}</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+
+                  @if (!answerSubmitted()) {
+                    <div class="interaction-submit-row">
+                      <button
+                        type="button"
+                        class="btn-submit-answer"
+                        [disabled]="!selectedOptionId()"
+                        (click)="submitAnswer()">
+                        Submit Answer
+                      </button>
+                    </div>
+                  }
+
+                  <!-- Feedback Banner -->
+                  @if (answerSubmitted()) {
+                    <div class="feedback-banner"
+                         [class.feedback--correct]="answerCorrect()"
+                         [class.feedback--incorrect]="!answerCorrect()"
+                         role="region">
+                      <div class="feedback-icon" aria-hidden="true">
+                        {{ answerCorrect() ? '✓' : '✗' }}
+                      </div>
+                      <div class="feedback-body">
+                        <p class="feedback-title">
+                          {{ answerCorrect() ? 'Correct!' : 'Try Again' }}
+                        </p>
+                        <p class="feedback-explanation">{{ feedbackText() }}</p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Recap Completion -->
+              @if (card.card_type === 'recap') {
+                <div class="recap-celebration">
+                  <div class="recap-trophy" aria-hidden="true">🏆</div>
+                  <h3 class="recap-title">Lesson Completed!</h3>
+                  <p class="recap-subtitle">You have reviewed all the cards for this lesson.</p>
+
+                  @if (v.learning_objectives.length > 0) {
+                    <div class="objectives-list-box">
+                      <h4 class="obj-box-title">Key Learning Outcomes:</h4>
+                      <ul class="obj-box-list">
+                        @for (obj of v.learning_objectives; track $index) {
+                          <li>✓ {{ obj }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+
+                  <div class="recap-actions">
+                    <button type="button" class="btn btn-restart" (click)="restart()">
+                      Restart Preview
+                    </button>
+                    <a [routerLink]="['/creator/lessons', v.lesson_id]" class="btn btn-editor">
+                      Return to Lesson Editor
+                    </a>
+                  </div>
+                </div>
+              }
+
+              <!-- Progress Navigation Footer -->
+              <footer class="oppia-progress-nav lesson-card__footer">
+                <button
+                  type="button"
+                  class="btn-nav btn-nav--prev"
+                  [disabled]="isFirstCard()"
+                  (click)="prevCard()">
+                  ‹ Previous
+                </button>
+
+                @if (!isLastCard()) {
+                  <button
+                    type="button"
+                    class="btn-nav btn-nav--continue"
+                    [disabled]="!canProceed()"
+                    (click)="nextCard()">
+                    Continue ›
+                  </button>
+                }
+              </footer>
+
+            </article>
+          }
+
+          <!-- Verified Medical Sources Accordion -->
+          @if (v.sources && v.sources.length > 0) {
+            <section class="sources-accordion">
+              <button
+                type="button"
+                class="sources-accordion__trigger"
+                [attr.aria-expanded]="showSources()"
+                (click)="toggleSources()">
+                <span class="sources-accordion__icon" aria-hidden="true">🛡️</span>
+                <span class="sources-accordion__title">
+                  Verified Medical Sources ({{ v.sources.length }})
+                </span>
+                <span class="sources-accordion__arrow" aria-hidden="true">
+                  {{ showSources() ? '▲' : '▼' }}
+                </span>
+              </button>
+
+              @if (showSources()) {
+                <div class="sources-accordion__body">
+                  <p class="sources-accordion__intro">
+                    The health statements in this lesson are backed by evidence from official health authorities:
+                  </p>
+                  <ul class="sources-list">
+                    @for (source of v.sources; track source.id) {
+                      <li class="source-item">
+                        <div class="source-item__header">
+                          <strong class="source-item__title">{{ source.title }}</strong>
+                          <span class="source-item__publisher">{{ source.publisher }}</span>
+                        </div>
+                        @if (source.jurisdiction) {
+                          <span class="source-item__jurisdiction">{{ source.jurisdiction }}</span>
+                        }
+                        <div class="source-item__link-row">
+                          <a [href]="source.url" target="_blank" rel="noopener noreferrer" class="source-item__url">
+                            View official publication ↗
+                          </a>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </section>
+          }
+
+        </div>
+      }
+    </div>
+  </section>
+</div>

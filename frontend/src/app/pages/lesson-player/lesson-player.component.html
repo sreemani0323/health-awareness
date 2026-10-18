@@ -1,0 +1,372 @@
+<!--
+  Copyright 2014-2022 The Oppia Authors. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  Adapted for Health Awareness Application from Oppia:
+  - core/templates/pages/exploration-player-page/current-lesson-player/learner-experience/tutor-card.component.html
+  - extensions/interactions/MultipleChoiceInput/directives/multiple-choice-input-interaction.component.html
+  - core/templates/pages/exploration-player-page/current-lesson-player/learner-experience/input-response-pair.component.html
+  - core/templates/pages/exploration-player-page/current-lesson-player/layout-directives/progress-nav.component.html
+-->
+<section class="lesson-player-page">
+  <div class="conversation-skin-cards-container">
+
+    @if (loading()) {
+      <div class="lesson-skeleton" aria-busy="true">
+        <div class="skeleton" style="height: 32px; width: 60%; margin-bottom: 1rem;"></div>
+        <div class="skeleton" style="height: 16px; width: 40%; margin-bottom: 2rem;"></div>
+        <div class="skeleton" style="height: 340px; border-radius: 2px;"></div>
+      </div>
+    } @else if (error()) {
+      <div class="error-state" role="alert">
+        <span class="error-state__icon" aria-hidden="true">⚠️</span>
+        <p class="error-state__message">{{ error() }}</p>
+        <a routerLink="/" class="btn btn--outline" id="back-home-err-btn">Back to Home</a>
+      </div>
+    } @else if (lesson(); as l) {
+
+      <div class="conversation-skin-tutor-card-container">
+
+        <!-- Breadcrumb & Lesson Top Info Bar (Oppia learner-view-info pattern) -->
+        <header class="lesson-header" id="lesson-header">
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a routerLink="/" class="breadcrumb__link">Home</a>
+            <span class="breadcrumb__sep" aria-hidden="true">›</span>
+            <a [routerLink]="['/topics', l.topic_id]" class="breadcrumb__link">Topic</a>
+            <span class="breadcrumb__sep" aria-hidden="true">›</span>
+            <span class="breadcrumb__current" aria-current="page">{{ l.title }}</span>
+          </nav>
+
+          <div class="lesson-header__title-row">
+            <h1 class="lesson-header__title">{{ l.title }}</h1>
+            <div class="lesson-header__meta">
+              <span class="lesson-meta__item">
+                <span aria-hidden="true">⏱</span> {{ l.estimated_duration_minutes }} min
+              </span>
+              <span class="lesson-meta__item">
+                <span aria-hidden="true">📄</span> {{ totalCards() }} cards
+              </span>
+              <span class="lesson-meta__item">
+                <span aria-hidden="true">🌐</span> {{ l.language | uppercase }}
+              </span>
+              @if (isCompletedOnDevice()) {
+                <span class="lesson-meta__item lesson-meta__completed-badge">
+                  <span aria-hidden="true">✓</span> Completed
+                </span>
+              }
+              <button
+                type="button"
+                class="btn--share-lesson"
+                (click)="shareLesson()"
+                id="share-lesson-btn"
+                title="Share this lesson link with family or caregivers"
+              >
+                <span aria-hidden="true">📤</span>
+                <span>Share Lesson</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Share toast alert -->
+        @if (shareToastMessage()) {
+          <div class="share-toast" role="status" aria-live="polite" id="share-toast-msg">
+            <span aria-hidden="true">📋</span>
+            <span>{{ shareToastMessage() }}</span>
+          </div>
+        }
+
+        <!-- Oppia Milestone Progress Bar -->
+        <div class="oppia-milestone-progress-bar"
+             role="progressbar"
+             [attr.aria-valuenow]="progressPercent()"
+             aria-valuemin="0"
+             aria-valuemax="100"
+             [attr.aria-label]="'Lesson progress: ' + progressPercent() + '%'">
+          <div class="oppia-progress-bar-track">
+            <div class="oppia-progress-bar-fill" [style.width.%]="progressPercent()"></div>
+          </div>
+          <div class="oppia-progress-bar-meta">
+            <span class="oppia-progress-bar-label">Card {{ currentCardIndex() + 1 }} of {{ totalCards() }}</span>
+            <span class="oppia-progress-bar-percentage">{{ progressPercent() }}% completed</span>
+          </div>
+        </div>
+
+        <!-- Oppia Tutor Card (.oppia-learner-view-card) -->
+        @if (currentCard(); as card) {
+          <article class="oppia-learner-view-card lesson-card" [id]="'lesson-card-' + card.id">
+
+            <!-- Card Category & Step Badge -->
+            <div class="oppia-card-top-bar">
+              <span class="oppia-card-badge lesson-card__type-badge">
+                {{ getCardTypeLabel(card.card_type) }}
+              </span>
+              <span class="oppia-card-step-badge">
+                STEP {{ currentCardIndex() + 1 }}
+              </span>
+            </div>
+
+            <!-- Oppia Mint Tutor Bubble (.oppia-learner-view-card-top-content) -->
+            <div class="oppia-learner-view-card-top-content">
+              @for (block of card.content_blocks; track $index) {
+                @if (block.block_type === 'heading') {
+                  <h2 class="card-heading oppia-content-heading">{{ block.body }}</h2>
+                } @else if (block.block_type === 'text') {
+                  <p class="card-text oppia-content-paragraph">{{ block.body }}</p>
+                } @else if (block.block_type === 'image_ref') {
+                  <figure class="card-image oppia-content-image">
+                    <div class="card-image__placeholder">
+                      <span aria-hidden="true">🖼️</span>
+                      <span>{{ block.body }}</span>
+                    </div>
+                  </figure>
+                }
+              }
+            </div>
+
+            <!-- Oppia MultipleChoiceInput Interaction -->
+            @if (card.interaction) {
+              <div class="conversation-skin-inline-interaction quiz" id="quiz-area">
+                <h3 class="multiple-choice-prompt quiz__prompt">
+                  {{ card.interaction.question_prompt }}
+                </h3>
+
+                <div class="multiple-choice-list quiz__options"
+                     role="radiogroup"
+                     [attr.aria-label]="'Answer options for: ' + card.interaction.question_prompt">
+                  @for (option of card.interaction.options; track option.id; let idx = $index) {
+                    <div class="multiple-choice-option-container">
+                      <button
+                        type="button"
+                        class="multiple-choice-option {{ getOptionClass(option) }}"
+                        [class.selected]="selectedOptionId() === option.id"
+                        [id]="'option-' + option.id"
+                        (click)="selectOption(option.id)"
+                        [disabled]="answerSubmitted()"
+                        role="radio"
+                        [attr.aria-checked]="selectedOptionId() === option.id"
+                      >
+                        <!-- Oppia custom radio circle -->
+                        <div class="multiple-choice-radio-button-container">
+                          <span class="multiple-choice-outer-radio-button">
+                            <span class="multiple-choice-inner-radio-button"></span>
+                          </span>
+                        </div>
+
+                        <!-- Option Text -->
+                        <div class="multiple-choice-content-container">
+                          <span class="quiz__option-label">{{ option.label }}</span>
+                        </div>
+
+                        <!-- Feedback validation indicator -->
+                        @if (answerSubmitted()) {
+                          <span class="quiz__option-indicator">
+                            @if (option.is_correct) {
+                              <span class="indicator-icon indicator-correct" title="Correct">✓</span>
+                            } @else if (selectedOptionId() === option.id && !option.is_correct) {
+                              <span class="indicator-icon indicator-incorrect" title="Incorrect">✗</span>
+                            }
+                          </span>
+                        }
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Oppia Check Answer Action -->
+                @if (!answerSubmitted() && selectedOptionId()) {
+                  <div class="interaction-action-row">
+                    <button class="oppia-learner-confirm-button btn--submit"
+                            (click)="submitAnswer()"
+                            id="submit-answer-btn">
+                      <span>Check Answer</span>
+                      <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
+                }
+
+                <!-- Oppia Input-Response Pair (Learner Response + Tutor Feedback) -->
+                @if (answerSubmitted()) {
+                  <div class="conversation-skin-response-pair quiz__feedback"
+                       [class.quiz__feedback--correct]="answerCorrect()"
+                       [class.quiz__feedback--incorrect]="!answerCorrect()"
+                       role="alert">
+
+                    <div class="conversation-skin-oppia-feedback-content">
+                      <div class="feedback-bubble-header">
+                        <span class="feedback-badge" [class.feedback-badge--correct]="answerCorrect()">
+                          {{ answerCorrect() ? '✓ Correct Answer' : '💡 Review Recommendation' }}
+                        </span>
+                      </div>
+                      <p class="feedback-bubble-text">{{ feedbackText() }}</p>
+
+                      @if (!answerCorrect()) {
+                        <div class="feedback-retry-action" style="margin-top: 12px;">
+                          <button type="button"
+                                  class="oppia-learner-confirm-button btn--retry"
+                                  (click)="retryQuestion()"
+                                  id="retry-answer-btn">
+                            <span>Try Again</span>
+                            <span aria-hidden="true">↺</span>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Sources & Medical Attribution Section (Oppia Lesson Info Card Pattern) -->
+            @if (card.source_ids.length > 0) {
+              <div class="oppia-sources-section">
+                <button type="button"
+                        class="oppia-sources-toggle sources-toggle"
+                        (click)="toggleSources()"
+                        id="toggle-sources-btn"
+                        [attr.aria-expanded]="showSources()">
+                  <span class="sources-toggle-icon">ℹ️</span>
+                  <span>{{ showSources() ? 'Hide Medical Sources' : 'View Verified Medical Sources' }}</span>
+                  <span class="sources-toggle-caret" aria-hidden="true">{{ showSources() ? '▲' : '▼' }}</span>
+                </button>
+
+                @if (showSources()) {
+                  <div class="oppia-lesson-info-card sources-panel" id="sources-panel">
+                    <div class="oppia-info-card-header">
+                      <h4 class="oppia-info-card-title sources-panel__title">Verified Medical References</h4>
+                      <span class="oppia-info-card-evidence-badge">EVIDENCE-BASED</span>
+                    </div>
+
+                    <div class="oppia-info-card-content">
+                      @for (sourceId of card.source_ids; track sourceId) {
+                        @for (source of l.sources; track source.id) {
+                          @if (source.id === sourceId) {
+                            <div class="oppia-source-item source-item">
+                              <div class="source-item__header">
+                                <span class="source-item__publisher-badge">{{ source.publisher }}</span>
+                                <span class="source-item__jurisdiction">{{ source.jurisdiction }}</span>
+                              </div>
+                              <a [href]="source.url"
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 class="oppia-source-link source-item__link">
+                                {{ source.title }}
+                                <span class="external-icon" aria-hidden="true">↗</span>
+                              </a>
+                              <div class="source-item__dates">
+                                <span>Published: {{ source.publication_date }}</span>
+                                <span>·</span>
+                                <span>Verified: {{ source.access_date }}</span>
+                              </div>
+                            </div>
+                          }
+                        }
+                      }
+                    </div>
+
+                    <div class="oppia-info-card-footer">
+                      <p class="medical-disclaimer-note">
+                        Reviewed for educational accuracy against authoritative global health guidance.
+                      </p>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Lesson Completion Banner on Final Card (Oppia Milestone Pattern) -->
+            @if (isLastCard()) {
+              <div class="oppia-lesson-completion-card" id="lesson-completion-card">
+                <div class="completion-icon-wrapper" aria-hidden="true">
+                  <span class="completion-icon">🎉</span>
+                </div>
+                <div class="completion-content">
+                  <h3 class="completion-title">Module Completed!</h3>
+                  <p class="completion-desc">
+                    @if (l.topic_id === 'topic-hygiene') {
+                      You have successfully completed <strong>{{ l.title }}</strong>. Remember to apply the 20-second handwashing technique with soap and clean water in your daily routine.
+                    } @else if (l.topic_id === 'topic-water') {
+                      You have successfully completed <strong>{{ l.title }}</strong>. Remember to practice safe water treatment, covered storage, and community sanitation in your daily routine.
+                    } @else {
+                      You have successfully completed <strong>{{ l.title }}</strong>. Remember to apply these evidence-based health practices in your daily routine.
+                    }
+                  </p>
+
+                  <!-- Associated Practical Family Activity -->
+                  @if (associatedActivity(); as act) {
+                    <div class="completion-activity-takeaway" id="completion-practical-takeaway">
+                      <div class="takeaway-header">
+                        <span class="takeaway-tag">TRY THIS AT HOME TODAY</span>
+                        <button
+                          type="button"
+                          class="takeaway-toggle-btn"
+                          [class.takeaway-toggle-btn--done]="isActivityCompleted(act.id)"
+                          (click)="toggleActivity(act.id)"
+                          [id]="'lesson-toggle-' + act.id"
+                        >
+                          <span>{{ isActivityCompleted(act.id) ? '✓ Completed with Family' : 'Mark as Practiced Today' }}</span>
+                        </button>
+                      </div>
+                      <h4 class="takeaway-title">{{ act.icon }} {{ act.title }}</h4>
+                      <p class="takeaway-instruction">{{ act.instruction }}</p>
+                      <div class="takeaway-safety">
+                        <span aria-hidden="true">🛡️</span>
+                        <span>{{ act.safetyNote }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Oppia Progress Nav Bar (.progress-nav-bar) -->
+            <nav class="progress-nav-bar lesson-nav" aria-label="Lesson card navigation">
+              <button type="button"
+                      class="oppia-nav-back-button"
+                      (click)="prevCard()"
+                      [disabled]="isFirstCard()"
+                      id="prev-card-btn">
+                <span aria-hidden="true">←</span>
+                <span>Previous</span>
+              </button>
+
+              <!-- Milestone Dot Indicators -->
+              <div class="lesson-nav__dots" aria-label="Card step indicators">
+                @for (c of l.cards; track c.id; let idx = $index) {
+                  <button type="button"
+                          class="lesson-nav__dot"
+                          [class.lesson-nav__dot--active]="idx === currentCardIndex()"
+                          [class.lesson-nav__dot--visited]="idx < currentCardIndex()"
+                          (click)="goToCard(idx)"
+                          [attr.aria-label]="'Go to card ' + (idx + 1)"
+                          [id]="'nav-dot-' + idx">
+                    {{ idx + 1 }}
+                  </button>
+                }
+              </div>
+
+              <!-- Next / Finish Action Button (Oppia Continue Button pattern) -->
+              @if (isLastCard()) {
+                <a [routerLink]="['/topics', l.topic_id]"
+                   (click)="onCompleteLesson()"
+                   class="oppia-learner-confirm-button finish-btn"
+                   id="finish-lesson-btn">
+                  <span>Complete Lesson</span>
+                  <span class="oppia-arrow" aria-hidden="true">✓</span>
+                </a>
+              } @else {
+                <button type="button"
+                        class="oppia-learner-confirm-button"
+                        (click)="nextCard()"
+                        [disabled]="!canProceed()"
+                        id="next-card-btn">
+                  <span>Continue</span>
+                  <span class="oppia-arrow" aria-hidden="true">→</span>
+                </button>
+              }
+            </nav>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>

@@ -1,0 +1,627 @@
+<div class="studio-workspace">
+  <app-creator-navbar currentSection="admin"></app-creator-navbar>
+
+  <main class="studio-main" id="main-content">
+    <div class="studio-container">
+      <!-- Admin Workspace Header -->
+      <header class="admin-header-card">
+        <div class="admin-header-content">
+          <div class="admin-badge-row">
+            <span class="admin-system-badge">System Administration</span>
+            <span class="admin-role-pill">Authenticated as Admin</span>
+          </div>
+          <h1 class="admin-page-title">Administration Workspace</h1>
+          <p class="admin-page-subtitle">
+            Manage educational accounts, assign permissions, oversee curriculum lifecycle, and monitor peer review queue health.
+          </p>
+        </div>
+
+        <div class="admin-header-actions">
+          <button class="btn-provision-user" (click)="openCreateUserModal()" id="btn-provision-user-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="20" y1="8" x2="20" y2="14"/>
+              <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+            <span>+ Provision Account</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Alert Banners -->
+      @if (successMessage) {
+        <div class="alert-banner success" role="alert">
+          <span class="alert-icon">✓</span>
+          <span>{{ successMessage }}</span>
+        </div>
+      }
+      @if (errorMessage) {
+        <div class="alert-banner error" role="alert">
+          <span class="alert-icon">⚠️</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <!-- Admin Navigation Tabs -->
+      <nav class="admin-tabs-bar" role="tablist" aria-label="Administration Sections">
+        <button
+          type="button"
+          class="admin-tab-btn"
+          [class.active]="activeTab === 'overview'"
+          (click)="setTab('overview')"
+          role="tab"
+          [attr.aria-selected]="activeTab === 'overview'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span>Overview</span>
+        </button>
+
+        <button
+          type="button"
+          class="admin-tab-btn"
+          [class.active]="activeTab === 'users'"
+          (click)="setTab('users')"
+          role="tab"
+          [attr.aria-selected]="activeTab === 'users'"
+          id="tab-btn-users"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Users & Roles</span>
+          <span class="tab-badge">{{ users.length }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="admin-tab-btn"
+          [class.active]="activeTab === 'content'"
+          (click)="setTab('content')"
+          role="tab"
+          [attr.aria-selected]="activeTab === 'content'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          <span>Content Overview</span>
+          <span class="tab-badge">{{ topics.length }}</span>
+        </button>
+      </nav>
+
+      @if (isLoading) {
+        <div class="loading-panel">
+          <div class="spinner-teal"></div>
+          <p class="loading-label">Loading administrative data…</p>
+        </div>
+      } @else {
+        <!-- ========================================================
+             TAB 1: SYSTEM OVERVIEW
+             ======================================================== -->
+        @if (activeTab === 'overview') {
+          <div class="overview-grid">
+            <!-- Metrics Cards -->
+            <div class="stat-card">
+              <div class="stat-icon-wrap user-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-num">{{ overview?.total_users || users.length }}</span>
+                <span class="stat-label">Total Accounts</span>
+                <span class="stat-meta">{{ overview?.active_users || users.length }} active accounts</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrap topic-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-num">{{ overview?.total_topics || topics.length }}</span>
+                <span class="stat-label">Health Topics</span>
+                <span class="stat-meta">{{ overview?.published_topics || 0 }} published live</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrap review-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 11l3 3L22 4"/>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-num" [class.highlight-num]="(overview?.pending_reviews || 0) > 0">
+                  {{ overview?.pending_reviews || 0 }}
+                </span>
+                <span class="stat-label">Pending Reviews</span>
+                <span class="stat-meta">
+                  @if ((overview?.pending_reviews || 0) > 0) {
+                    <a routerLink="/creator/reviews" class="stat-link">Inspect queue →</a>
+                  } @else {
+                    Review queue is clear
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrap security-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-num status-healthy">Active</span>
+                <span class="stat-label">Datastore & Auth</span>
+                <span class="stat-meta">PBKDF2 600k • CSRF enabled</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role & Permissions Clarity Card (Oppia-inspired) -->
+          <section class="roles-clarity-card">
+            <div class="clarity-header">
+              <h2 class="clarity-title">Role & Authorization Structure</h2>
+              <p class="clarity-subtitle">
+                Explicit separation of duties ensures clinical accuracy and prevents unauthorized content alterations.
+              </p>
+            </div>
+
+            <div class="roles-grid">
+              <div class="role-desc-item contributor-desc">
+                <div class="role-badge contributor-pill">Contributor</div>
+                <h3 class="role-heading">Content Authoring</h3>
+                <ul class="role-list">
+                  <li>Creates and edits authorized topics and draft lessons.</li>
+                  <li>Adds structured explanation cards and interactive single-choice quizzes.</li>
+                  <li>Attaches verified medical source citations.</li>
+                  <li>Submits drafts for peer review (strictly isolated from public API).</li>
+                </ul>
+              </div>
+
+              <div class="role-desc-item reviewer-desc">
+                <div class="role-badge reviewer-pill">Reviewer</div>
+                <h3 class="role-heading">Clinical & Peer Quality Assurance</h3>
+                <ul class="role-list">
+                  <li>Inspects submitted drafts in learner sequence order.</li>
+                  <li>Validates medical sources and clinical clarity.</li>
+                  <li>Requests revisions with persistent written feedback.</li>
+                  <li>Approves and publishes live (strictly prevents self-approval).</li>
+                </ul>
+              </div>
+
+              <div class="role-desc-item admin-desc">
+                <div class="role-badge admin-pill">Administrator</div>
+                <h3 class="role-heading">Governance & Access Management</h3>
+                <ul class="role-list">
+                  <li>Provisions new contributor and reviewer accounts.</li>
+                  <li>Assigns or updates role privileges.</li>
+                  <li>Activates or deactivates accounts (with instant session termination).</li>
+                  <li>Monitors curriculum status and system health.</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        }
+
+        <!-- ========================================================
+             TAB 2: USERS & ROLES MANAGEMENT
+             ======================================================== -->
+        @if (activeTab === 'users') {
+          <div class="users-management-section">
+            <!-- Search & Controls Bar -->
+            <div class="users-controls-bar">
+              <div class="controls-left">
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <input
+                    type="text"
+                    [(ngModel)]="userSearch"
+                    placeholder="Search accounts by name or username…"
+                    aria-label="Search accounts"
+                    class="search-input"
+                  />
+                  @if (userSearch) {
+                    <button class="clear-search-btn" (click)="userSearch = ''" aria-label="Clear search">×</button>
+                  }
+                </div>
+
+                <div class="filter-group">
+                  <label for="role-filter-select" class="filter-label">Role:</label>
+                  <select id="role-filter-select" [(ngModel)]="roleFilter" class="filter-select">
+                    <option value="all">All Roles</option>
+                    <option value="contributor">Contributors</option>
+                    <option value="reviewer">Reviewers</option>
+                    <option value="admin">Administrators</option>
+                  </select>
+                </div>
+              </div>
+
+              <button class="btn-provision-user" (click)="openCreateUserModal()" id="btn-provision-user-tab">
+                + Add User Account
+              </button>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-container">
+              <table class="admin-table" aria-label="User Accounts Table">
+                <thead>
+                  <tr>
+                    <th scope="col">User Account</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Created Date</th>
+                    <th scope="col" class="th-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (user of filteredUsers; track user.user_id) {
+                    <tr [class.row-deactivated]="!user.is_active">
+                      <!-- User Info -->
+                      <td>
+                        <div class="user-row-cell">
+                          <div class="table-avatar" [class.avatar-inactive]="!user.is_active">
+                            {{ user.display_name?.charAt(0) || 'U' }}
+                          </div>
+                          <div class="user-row-meta">
+                            <span class="user-display-name">{{ user.display_name }}</span>
+                            <span class="user-account-handle">&#64;{{ user.username }}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Role Badge -->
+                      <td>
+                        <span class="role-badge" [ngClass]="user.role + '-pill'">
+                          {{ user.role | uppercase }}
+                        </span>
+                      </td>
+
+                      <!-- Active/Inactive Status -->
+                      <td>
+                        <span class="status-indicator-pill" [class.active-pill]="user.is_active" [class.inactive-pill]="!user.is_active">
+                          <span class="status-dot"></span>
+                          {{ user.is_active ? 'Active' : 'Deactivated' }}
+                        </span>
+                      </td>
+
+                      <!-- Created Date -->
+                      <td>
+                        <span class="created-date-text">
+                          {{ user.created_at ? (user.created_at | date:'mediumDate') : 'Permanent System User' }}
+                        </span>
+                      </td>
+
+                      <!-- Actions -->
+                      <td class="td-actions">
+                        <div class="actions-group">
+                          <button
+                            type="button"
+                            class="btn-table-action"
+                            (click)="openChangeRoleModal(user)"
+                            title="Change role for this user"
+                            id="btn-change-role-{{ user.username }}"
+                          >
+                            Change Role
+                          </button>
+
+                          @if (user.user_id === currentUser?.user_id) {
+                            <span class="self-tag" title="Cannot deactivate your own account">Current User</span>
+                          } @else {
+                            <button
+                              type="button"
+                              class="btn-table-action"
+                              [class.btn-deactivate]="user.is_active"
+                              [class.btn-activate]="!user.is_active"
+                              (click)="openStatusChangeModal(user)"
+                              title="{{ user.is_active ? 'Deactivate account' : 'Reactivate account' }}"
+                              id="btn-toggle-status-{{ user.username }}"
+                            >
+                              {{ user.is_active ? 'Deactivate' : 'Activate' }}
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  @empty {
+                    <tr>
+                      <td colspan="5" class="empty-table-cell">
+                        No user accounts found matching your filter criteria.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- ========================================================
+             TAB 3: CONTENT & PUBLICATION OVERVIEW
+             ======================================================== -->
+        @if (activeTab === 'content') {
+          <div class="content-overview-section">
+            <div class="content-overview-header">
+              <div>
+                <h2 class="section-title">Health Education Curriculum Overview</h2>
+                <p class="section-subtitle">
+                  Inspect publication states across all active topics and curriculum chapters.
+                </p>
+              </div>
+              <a routerLink="/creator" class="btn-secondary-link">
+                Go to Creator Studio →
+              </a>
+            </div>
+
+            <div class="topics-table-container">
+              <table class="admin-table" aria-label="Topic Curriculum Overview Table">
+                <thead>
+                  <tr>
+                    <th scope="col">Topic Title & Slug</th>
+                    <th scope="col">Curriculum Chapters</th>
+                    <th scope="col">Publication State</th>
+                    <th scope="col" class="th-actions">Direct Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (topic of topics; track topic.id) {
+                    <tr>
+                      <td>
+                        <div class="topic-row-info">
+                          <strong class="topic-name">{{ topic.title }}</strong>
+                          <span class="topic-slug">/topics/{{ topic.slug }}</span>
+                          <p class="topic-desc">{{ topic.description }}</p>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="chapters-count-pill">
+                          {{ topic.chapterCount }} {{ topic.chapterCount === 1 ? 'Chapter' : 'Chapters' }}
+                        </span>
+                        @if (topic.inReviewCount > 0) {
+                          <span class="pending-chip">{{ topic.inReviewCount }} in review</span>
+                        }
+                      </td>
+                      <td>
+                        <span class="status-indicator-pill" [class.active-pill]="topic.status === 'published'" [class.inactive-pill]="topic.status !== 'published'">
+                          <span class="status-dot"></span>
+                          {{ topic.status === 'published' ? 'Published Live' : 'Draft In Progress' }}
+                        </span>
+                      </td>
+                      <td class="td-actions">
+                        <a [routerLink]="['/creator/topic', topic.id]" class="btn-table-action primary">
+                          Open Workspace
+                        </a>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </main>
+
+  <!-- ========================================================
+       MODAL 1: PROVISION NEW USER ACCOUNT
+       ======================================================== -->
+  @if (showCreateUserModal) {
+    <div class="modal-backdrop" (click)="closeCreateUserModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Provision New User Account</h2>
+          <button class="modal-close-btn" (click)="closeCreateUserModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <form (ngSubmit)="submitCreateUser()" class="modal-body" id="provision-user-form">
+          @if (createUserError) {
+            <div class="modal-alert error" role="alert">
+              <span>⚠️ {{ createUserError }}</span>
+            </div>
+          }
+
+          <div class="field-item">
+            <label for="new-username" class="field-label required">Username</label>
+            <input
+              id="new-username"
+              type="text"
+              [(ngModel)]="newUsername"
+              name="username"
+              placeholder="e.g. educator_mary"
+              class="field-input"
+              required
+              autofocus
+            />
+            <span class="field-hint">Unique identifier used for authentication. Lowercase letters, numbers, underscores.</span>
+          </div>
+
+          <div class="field-item">
+            <label for="new-displayname" class="field-label required">Display Name</label>
+            <input
+              id="new-displayname"
+              type="text"
+              [(ngModel)]="newDisplayName"
+              name="displayName"
+              placeholder="e.g. Dr. Mary Mwangi"
+              class="field-input"
+              required
+            />
+            <span class="field-hint">Name visible across authoring notes and peer reviews.</span>
+          </div>
+
+          <div class="field-item">
+            <label for="new-role" class="field-label required">Initial Role Assignment</label>
+            <select id="new-role" [(ngModel)]="newRole" name="role" class="field-select">
+              <option value="contributor">Contributor (Draft Authoring & Submission)</option>
+              <option value="reviewer">Reviewer (Quality Assurance & Publication)</option>
+              <option value="admin">Administrator (System Governance)</option>
+            </select>
+            <span class="field-hint">Defines permissions for this account across Creator Studio.</span>
+          </div>
+
+          <div class="field-item">
+            <label for="new-password" class="field-label required">Temporary Initial Password</label>
+            <input
+              id="new-password"
+              type="password"
+              [(ngModel)]="newPassword"
+              name="password"
+              placeholder="Minimum 8 characters"
+              class="field-input"
+              required
+              minlength="8"
+            />
+            <span class="field-hint">Secured with PBKDF2 600,000 iterations. Never displayed in logs or public responses.</span>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeCreateUserModal()">Cancel</button>
+            <button
+              type="submit"
+              class="btn-create-submit"
+              [disabled]="isCreatingUser || !newUsername.trim() || !newDisplayName.trim() || newPassword.length < 8"
+              id="btn-confirm-provision"
+            >
+              @if (isCreatingUser) {
+                <span class="spinner-inline"></span> Creating…
+              } @else {
+                Create Account
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 2: CHANGE ROLE DIALOG
+       ======================================================== -->
+  @if (userForRoleChange) {
+    <div class="modal-backdrop" (click)="closeChangeRoleModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Change Account Role</h2>
+          <button class="modal-close-btn" (click)="closeChangeRoleModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <form (ngSubmit)="confirmChangeRole()" class="modal-body">
+          <p class="modal-subtext">
+            Update role privileges for <strong>{{ userForRoleChange.display_name }}</strong> (&#64;{{ userForRoleChange.username }}).
+          </p>
+
+          <div class="field-item">
+            <label for="change-role-select" class="field-label required">Select New Role</label>
+            <select
+              id="change-role-select"
+              [(ngModel)]="selectedRoleForChange"
+              name="selectedRole"
+              class="field-select"
+            >
+              <option value="contributor">Contributor (Authoring drafts)</option>
+              <option value="reviewer">Reviewer (Inspection & Approval)</option>
+              <option value="admin">Administrator (Full administration)</option>
+            </select>
+          </div>
+
+          <div class="role-implication-note">
+            ℹ️ Role modifications take effect immediately upon their next authenticated API request.
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeChangeRoleModal()">Cancel</button>
+            <button
+              type="submit"
+              class="btn-create-submit"
+              [disabled]="isChangingRole || selectedRoleForChange === userForRoleChange.role"
+              id="btn-confirm-role-change"
+            >
+              @if (isChangingRole) {
+                Saving…
+              } @else {
+                Update Role
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 3: CONFIRM STATUS CHANGE (DEACTIVATE / ACTIVATE)
+       ======================================================== -->
+  @if (userForStatusChange) {
+    <div class="modal-backdrop" (click)="closeStatusChangeModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title" [class.delete-title]="userForStatusChange.is_active">
+            {{ userForStatusChange.is_active ? 'Deactivate User Account?' : 'Reactivate User Account?' }}
+          </h2>
+          <button class="modal-close-btn" (click)="closeStatusChangeModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="modal-subtext">
+            @if (userForStatusChange.is_active) {
+              Are you sure you want to deactivate <strong>{{ userForStatusChange.display_name }}</strong> (&#64;{{ userForStatusChange.username }})?
+            } @else {
+              Are you sure you want to reactivate <strong>{{ userForStatusChange.display_name }}</strong> (&#64;{{ userForStatusChange.username }})?
+            }
+          </p>
+
+          @if (userForStatusChange.is_active) {
+            <div class="deactivation-warning-box">
+              ⚠️ <strong>Security Effect:</strong> Deactivating an account terminates their authenticated session immediately. Any subsequent API request made with their credentials or session cookie will receive a 401 Unauthorized block.
+            </div>
+          } @else {
+            <p class="activation-info-box">
+              Reactivating this account will permit the user to authenticate again with their existing credentials.
+            </p>
+          }
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeStatusChangeModal()">Cancel</button>
+            <button
+              type="button"
+              [class.btn-delete-confirm]="userForStatusChange.is_active"
+              [class.btn-create-submit]="!userForStatusChange.is_active"
+              [disabled]="isChangingStatus"
+              (click)="confirmStatusChange()"
+              id="btn-confirm-status-toggle"
+            >
+              @if (isChangingStatus) {
+                Updating…
+              } @else if (userForStatusChange.is_active) {
+                Confirm Deactivation
+              } @else {
+                Reactivate Account
+              }
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+</div>

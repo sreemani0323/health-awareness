@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 480" width="100%" height="100%" fill="none" role="img" aria-labelledby="cc-title cc-desc">
+  <title id="cc-title">Caring Family Health and Hygiene Practice</title>
+  <desc id="cc-desc">A mother and child practicing proper handwashing together at home with clean water, soap, and a covered safe storage container.</desc>
+  <defs>
+    <linearGradient id="cc-bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8F5E9" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#E0F2F1" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="cc-teal-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00897B"/>
+      <stop offset="100%" stop-color="#004D40"/>
+    </linearGradient>
+    <linearGradient id="cc-water-stream" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#81D4FA"/>
+      <stop offset="100%" stop-color="#0288D1"/>
+    </linearGradient>
+    <filter id="cc-shadow" x="-8%" y="-8%" width="116%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004D40" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background Soft Aura Backdrop -->
+  <circle cx="260" cy="240" r="210" fill="url(#cc-bg-grad)"/>
+  <circle cx="260" cy="240" r="170" fill="#FFFFFF" fill-opacity="0.6"/>
+
+  <!-- Floor / Ground Plane -->
+  <ellipse cx="260" cy="430" rx="200" ry="24" fill="#C8E6C9" fill-opacity="0.5"/>
+
+  <!-- ===================================================================
+       1. Safe Water Pot on Stand (Left Side)
+       =================================================================== -->
+  <g transform="translate(65, 230)" filter="url(#cc-shadow)">
+    <!-- Wooden Stool -->
+    <rect x="25" y="110" width="8" height="65" rx="3" fill="#8D6E63"/>
+    <rect x="75" y="110" width="8" height="65" rx="3" fill="#6D4C41"/>
+    <rect x="15" y="105" width="78" height="10" rx="3" fill="#A1887F"/>
+
+    <!-- Traditional Clay Matka with Tap -->
+    <!-- Belly -->
+    <ellipse cx="54" cy="65" rx="42" ry="40" fill="#D7CCC8" stroke="#8D6E63" stroke-width="2"/>
+    <path d="M28 35 C38 20 70 20 80 35 Z" fill="#BCAAA4" stroke="#8D6E63" stroke-width="2"/>
+    <!-- Lid & Handle -->
+    <ellipse cx="54" cy="24" rx="24" ry="7" fill="#8D6E63" stroke="#5D4037" stroke-width="2"/>
+    <circle cx="54" cy="16" r="5" fill="#5D4037"/>
+
+    <!-- Tap Dispenser -->
+    <rect x="92" y="68" width="16" height="7" rx="2" fill="#FFA000"/>
+    <path d="M106 72 L106 82" stroke="#E65100" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Pure Water Badge Label -->
+    <rect x="24" y="80" width="60" height="18" rx="9" fill="#00796B"/>
+    <text x="54" y="93" font-family="'Roboto', sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">SAFE WATER</text>
+  </g>
+
+  <!-- ===================================================================
+       2. Mother / Caregiver (Center-Right)
+       =================================================================== -->
+  <g transform="translate(230, 80)">
+    <!-- Hair & Bun -->
+    <circle cx="110" cy="50" r="28" fill="#212121"/>
+    <circle cx="132" cy="42" r="14" fill="#212121"/>
+    <!-- Jasmine Flowers in Bun (Cultural touch) -->
+    <circle cx="130" cy="32" r="4" fill="#FFFFFF"/>
+    <circle cx="136" cy="36" r="4" fill="#FFFFFF"/>
+    <circle cx="138" cy="44" r="4" fill="#FFFFFF"/>
+
+    <!-- Head & Neck -->
+    <ellipse cx="106" cy="64" rx="19" ry="23" fill="#D7A179"/>
+    <!-- Warm smile and eyes -->
+    <path d="M96 68 Q102 76 112 70" stroke="#5D4037" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <circle cx="98" cy="58" r="2.5" fill="#3E2723"/>
+    <circle cx="112" cy="60" r="2.5" fill="#3E2723"/>
+    <!-- Bindi -->
+    <circle cx="104" cy="54" r="2" fill="#D32F2F"/>
+
+    <!-- Traditional Saree / Attire (Teal & Forest Green) -->
+    <path d="M85 88 C70 120 60 170 55 270 L155 270 C150 190 145 130 130 88 Z" fill="#00695C"/>
+    <!-- Pallu drape over shoulder -->
+    <path d="M85 88 C95 105 105 140 108 180 C88 170 78 140 75 110 Z" fill="#00897B"/>
+    <!-- Saree Border Accent (Golden) -->
+    <path d="M85 88 C95 105 105 140 108 180" stroke="#FFB300" stroke-width="3" fill="none"/>
+
+    <!-- Mother's Arm guiding water jug -->
+    <path d="M82 108 C65 125 50 148 40 160" stroke="#D7A179" stroke-width="14" stroke-linecap="round"/>
+    <!-- Red bangles -->
+    <circle cx="48" cy="150" r="8" stroke="#D32F2F" stroke-width="3" fill="none"/>
+
+    <!-- Water Pitcher poured by Mother -->
+    <g transform="translate(18, 145) rotate(-35)">
+      <ellipse cx="20" cy="20" rx="16" ry="22" fill="#80CBC4" stroke="#004D40" stroke-width="2"/>
+      <rect x="12" y="-4" width="16" height="10" rx="3" fill="#004D40"/>
+      <path d="M12 2 C-2 15 -2 30 12 40" stroke="#004D40" stroke-width="4" fill="none"/>
+    </g>
+
+    <!-- Poured Water Stream into Basin -->
+    <path d="M24 165 C20 185 16 205 14 225" stroke="url(#cc-water-stream)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M28 170 C26 190 22 210 20 225" stroke="#E1F5FE" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===================================================================
+       3. Child Washing Hands (Foreground Center)
+       =================================================================== -->
+  <g transform="translate(145, 175)">
+    <!-- Child Head -->
+    <circle cx="85" cy="40" r="22" fill="#212121"/>
+    <!-- Cute bangs -->
+    <path d="M68 35 C75 22 95 22 102 35 Z" fill="#212121"/>
+    <ellipse cx="85" cy="46" rx="16" ry="18" fill="#E8B896"/>
+    <!-- Joyful eyes & smile -->
+    <circle cx="79" cy="43" r="2" fill="#3E2723"/>
+    <circle cx="91" cy="43" r="2" fill="#3E2723"/>
+    <path d="M80 52 Q85 58 91 52" stroke="#5D4037" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+    <!-- Child Kurta / Shirt (Bright Friendly Orange/Yellow) -->
+    <path d="M66 65 C60 90 55 140 50 175 L120 175 C115 140 110 90 104 65 Z" fill="#FFA726"/>
+    <rect x="83" y="65" width="4" height="25" fill="#E65100"/>
+
+    <!-- Child Arms Outstretched to Basin -->
+    <path d="M68 80 C80 95 90 105 100 108" stroke="#E8B896" stroke-width="11" stroke-linecap="round"/>
+    <path d="M102 80 C95 95 88 105 82 108" stroke="#E8B896" stroke-width="11" stroke-linecap="round"/>
+
+    <!-- Hands Scrubbing with Lather -->
+    <ellipse cx="94" cy="110" rx="10" ry="7" fill="#E8B896"/>
+    <ellipse cx="86" cy="110" rx="10" ry="7" fill="#D7A179"/>
+
+    <!-- Soap Bar on Tray -->
+    <rect x="135" y="112" width="28" height="12" rx="6" fill="#4DB6AC" stroke="#00796B" stroke-width="1.5"/>
+
+    <!-- Floating Lather Bubbles -->
+    <circle cx="80" cy="100" r="5" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.5"/>
+    <circle cx="98" cy="98" r="7" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.5"/>
+    <circle cx="90" cy="92" r="4" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.2"/>
+    <circle cx="106" cy="108" r="5.5" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.5"/>
+    <circle cx="74" cy="112" r="4" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.2"/>
+
+    <!-- Splash Basin -->
+    <path d="M40 120 C40 145 140 145 140 120 Z" fill="#B2EBF2" stroke="#00838F" stroke-width="2.5"/>
+    <ellipse cx="90" cy="120" rx="50" ry="9" fill="#80DEEA" stroke="#00838F" stroke-width="2"/>
+    <!-- Catch Water Ripples in Basin -->
+    <ellipse cx="90" cy="122" rx="30" ry="5" fill="#E0F7FA"/>
+
+    <!-- Basin Stand -->
+    <rect x="85" y="132" width="10" height="45" rx="3" fill="#00838F"/>
+    <rect x="55" y="172" width="70" height="8" rx="4" fill="#006064"/>
+  </g>
+
+  <!-- ===================================================================
+       4. Floating Community Health Guidance Badges
+       =================================================================== -->
+  <g transform="translate(360, 320)" filter="url(#cc-shadow)">
+    <rect x="0" y="0" width="130" height="42" rx="21" fill="#FFFFFF"/>
+    <circle cx="22" cy="21" r="14" fill="#E8F5E9"/>
+    <text x="22" y="26" font-size="14" text-anchor="middle">💧</text>
+    <text x="74" y="19" font-family="'Capriola', sans-serif" font-size="11" font-weight="bold" fill="#004D40">Clean Water</text>
+    <text x="74" y="32" font-family="'Roboto', sans-serif" font-size="9" fill="#00796B">Everyday habit</text>
+  </g>
+
+  <g transform="translate(40, 140)" filter="url(#cc-shadow)">
+    <rect x="0" y="0" width="120" height="38" rx="19" fill="#FFFFFF"/>
+    <circle cx="20" cy="19" r="13" fill="#E0F2F1"/>
+    <text x="20" y="24" font-size="13" text-anchor="middle">🧼</text>
+    <text x="68" y="18" font-family="'Capriola', sans-serif" font-size="11" font-weight="bold" fill="#004D40">Safe Hands</text>
+    <text x="68" y="30" font-family="'Roboto', sans-serif" font-size="9" fill="#00796B">20 seconds</text>
+  </g>
+</svg>

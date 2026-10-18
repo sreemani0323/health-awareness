@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420" width="100%" height="100%" fill="none" role="img" aria-labelledby="he-title he-desc">
+  <title id="he-title">Community Health Worker Education Session</title>
+  <desc id="he-desc">A trained community health worker presenting a preventive health and hygiene poster board to local community members.</desc>
+  <defs>
+    <linearGradient id="he-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2F1" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#F1F8E9" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="he-board-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F9FBFB"/>
+    </linearGradient>
+    <filter id="he-shadow" x="-8%" y="-8%" width="116%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004D40" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Background Soft Oval -->
+  <ellipse cx="260" cy="210" rx="230" ry="170" fill="url(#he-bg)"/>
+  <ellipse cx="260" cy="380" rx="200" ry="20" fill="#C8E6C9" fill-opacity="0.4"/>
+
+  <!-- ===================================================================
+       1. Presentation Flipchart / Health Board (Left Side)
+       =================================================================== -->
+  <g transform="translate(60, 60)" filter="url(#he-shadow)">
+    <!-- Tripod Legs -->
+    <line x1="120" y1="120" x2="45" y2="300" stroke="#78909C" stroke-width="5" stroke-linecap="round"/>
+    <line x1="120" y1="120" x2="195" y2="300" stroke="#78909C" stroke-width="5" stroke-linecap="round"/>
+    <line x1="120" y1="120" x2="120" y2="300" stroke="#546E7A" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- Chart Board Body -->
+    <rect x="20" y="10" width="200" height="180" rx="12" fill="url(#he-board-grad)" stroke="#B0BEC5" stroke-width="2"/>
+
+    <!-- Top Hanging Clip -->
+    <rect x="75" y="4" width="90" height="14" rx="4" fill="#00695C"/>
+    <circle cx="120" cy="11" r="3" fill="#FFFFFF"/>
+
+    <!-- Board Header -->
+    <rect x="35" y="28" width="170" height="24" rx="6" fill="#E0F2F1"/>
+    <text x="120" y="44" font-family="'Capriola', 'Roboto', sans-serif" font-size="11" font-weight="bold" fill="#004D40" text-anchor="middle">HEALTH AWARENESS</text>
+
+    <!-- Step 1: Hand Hygiene -->
+    <g transform="translate(35, 62)">
+      <circle cx="14" cy="14" r="12" fill="#E0F7FA"/>
+      <text x="14" y="18" font-size="12" text-anchor="middle">🧼</text>
+      <text x="36" y="12" font-family="'Roboto', sans-serif" font-size="10" font-weight="bold" fill="#004D40">1. Proper Handwashing</text>
+      <text x="36" y="24" font-family="'Roboto', sans-serif" font-size="8.5" fill="#546E7A">20s scrub with soap</text>
+      <circle cx="160" cy="14" r="6" fill="#4CAF50"/>
+      <path d="M157 14 L159 16 L163 12" stroke="#FFFFFF" stroke-width="1.5" fill="none"/>
+    </g>
+
+    <!-- Step 2: Safe Water -->
+    <g transform="translate(35, 98)">
+      <circle cx="14" cy="14" r="12" fill="#E1F5FE"/>
+      <text x="14" y="18" font-size="12" text-anchor="middle">💧</text>
+      <text x="36" y="12" font-family="'Roboto', sans-serif" font-size="10" font-weight="bold" fill="#004D40">2. Boil or Filter Water</text>
+      <text x="36" y="24" font-family="'Roboto', sans-serif" font-size="8.5" fill="#546E7A">Prevent waterborne illness</text>
+      <circle cx="160" cy="14" r="6" fill="#4CAF50"/>
+      <path d="M157 14 L159 16 L163 12" stroke="#FFFFFF" stroke-width="1.5" fill="none"/>
+    </g>
+
+    <!-- Step 3: Mosquito Control -->
+    <g transform="translate(35, 134)">
+      <circle cx="14" cy="14" r="12" fill="#E8F5E9"/>
+      <text x="14" y="18" font-size="12" text-anchor="middle">🛡️</text>
+      <text x="36" y="12" font-family="'Roboto', sans-serif" font-size="10" font-weight="bold" fill="#004D40">3. Remove Stagnant Water</text>
+      <text x="36" y="24" font-family="'Roboto', sans-serif" font-size="8.5" fill="#546E7A">Stop vector breeding</text>
+      <circle cx="160" cy="14" r="6" fill="#4CAF50"/>
+      <path d="M157 14 L159 16 L163 12" stroke="#FFFFFF" stroke-width="1.5" fill="none"/>
+    </g>
+  </g>
+
+  <!-- ===================================================================
+       2. Community Health Worker / Educator (Right Side)
+       =================================================================== -->
+  <g transform="translate(285, 70)">
+    <!-- Hair & Bun -->
+    <circle cx="95" cy="50" r="26" fill="#212121"/>
+    <circle cx="70" cy="46" r="16" fill="#212121"/>
+
+    <!-- Head & Neck -->
+    <ellipse cx="94" cy="62" rx="18" ry="22" fill="#D7A179"/>
+    <!-- Smiling facial features -->
+    <circle cx="86" cy="58" r="2.2" fill="#3E2723"/>
+    <circle cx="98" cy="58" r="2.2" fill="#3E2723"/>
+    <path d="M86 68 Q92 75 100 68" stroke="#5D4037" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <!-- Bindi -->
+    <circle cx="92" cy="52" r="1.8" fill="#D32F2F"/>
+
+    <!-- Professional Health Worker Vest / Apron (Teal `#00796B`) -->
+    <path d="M72 85 C60 115 50 170 45 280 L145 280 C140 170 130 115 118 85 Z" fill="#00796B"/>
+    <!-- White Inner Collar Shirt -->
+    <path d="M85 85 L95 102 L105 85 Z" fill="#FFFFFF"/>
+
+    <!-- ID Badge Lanyard (Crucial Community Worker detail) -->
+    <path d="M88 85 L95 125 L102 85" stroke="#FFA000" stroke-width="2" fill="none"/>
+    <rect x="88" y="125" width="14" height="18" rx="2" fill="#FFFFFF" stroke="#004D40" stroke-width="1"/>
+    <rect x="90" y="128" width="10" height="3" fill="#00796B"/>
+    <circle cx="95" cy="136" r="2" fill="#D32F2F"/>
+
+    <!-- Left Arm Pointing to Presentation Board -->
+    <path d="M72 105 C40 100 0 115 -25 130" stroke="#D7A179" stroke-width="13" stroke-linecap="round"/>
+    <!-- Pointing Hand with baton/pen -->
+    <circle cx="-25" cy="130" r="8" fill="#D7A179"/>
+    <line x1="-25" y1="130" x2="-45" y2="120" stroke="#FFB300" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Right Arm holding Health Guide Folder -->
+    <path d="M118 105 C135 125 130 155 120 180" stroke="#D7A179" stroke-width="13" stroke-linecap="round"/>
+    <rect x="105" y="150" width="30" height="38" rx="4" fill="#004D40" transform="rotate(12 120 169)"/>
+    <rect x="110" y="156" width="20" height="6" fill="#80CBC4" transform="rotate(12 120 169)"/>
+
+    <!-- Medical Cross on Pocket -->
+    <circle cx="120" cy="115" r="9" fill="#FFFFFF"/>
+    <rect x="118.5" y="109" width="3" height="12" fill="#D32F2F"/>
+    <rect x="114" y="113.5" width="12" height="3" fill="#D32F2F"/>
+  </g>
+
+  <!-- ===================================================================
+       3. Community Listeners (Silhouettes at Bottom Right)
+       =================================================================== -->
+  <g transform="translate(370, 260)">
+    <!-- Listener 1 -->
+    <circle cx="35" cy="40" r="18" fill="#80CBC4"/>
+    <path d="M15 85 C15 65 30 55 55 55 C80 55 95 65 95 85 Z" fill="#004D40" fill-opacity="0.8"/>
+
+    <!-- Listener 2 (Younger) -->
+    <circle cx="90" cy="50" r="14" fill="#A5D6A7"/>
+    <path d="M75 90 C75 75 85 65 105 65 C125 65 135 75 135 90 Z" fill="#2E7D32" fill-opacity="0.75"/>
+  </g>
+
+  <!-- Speech / Education Sparkle Bubble -->
+  <g transform="translate(230, 45)" filter="url(#he-shadow)">
+    <rect x="0" y="0" width="85" height="28" rx="14" fill="#00796B"/>
+    <text x="42" y="18" font-family="'Roboto', sans-serif" font-size="10" font-weight="bold" fill="#FFFFFF" text-anchor="middle">📢 Health Talk</text>
+  </g>
+</svg>

@@ -1,0 +1,1195 @@
+{
+  "topics": [
+    {
+      "topic_id": "topic-hygiene",
+      "title": "Personal Hygiene & Handwashing",
+      "url_slug": "hygiene",
+      "description": "Essential techniques for infection prevention through proper handwashing and personal hygiene.",
+      "display_order": 1,
+      "status": "published",
+      "cover_image_ref": null,
+      "cover_image_alt": null
+    },
+    {
+      "topic_id": "topic-water",
+      "title": "Safe Drinking Water & Sanitation",
+      "url_slug": "water",
+      "description": "Practical household water treatment, safe storage principles, and sanitation barriers to protect health.",
+      "display_order": 2,
+      "status": "published",
+      "cover_image_ref": null,
+      "cover_image_alt": null
+    },
+    {
+      "topic_id": "topic-mosquito",
+      "title": "Mosquito Prevention & Vector Control",
+      "url_slug": "mosquito",
+      "description": "Eliminate stagnant water breeding habitats, apply personal barriers, and reduce vector-borne disease risks.",
+      "display_order": 3,
+      "status": "published",
+      "cover_image_ref": null,
+      "cover_image_alt": null
+    },
+    {
+      "topic_id": "topic-vaccine",
+      "title": "Vaccine Awareness & Immunity",
+      "url_slug": "vaccine",
+      "description": "Learn how vaccines prime the human immune system, preserve community immunity, and save millions of lives.",
+      "display_order": 4,
+      "status": "published",
+      "cover_image_ref": null,
+      "cover_image_alt": null
+    }
+  ],
+  "lessons": [
+    {
+      "lesson_id": "lesson-handwashing",
+      "topic_id": "topic-hygiene",
+      "display_order": 1,
+      "published_version_id": "ver-handwashing-1",
+      "draft_version_id": null
+    },
+    {
+      "lesson_id": "lesson-understanding-mosquitoes-and-m-5557",
+      "topic_id": "topic-mosquito",
+      "display_order": 1,
+      "published_version_id": "ver-lesson-understanding-mosquitoes-and-m-5557-v1",
+      "draft_version_id": null
+    },
+    {
+      "lesson_id": "lesson-mosquito-control",
+      "topic_id": "topic-mosquito",
+      "display_order": 2,
+      "published_version_id": "ver-mosquito-1",
+      "draft_version_id": null
+    },
+    {
+      "lesson_id": "lesson-protect-yourself-and-your-fami-3513",
+      "topic_id": "topic-mosquito",
+      "display_order": 3,
+      "published_version_id": "ver-lesson-protect-yourself-and-your-fami-3513-v1",
+      "draft_version_id": null
+    },
+    {
+      "lesson_id": "lesson-community-prevention-symptoms--4817",
+      "topic_id": "topic-mosquito",
+      "display_order": 4,
+      "published_version_id": "ver-lesson-community-prevention-symptoms--4817-v1",
+      "draft_version_id": null
+    },
+    {
+      "lesson_id": "lesson-vaccine-basics",
+      "topic_id": "topic-vaccine",
+      "display_order": 1,
+      "published_version_id": "ver-vaccine-1",
+      "draft_version_id": null
+    },
+    {
+      "lesson_id": "lesson-water-purification",
+      "topic_id": "topic-water",
+      "display_order": 1,
+      "published_version_id": "ver-water-1",
+      "draft_version_id": null
+    }
+  ],
+  "versions": [
+    {
+      "version_id": "ver-handwashing-1",
+      "lesson_id": "lesson-handwashing",
+      "version_number": 1,
+      "title": "Effective Handwashing Techniques",
+      "summary": "Learn the science-backed 20-second handwashing method to remove pathogens.",
+      "language": "en",
+      "learning_objectives": [
+        "Master the 5-step handwashing technique with soap and running water, scrubbing for at least 20 seconds",
+        "Identify the 5 critical everyday moments for hand hygiene in household and community settings",
+        "Understand how soap, friction, and rinsing remove germs, and when alcohol-based rub is an acceptable alternative"
+      ],
+      "estimated_duration_minutes": 5,
+      "cards": [
+        {
+          "card_id": "hw-card-1",
+          "position": 1,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Why Handwashing Saves Lives"
+            },
+            {
+              "block_type": "text",
+              "body": "Handwashing with soap and clean running water is one of the most effective and affordable ways to prevent diarrheal illnesses and acute respiratory infections. Germs spread quickly when unwashed hands touch the face, food, or surfaces that others share."
+            },
+            {
+              "block_type": "text",
+              "body": "How soap works: Soap does not instantly kill all germs on contact. Instead, soap molecules combine with the physical friction of scrubbing and rinsing to loosen, lift, and wash away dirt, grease, and infectious microbes from your skin. For certain viruses with an outer lipid layer (such as influenza and coronaviruses), soap also disrupts that protective fatty envelope to help inactivate them. For other bacteria and non-enveloped germs, the mechanical action of lathering and rinsing safely removes them from hands."
+            }
+          ],
+          "source_ids": [
+            "src-who-hygiene",
+            "src-cdc-hygiene"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "hw-card-2",
+          "position": 2,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Scrub Duration"
+            }
+          ],
+          "source_ids": [
+            "src-cdc-hygiene",
+            "src-who-hygiene"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "According to WHO and CDC guidelines, how long should you scrub your hands with soap?",
+            "options": [
+              {
+                "option_id": "opt-hw-1",
+                "label": "5 to 10 seconds",
+                "is_correct": false,
+                "feedback": "Too brief! Quick scrubbing does not provide enough friction time for soap lather to lift and loosen microbes, dirt, and grease from skin folds, finger webs, and under fingernails."
+              },
+              {
+                "option_id": "opt-hw-2",
+                "label": "At least 20 seconds",
+                "is_correct": true,
+                "feedback": "Spot on! The CDC and WHO recommend scrubbing with soap for at least 20 seconds (the time it takes to hum 'Happy Birthday' twice). This provides enough physical friction to lift germs from palms, backs of hands, between fingers, and under nails before rinsing."
+              },
+              {
+                "option_id": "opt-hw-3",
+                "label": "1 minute with scalding hot water",
+                "is_correct": false,
+                "feedback": "Scalding water does not remove more germs and can damage your skin barrier, causing dryness and irritation. Clean running water (warm or cold) with 20 seconds of soap scrubbing is effective and safe."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "hw-card-3",
+          "position": 3,
+          "card_type": "recap",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Key Takeaways: 5 Steps & Everyday Moments"
+            },
+            {
+              "block_type": "text",
+              "body": "The 5 Steps of Handwashing (CDC): 1. Wet hands with clean running water (warm or cold). 2. Lather thoroughly with soap. 3. Scrub for at least 20 seconds, including backs of hands, between fingers, and under nails. 4. Rinse completely under running water. 5. Dry with a clean towel or air dry."
+            },
+            {
+              "block_type": "text",
+              "body": "5 Key Everyday Community Moments (WHO): Wash before preparing food, before eating or feeding others, after using the toilet or handling feces (including changing diapers), after coughing or sneezing, and whenever hands are visibly soiled. Note: These community moments apply to everyday life and are distinct from the clinical '5 Moments' framework used in hospital healthcare settings."
+            }
+          ],
+          "source_ids": [
+            "src-who-hygiene",
+            "src-cdc-hygiene"
+          ],
+          "interaction": null
+        }
+      ],
+      "source_ids": [
+        "src-who-hygiene",
+        "src-cdc-hygiene"
+      ],
+      "status": "published",
+      "author_id": "user-contributor",
+      "submitted_by": null,
+      "review_feedback": null
+    },
+    {
+      "version_id": "ver-lesson-community-prevention-symptoms--4817-v1",
+      "lesson_id": "lesson-community-prevention-symptoms--4817",
+      "version_number": 1,
+      "title": "Community Prevention, Symptoms, and Seeking Care",
+      "summary": "Community-wide vector management, recognizing illness symptoms without self-diagnosing, and identifying urgent severe dengue warning signs.",
+      "language": "en",
+      "learning_objectives": [
+        "Understand community environmental management and sanitation",
+        "Recognize fever symptoms and avoid dangerous self-medication like NSAIDs",
+        "Identify emergency severe dengue warning signs requiring urgent hospitalization"
+      ],
+      "estimated_duration_minutes": 5,
+      "cards": [
+        {
+          "card_id": "card-lesson-community-prevention-symptoms--4817-1",
+          "position": 1,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Community Action and Environmental Sanitation"
+            },
+            {
+              "block_type": "text",
+              "body": "Mosquito control cannot succeed in isolation. Because mosquitoes fly between properties, one untreated breeding site can jeopardize an entire neighborhood. Community-wide action\u2014including organized clean-up drives, solid waste management to remove discarded tyres and plastics, clearing blocked drainage channels, and alerting community health workers to public stagnant pools\u2014is essential for sustained vector suppression."
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "card-lesson-community-prevention-symptoms--4817-2",
+          "position": 2,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Recognizing Symptoms and Seeking Qualified Care"
+            },
+            {
+              "block_type": "text",
+              "body": "Both dengue and malaria commonly begin with acute fever, chills, body aches, headache, or nausea. Do not attempt to differentiate or self-diagnose these infections based on symptoms alone, and avoid self-medication (such as taking non-steroidal anti-inflammatory drugs like ibuprofen or aspirin, which can worsen bleeding risks in dengue). If you develop high fever following potential mosquito exposure, consult a qualified healthcare provider promptly for diagnostic testing and supportive care."
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "card-lesson-community-prevention-symptoms--4817-3",
+          "position": 3,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Severe Dengue Warning Signs: Urgent Medical Care"
+            },
+            {
+              "block_type": "text",
+              "body": "In some individuals, dengue can progress to severe dengue (formerly known as dengue haemorrhagic fever), which is life-threatening. Severe complications usually arise around the time the initial fever begins to subside (days 3 to 7 of illness). Seek emergency hospital evaluation immediately if any of these critical warning signs appear: severe abdominal pain, persistent vomiting, bleeding from gums or nose, blood in vomit or stool, rapid or labored breathing, extreme fatigue, or restlessness."
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "card-lesson-community-prevention-symptoms--4817-4",
+          "position": 4,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Severe Dengue Warning Signs"
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "Which set of symptoms following a febrile illness represents severe dengue warning signs requiring immediate emergency medical care?",
+            "options": [
+              {
+                "option_id": "opt-ch4-1",
+                "label": "Mild tiredness that resolves completely after drinking a glass of water at home.",
+                "is_correct": false,
+                "feedback": "Incorrect. Mild tiredness alone without persistent symptoms does not signify severe dengue, though continued hydration is beneficial."
+              },
+              {
+                "option_id": "opt-ch4-2",
+                "label": "Severe abdominal pain, persistent vomiting, bleeding from gums or nose, and rapid or labored breathing.",
+                "is_correct": true,
+                "feedback": "Correct! These are official WHO and national warning signs indicating potential plasma leakage or haemorrhage, requiring urgent emergency hospital evaluation."
+              },
+              {
+                "option_id": "opt-ch4-3",
+                "label": "Itching around an old healed mosquito bite on the forearm without fever or other symptoms.",
+                "is_correct": false,
+                "feedback": "Incorrect. Localized skin itching from a past bite is a normal skin reaction, not a sign of severe systemic disease."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "card-lesson-community-prevention-symptoms--4817-5",
+          "position": 5,
+          "card_type": "recap",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Summary: Community Responsibility and Medical Assessment"
+            },
+            {
+              "block_type": "text",
+              "body": "Vector control is a shared community effort: coordinate neighborhood cleanups, manage solid waste, and report large breeding sites. If fever strikes after mosquito exposure, seek prompt evaluation from qualified healthcare professionals. Never self-treat, and go immediately to an emergency facility if severe dengue warning signs appear."
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": null
+        }
+      ],
+      "source_ids": [
+        "src-do-s-and-don-ts-1543"
+      ],
+      "status": "published",
+      "author_id": "user-contributor",
+      "submitted_by": "user-contributor",
+      "review_feedback": null
+    },
+    {
+      "version_id": "ver-lesson-protect-yourself-and-your-fami-3513-v1",
+      "lesson_id": "lesson-protect-yourself-and-your-fami-3513",
+      "version_number": 1,
+      "title": "Protect Yourself and Your Family from Mosquito Bites",
+      "summary": "Proven personal barriers, protective clothing, window screening, and evidence-based repellent and bed net usage.",
+      "language": "en",
+      "learning_objectives": [
+        "Master physical barriers including light-colored clothing and window screening",
+        "Apply insect repellents safely following label instructions and age limits",
+        "Utilize bed nets appropriately for diurnal infants and nocturnal malaria protection"
+      ],
+      "estimated_duration_minutes": 5,
+      "cards": [
+        {
+          "card_id": "card-lesson-protect-yourself-and-your-fami-3513-1",
+          "position": 1,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Physical Barriers and Protective Clothing"
+            },
+            {
+              "block_type": "text",
+              "body": "Personal protection provides a critical line of defense against both day-biting and night-biting vectors. Wear light-colored clothing that covers arms and legs\u2014such as full-sleeved shirts, trousers, and socks\u2014especially during peak biting hours. Dark colors can attract certain mosquito species. Ensure living spaces are protected by installing and maintaining intact wire mesh or screens on doors and windows to block mosquito entry."
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "card-lesson-protect-yourself-and-your-fami-3513-2",
+          "position": 2,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Repellents and Insecticide-Treated Bed Nets"
+            },
+            {
+              "block_type": "text",
+              "body": "Apply government-approved insect repellents (containing active ingredients such as DEET, Picaridin, or IR3535) strictly according to the product label instructions. Never apply repellents under clothing, over cuts, or near eyes and mouth. For infants and young children, always follow age-specific recommendations and avoid applying repellent to their hands. Use insecticide-treated bed nets (LLINs) when sleeping, particularly for young children sleeping during the daytime (against day-biting Aedes) and for everyone at night in malaria-endemic regions."
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "card-lesson-protect-yourself-and-your-fami-3513-3",
+          "position": 3,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Repellents and Bed Nets"
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "When using mosquito repellents and bed nets, which practice adheres strictly to official public health guidelines?",
+            "options": [
+              {
+                "option_id": "opt-ch3-1",
+                "label": "Apply repellents liberally regardless of age or product packaging, and omit bed nets if outdoor temperatures are warm.",
+                "is_correct": false,
+                "feedback": "Incorrect. Over-applying repellent without following label directions or age limits is unsafe, and bed nets remain essential regardless of weather."
+              },
+              {
+                "option_id": "opt-ch3-2",
+                "label": "Read and follow the product label instructions for repellents (including age restrictions), and use bed nets during daytime naps for infants as well as LLINs at night in malaria areas.",
+                "is_correct": true,
+                "feedback": "Correct! Always follow product labels for age restrictions and application safety, and use bed nets for both daytime rests (infants) and nocturnal protection."
+              },
+              {
+                "option_id": "opt-ch3-3",
+                "label": "Rely entirely on a single daily repellent application and avoid checking household window screens or standing water.",
+                "is_correct": false,
+                "feedback": "Incorrect. Repellents wear off and require reapplication as directed, and physical screening is essential."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "card-lesson-protect-yourself-and-your-fami-3513-4",
+          "position": 4,
+          "card_type": "recap",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Summary: Comprehensive Personal Protection"
+            },
+            {
+              "block_type": "text",
+              "body": "Wear protective long-sleeved clothing, ensure window and door mesh is intact, apply repellents strictly according to product label guidelines, and use bed nets for daytime rests (infants) and LLINs at night in malaria zones. Layering personal protection with environmental source reduction offers maximum safety."
+            }
+          ],
+          "source_ids": [
+            "src-do-s-and-don-ts-1543"
+          ],
+          "interaction": null
+        }
+      ],
+      "source_ids": [
+        "src-do-s-and-don-ts-1543"
+      ],
+      "status": "published",
+      "author_id": "user-contributor",
+      "submitted_by": "user-contributor",
+      "review_feedback": null
+    },
+    {
+      "version_id": "ver-lesson-understanding-mosquitoes-and-m-5557-v1",
+      "lesson_id": "lesson-understanding-mosquitoes-and-m-5557",
+      "version_number": 1,
+      "title": "Understanding Mosquitoes and Mosquito-Borne Diseases",
+      "summary": "Learn how infected mosquitoes transmit illnesses, how Aedes and Anopheles differ, and why bite prevention matters.",
+      "language": "en",
+      "learning_objectives": [
+        "Understand transmission mechanics through mosquito blood meals",
+        "Distinguish between diurnal Aedes and nocturnal Anopheles vectors",
+        "Apply comprehensive daytime and nighttime bite protection routines"
+      ],
+      "estimated_duration_minutes": 5,
+      "cards": [
+        {
+          "card_id": "card-lesson-understanding-mosquitoes-and-m-5557-1",
+          "position": 1,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "How Mosquito-Borne Diseases Spread"
+            },
+            {
+              "block_type": "text",
+              "body": "Mosquito-borne diseases such as dengue, malaria, chikungunya, and Zika do not originate spontaneously. They spread when a female mosquito bites an infected individual, ingests the pathogen (virus or parasite), and subsequently transmits it to another person during a future blood meal. Not every mosquito carries a pathogen, and not every bite causes infection; however, reducing mosquito populations and avoiding bites significantly lowers community transmission risk."
+            }
+          ],
+          "source_ids": [
+            "src-malaria-control-stra-6564"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "card-lesson-understanding-mosquitoes-and-m-5557-2",
+          "position": 2,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Distinguishing Dengue and Malaria Vectors"
+            },
+            {
+              "block_type": "text",
+              "body": "Different mosquito species have distinct biology, habitats, and biting behaviors. Dengue is transmitted by Aedes mosquitoes (primarily Aedes aegypti), which breed in clean domestic artificial water containers and bite predominantly during daylight hours\u2014especially early morning and late afternoon. In contrast, malaria is transmitted by Anopheles mosquitoes, which typically bite between dusk and dawn and often breed in natural water collections or vegetated pools. Because their habits differ, protection measures must cover both daytime and nighttime activities."
+            }
+          ],
+          "source_ids": [
+            "src-malaria-control-stra-6564"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "card-lesson-understanding-mosquitoes-and-m-5557-3",
+          "position": 3,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Daytime Protection"
+            }
+          ],
+          "source_ids": [
+            "src-malaria-control-stra-6564"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "Why is daytime protection specifically important for preventing dengue transmission?",
+            "options": [
+              {
+                "option_id": "opt-ch1-1",
+                "label": "Dengue viruses can only survive in human blood under direct sunlight.",
+                "is_correct": false,
+                "feedback": "Incorrect. The virus survives inside the mosquito and human bloodstream regardless of sunlight; the timing is driven by the mosquito diurnal biting activity."
+              },
+              {
+                "option_id": "opt-ch1-2",
+                "label": "Aedes mosquitoes, which transmit dengue, bite primarily during daytime hours.",
+                "is_correct": true,
+                "feedback": "Correct! Aedes mosquitoes are diurnal feeders, active mainly during daylight hours (particularly early morning and late afternoon), so personal protection cannot be limited to nighttime."
+              },
+              {
+                "option_id": "opt-ch1-3",
+                "label": "Mosquitoes only lay eggs at midday, making water surfaces toxic at noon.",
+                "is_correct": false,
+                "feedback": "Incorrect. Egg laying depends on container conditions, not midday heat, and does not alter the biting habits of adult mosquitoes."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "card-lesson-understanding-mosquitoes-and-m-5557-4",
+          "position": 4,
+          "card_type": "recap",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Summary of Mosquito Vectors"
+            },
+            {
+              "block_type": "text",
+              "body": "Mosquito control is essential for families and communities. Remember that Aedes mosquitoes transmit dengue and bite during the day, while Anopheles mosquitoes transmit malaria and bite at night. Comprehensive bite prevention must continue even when mosquitoes or breeding sites are not immediately visible."
+            }
+          ],
+          "source_ids": [
+            "src-malaria-control-stra-6564"
+          ],
+          "interaction": null
+        }
+      ],
+      "source_ids": [
+        "src-malaria-control-stra-6564"
+      ],
+      "status": "published",
+      "author_id": "user-contributor",
+      "submitted_by": "user-contributor",
+      "review_feedback": null
+    },
+    {
+      "version_id": "ver-mosquito-1",
+      "lesson_id": "lesson-mosquito-control",
+      "version_number": 1,
+      "title": "Stopping Mosquito Breeding at Home",
+      "summary": "Simple weekly routines to disrupt mosquito breeding cycles in household environments.",
+      "language": "en",
+      "learning_objectives": [
+        "Recognize common household standing water traps",
+        "Understand mosquito larval development cycles",
+        "Adopt the weekly 'Tip and Toss' routine"
+      ],
+      "estimated_duration_minutes": 4,
+      "cards": [
+        {
+          "card_id": "mos-card-1",
+          "position": 1,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "The Mosquito Life Cycle"
+            },
+            {
+              "block_type": "text",
+              "body": "Mosquitoes responsible for transmitting Dengue, Malaria, and Zika lay eggs on the surface of standing water. It takes only 7 to 10 days for an egg to develop into a biting adult."
+            }
+          ],
+          "source_ids": [
+            "src-cdc-mosquito"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "mos-card-2",
+          "position": 2,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Breeding Prevention"
+            }
+          ],
+          "source_ids": [
+            "src-cdc-mosquito"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "How often should you empty and scrub outdoor containers holding standing water?",
+            "options": [
+              {
+                "option_id": "opt-m-1",
+                "label": "Once a month",
+                "is_correct": false,
+                "feedback": "Too late! Larvae will have already emerged as adult mosquitoes within 7-10 days."
+              },
+              {
+                "option_id": "opt-m-2",
+                "label": "At least once a week",
+                "is_correct": true,
+                "feedback": "Excellent! Emptying containers weekly interrupts the larval life cycle before mosquitoes can emerge."
+              },
+              {
+                "option_id": "opt-m-3",
+                "label": "Only during heavy rain season",
+                "is_correct": false,
+                "feedback": "Mosquitoes can breed year-round in artificial containers, plant saucers, and air conditioner runoff."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "mos-card-3",
+          "position": 3,
+          "card_type": "recap",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Tip, Toss, and Cover"
+            },
+            {
+              "block_type": "text",
+              "body": "Check flower pots, pet bowls, old tires, and coolers weekly. Turn empty containers upside down, cover rain barrels with mesh screens, and use repellents or bed nets in endemic areas."
+            }
+          ],
+          "source_ids": [
+            "src-cdc-mosquito"
+          ],
+          "interaction": null
+        }
+      ],
+      "source_ids": [
+        "src-cdc-mosquito"
+      ],
+      "status": "published",
+      "author_id": "user-contributor",
+      "submitted_by": null,
+      "review_feedback": null
+    },
+    {
+      "version_id": "ver-vaccine-1",
+      "lesson_id": "lesson-vaccine-basics",
+      "version_number": 1,
+      "title": "How Vaccines Build Immunity",
+      "summary": "Discover the biological mechanisms of immunization and why community immunity matters.",
+      "language": "en",
+      "learning_objectives": [
+        "Understand memory B and T cell activation",
+        "Explain herd/community immunity in simple terms",
+        "Distinguish between vaccination and active infection risks"
+      ],
+      "estimated_duration_minutes": 5,
+      "cards": [
+        {
+          "card_id": "vac-card-1",
+          "position": 1,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Training Your Immune Defenses"
+            },
+            {
+              "block_type": "text",
+              "body": "Vaccines introduce a weakened or harmless fragment of an antigen to teach your immune cells how to fight it. When your body encounters the real pathogen later, antibodies recognize and eliminate it rapidly."
+            }
+          ],
+          "source_ids": [
+            "src-who-vaccines"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "vac-card-2",
+          "position": 2,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Community Immunity"
+            }
+          ],
+          "source_ids": [
+            "src-who-vaccines"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "What is 'Community Immunity' (also known as Herd Immunity)?",
+            "options": [
+              {
+                "option_id": "opt-v-1",
+                "label": "When healthy individuals avoid going outside to prevent infection",
+                "is_correct": false,
+                "feedback": "That is physical isolation, not community immunity."
+              },
+              {
+                "option_id": "opt-v-2",
+                "label": "When a high percentage of a population is immune, protecting vulnerable individuals who cannot be vaccinated",
+                "is_correct": true,
+                "feedback": "Correct! High vaccination rates shield newborns, immunocompromised patients, and elders who cannot receive certain vaccines."
+              },
+              {
+                "option_id": "opt-v-3",
+                "label": "Immunity acquired exclusively through contracting severe illnesses",
+                "is_correct": false,
+                "feedback": "Natural infection carries high risks of permanent disability and death; vaccines provide immunity safely."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "vac-card-3",
+          "position": 3,
+          "card_type": "recap",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Staying Protected"
+            },
+            {
+              "block_type": "text",
+              "body": "Vaccines prevent over 3.5 to 5 million deaths each year globally from diseases like measles, tetanus, and influenza. Keep your routine immunizations up to date according to your local health authority."
+            }
+          ],
+          "source_ids": [
+            "src-who-vaccines"
+          ],
+          "interaction": null
+        }
+      ],
+      "source_ids": [
+        "src-who-vaccines"
+      ],
+      "status": "published",
+      "author_id": "user-contributor",
+      "submitted_by": null,
+      "review_feedback": null
+    },
+    {
+      "version_id": "ver-water-1",
+      "lesson_id": "lesson-water-purification",
+      "version_number": 1,
+      "title": "Household Water Treatment and Safe Storage",
+      "summary": "Learn practical methods to treat drinking water, prevent recontamination during storage, and protect community water sources through sanitation.",
+      "language": "en",
+      "learning_objectives": [
+        "Understand why drinking water can become contaminated across collection, transport, treatment, and storage",
+        "Distinguish between microbial hazards and chemical hazards and recognize why treatment methods must match the risk",
+        "Evaluate common household treatment options (boiling, filtration, disinfection) and understand their specific limitations",
+        "Apply practical safe-water collection, covered storage, and hygienic handling principles to prevent recontamination",
+        "Explain how community sanitation facilities and personal hygiene barriers protect shared drinking-water sources"
+      ],
+      "estimated_duration_minutes": 7,
+      "cards": [
+        {
+          "card_id": "water-card-1",
+          "position": 1,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Understanding Drinking Water Safety and Contamination"
+            },
+            {
+              "block_type": "text",
+              "body": "Safe drinking water is essential for health, yet contamination can occur at any stage: at the source, during transport, during handling, or within household storage.\n\nWater that looks clear, smells fresh, and tastes normal is not guaranteed to be safe. Microscopic disease-causing pathogens\u2014including bacteria (such as Vibrio cholerae and pathogenic E. coli), viruses, and protozoan parasites\u2014cannot be seen with the naked eye. Contaminated drinking water contributes significantly to acute waterborne illnesses, especially diarrheal disease in children and vulnerable community members.\n\nCrucially, microbial hazards and chemical hazards are different. Microbial pathogens are living organisms that cause immediate infections, while chemical contaminants (such as naturally occurring arsenic, excess fluoride, or industrial runoff) cause chronic toxic effects over time and require fundamentally different treatment solutions."
+            }
+          ],
+          "source_ids": [
+            "src-who-water-guidelines",
+            "src-who-water-factsheet"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "water-card-2",
+          "position": 2,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Household Water Treatment: Choosing the Right Method"
+            },
+            {
+              "block_type": "text",
+              "body": "Household water treatment (HWT) can improve water quality, but households must match the treatment method to the specific contamination risk.\n\n\u2022 Boiling: Bringing water to a rolling boil for 1 full minute is highly effective for inactivating disease-causing bacteria, viruses, and protozoa according to WHO guidelines. However, boiling does NOT destroy or remove dissolved chemical contaminants like arsenic, fluoride, or heavy metals. In fact, prolonged boiling evaporates water and actually concentrates dissolved chemical toxins.\n\n\u2022 Filtration: Physical filters vary widely by technology. Verified ceramic and membrane filters can physically trap bacteria and parasites, whereas simple cloth straining only removes suspended dirt and insects\u2014not bacteria, viruses, or dissolved chemicals.\n\n\u2022 Disinfection: Disinfection products (such as approved chlorine tablets or liquid solutions) destroy most bacteria and viruses in clear water, but are less effective in cloudy water and do not remove dissolved chemicals or certain resistant protozoa.\n\nAlways follow local public-health advice and product instructions. When chemical contamination is suspected, households should seek water-quality testing and guidance from the responsible water-supply authority or qualified testing service rather than assuming home treatment makes all water safe."
+            }
+          ],
+          "source_ids": [
+            "src-who-water-guidelines",
+            "src-who-hwts",
+            "src-jjm-water-tech"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "water-card-3",
+          "position": 3,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Safe Collection, Storage, and Handling"
+            },
+            {
+              "block_type": "text",
+              "body": "Even thoroughly treated drinking water can quickly become contaminated again if it is handled or stored without care. Practical household practices help maintain water safety from the tap to the cup.\n\n\u2022 Dedicated Storage Container: Store treated drinking water in a clean, dedicated container made of food-grade material.\n\n\u2022 Keep Covered: Always keep the storage vessel tightly covered to shield water from dust, flies, airborne particles, and domestic animals.\n\n\u2022 Narrow Neck or Dispensing Tap: Containers with a narrow neck or a built-in tap are strongly recommended. These designs prevent hands, unwashed cups, ladles, or foreign objects from entering the stored water.\n\n\u2022 Hygienic Dispensing: If a container has a wide opening, use a dedicated, clean ladle with a long handle rather than dipping cups or hands into the water.\n\n\u2022 Routine Cleaning: Regularly clean storage containers with clean water and appropriate disinfectant. Keep the container elevated off the ground in a clean, shaded area."
+            }
+          ],
+          "source_ids": [
+            "src-who-hwts",
+            "src-who-water-guidelines"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "water-card-4",
+          "position": 4,
+          "card_type": "explanation",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Sanitation and Protecting Community Water Sources"
+            },
+            {
+              "block_type": "text",
+              "body": "Safe sanitation is the first and most critical protective barrier for drinking-water safety. Unsafe disposal of human excreta, overflowing open drains, and leaking sewage allow disease-causing pathogens to wash into surface streams or leach deep into groundwater aquifers.\n\n\u2022 Use and Maintain Toilets: Defecation in the open exposes community soil and runoff to heavy pathogen loads. Using and properly maintaining sanitary latrines contains human waste safely.\n\n\u2022 Protect Water Points: Ensure that toilets, soak pits, and animal pens are constructed downhill and at a safe distance from wells, hand pumps, and delivery pipes.\n\n\u2022 Hand Hygiene: Always wash hands thoroughly with soap and water after using the toilet and before preparing food, collecting water, or serving drinks.\n\n\u2022 Community Action: Avoid washing clothes, bathing cattle, or dumping garbage near drinking-water wells, ponds, or standposts. Report damaged water pipes, broken handpumps, or sewage leaks promptly to local authorities."
+            }
+          ],
+          "source_ids": [
+            "src-who-water-factsheet",
+            "src-jjm-water-tech"
+          ],
+          "interaction": null
+        },
+        {
+          "card_id": "water-card-5",
+          "position": 5,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Water Treatment Limits"
+            }
+          ],
+          "source_ids": [
+            "src-who-water-guidelines",
+            "src-jjm-water-tech"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "Why can boiling alone NOT be relied upon to make water safe if it contains dissolved chemical contaminants like arsenic or fluoride?",
+            "options": [
+              {
+                "option_id": "opt-wt-q1-1",
+                "label": "Boiling inactivates microbial pathogens, but does not remove dissolved chemicals and actually concentrates them as water evaporates",
+                "is_correct": true,
+                "feedback": "Correct! Boiling heat destroys living microorganisms (bacteria, viruses, parasites), but dissolved minerals like arsenic and fluoride do not evaporate with steam. Prolonged boiling reduces water volume and increases the concentration of chemical toxins. Chemical contamination requires verified specialized treatment or an alternative safe water source."
+              },
+              {
+                "option_id": "opt-wt-q1-2",
+                "label": "Boiling only removes dissolved chemical toxins if the water is boiled for more than 45 minutes continuously",
+                "is_correct": false,
+                "feedback": "Incorrect. Boiling longer does not eliminate dissolved chemicals\u2014it evaporates more water, which actually concentrates the chemical contaminants further and wastes fuel."
+              },
+              {
+                "option_id": "opt-wt-q1-3",
+                "label": "Boiling works for chemicals only if a pinch of salt or lemon juice is added to the pot",
+                "is_correct": false,
+                "feedback": "Incorrect. Household kitchen additives do not neutralize dissolved mineral contaminants like arsenic or fluoride. When chemical contamination is suspected, seek guidance and testing from local water-supply authorities."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "water-card-6",
+          "position": 6,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Safe Storage and Handling"
+            }
+          ],
+          "source_ids": [
+            "src-who-hwts",
+            "src-who-water-guidelines"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "Which household storage practice best protects treated drinking water from becoming recontaminated?",
+            "options": [
+              {
+                "option_id": "opt-wt-q2-1",
+                "label": "Storing water in an open bucket so natural sunlight can reach and disinfect the water surface all day",
+                "is_correct": false,
+                "feedback": "Incorrect. Leaving drinking water uncovered in an open bucket allows dust, insects, hands, and airborne germs to rapidly recontaminate treated water."
+              },
+              {
+                "option_id": "opt-wt-q2-2",
+                "label": "Keeping water in a clean, covered container with a narrow neck or dispensing tap to prevent hands and dirty cups from touching it",
+                "is_correct": true,
+                "feedback": "Correct! Keeping water covered in a narrow-neck or tap-dispensing container prevents direct contact. Dipping unwashed fingers, ladles, or dirty cups into open storage is a leading cause of recontamination in homes."
+              },
+              {
+                "option_id": "opt-wt-q2-3",
+                "label": "Allowing family members to dip shared drinking cups into the container as long as cups are rinsed with cold water first",
+                "is_correct": false,
+                "feedback": "Incorrect. Dipping cups or fingers into the storage container introduces bacteria and germs from hands and lips directly into the entire stored water supply."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "water-card-7",
+          "position": 7,
+          "card_type": "interaction",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Knowledge Check: Community Sanitation Barriers"
+            }
+          ],
+          "source_ids": [
+            "src-who-water-factsheet",
+            "src-jjm-water-tech"
+          ],
+          "interaction": {
+            "interaction_type": "single_choice",
+            "question_prompt": "How does safe community sanitation directly protect drinking-water supplies from contamination?",
+            "options": [
+              {
+                "option_id": "opt-wt-q3-1",
+                "label": "By safely containing human waste and sewage away from groundwater aquifers and surface water sources",
+                "is_correct": true,
+                "feedback": "Correct! Safely containing human waste in proper latrines and keeping sewage away from water sources acts as the primary barrier, stopping fecal pathogens before they can enter groundwater or runoff into drinking supplies."
+              },
+              {
+                "option_id": "opt-wt-q3-2",
+                "label": "By naturally neutralizing dissolved mineral chemicals before rain enters the soil",
+                "is_correct": false,
+                "feedback": "Incorrect. Sanitation manages human waste and wastewater to prevent microbiological disease transmission; it does not remove naturally occurring minerals from soil or rain."
+              },
+              {
+                "option_id": "opt-wt-q3-3",
+                "label": "Sanitation only keeps surroundings looking clean and has no direct connection to drinking water safety",
+                "is_correct": false,
+                "feedback": "Incorrect. Inadequate sanitation and open waste disposal are major causes of microbial contamination in drinking water sources worldwide."
+              }
+            ],
+            "incorrect_behaviour": "retry"
+          }
+        },
+        {
+          "card_id": "water-card-8",
+          "position": 8,
+          "card_type": "recap",
+          "content_blocks": [
+            {
+              "block_type": "heading",
+              "body": "Core Takeaways: Safe Drinking Water & Sanitation"
+            },
+            {
+              "block_type": "text",
+              "body": "By following evidence-based drinking-water and sanitation practices, households and communities can effectively prevent waterborne illness:\n\n1. Water Appearance Can Be Deceiving: Clear, odorless water can still carry invisible microorganisms or harmful dissolved chemicals. Do not rely on visual inspection alone.\n\n2. Match Treatment to the Contaminant: A 1-minute rolling boil inactivates microbial pathogens, but does NOT remove dissolved chemical hazards like arsenic or fluoride. Where chemical risks exist, seek official testing and advice from water-supply authorities.\n\n3. Safeguard Treated Water: Store drinking water in clean, covered containers with a narrow neck or tap. Never dip hands, unwashed cups, or utensils into stored drinking water.\n\n4. Strengthen Sanitation Barriers: Using sanitary latrines, containing sewage away from water points, washing hands with soap, and reporting water-system damage protect entire communities from waterborne disease outbreaks."
+            }
+          ],
+          "source_ids": [
+            "src-who-water-guidelines",
+            "src-who-water-factsheet",
+            "src-who-hwts",
+            "src-jjm-water-tech"
+          ],
+          "interaction": null
+        }
+      ],
+      "source_ids": [
+        "src-who-water-guidelines",
+        "src-who-water-factsheet",
+        "src-who-hwts",
+        "src-jjm-water-tech",
+        "src-cdc-water"
+      ],
+      "status": "published",
+      "author_id": "user-contributor",
+      "submitted_by": null,
+      "review_feedback": null
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "src-cdc-hygiene",
+      "title": "CDC When and How to Wash Your Hands: Official Handwashing Guidance",
+      "publisher": "Centers for Disease Control and Prevention",
+      "url": "https://www.cdc.gov/clean-hands/about/index.html",
+      "publication_date": "2024-05-14",
+      "access_date": "2026-10-12",
+      "jurisdiction": "Global / United States",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-cdc-mosquito",
+      "title": "CDC Mosquito Control: Prevent Mosquito Bites and Breeding",
+      "publisher": "Centers for Disease Control and Prevention",
+      "url": "https://www.cdc.gov/mosquitoes/prevention",
+      "publication_date": "2024-02-15",
+      "access_date": "2025-03-01",
+      "jurisdiction": "Global",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-cdc-water",
+      "title": "CDC Healthy Water: Drinking Water Treatment and Purification",
+      "publisher": "Centers for Disease Control and Prevention",
+      "url": "https://www.cdc.gov/healthywater/drinking",
+      "publication_date": "2023-10-01",
+      "access_date": "2026-10-12",
+      "jurisdiction": "Global",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-dengue-and-severe-d-7821",
+      "title": "Dengue and severe dengue",
+      "publisher": "World Health Organization",
+      "url": "https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue",
+      "publication_date": null,
+      "access_date": null,
+      "jurisdiction": "Global / WHO",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-do-s-and-don-ts-1543",
+      "title": "Do's and Don'ts",
+      "publisher": "National Center for Vector Borne Diseases Control, Ministry of Health and Family Welfare, Government of India",
+      "url": "https://ncvbdc.mohfw.gov.in/index4.php?lang=1&level=0&lid=3724&linkid=442",
+      "publication_date": null,
+      "access_date": null,
+      "jurisdiction": "India / National",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-jjm-water-tech",
+      "title": "Jal Jeevan Mission: Handbook on Drinking Water Treatment Technologies",
+      "publisher": "Ministry of Jal Shakti, Government of India",
+      "url": "https://jaljeevanmission.gov.in/sites/default/files/handbook-on-drinking-water-treatment-technologies-2023.pdf",
+      "publication_date": "2023-01-01",
+      "access_date": "2026-10-12",
+      "jurisdiction": "India / National",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-malaria-control-stra-6564",
+      "title": "Malaria Control Strategies",
+      "publisher": "National Center for Vector Borne Diseases Control, Ministry of Health and Family Welfare, Government of India",
+      "url": "https://ncvbdc.mohfw.gov.in/index4.php?Background=Light&font=Increase&lang=1&level=0&lid=3707&linkid=421",
+      "publication_date": null,
+      "access_date": null,
+      "jurisdiction": "India / National",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-vector-control-measu-4319",
+      "title": "Vector Control Measures",
+      "publisher": "National Center for Vector Borne Diseases Control, Ministry of Health and Family Welfare, Government of India",
+      "url": "https://ncvbdc.mohfw.gov.in/index4.php?font=Normal&lang=1&level=0&lid=3722&linkid=448",
+      "publication_date": null,
+      "access_date": null,
+      "jurisdiction": "India / National",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-who-hwts",
+      "title": "WHO Household Water Treatment and Safe Storage Guidance",
+      "publisher": "World Health Organization",
+      "url": "https://iris.who.int/handle/10665/206916",
+      "publication_date": "2010-01-01",
+      "access_date": "2026-10-12",
+      "jurisdiction": "Global",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-who-hygiene",
+      "title": "WHO Guidelines on Hand Hygiene in Community Settings",
+      "publisher": "World Health Organization & UNICEF",
+      "url": "https://www.who.int/publications/i/item/9789240116559",
+      "publication_date": "2025-10-15",
+      "access_date": "2026-10-12",
+      "jurisdiction": "Global",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-who-vaccines",
+      "title": "WHO Vaccines and Immunization: How Do Vaccines Work?",
+      "publisher": "World Health Organization",
+      "url": "https://www.who.int/news-room/questions-and-answers/item/vaccines-and-immunization-what-is-vaccination",
+      "publication_date": "2023-11-20",
+      "access_date": "2025-03-01",
+      "jurisdiction": "Global",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-who-water-factsheet",
+      "title": "WHO Drinking-water Fact Sheet: Health Risks and Interventions",
+      "publisher": "World Health Organization",
+      "url": "https://www.who.int/news-room/fact-sheets/detail/drinking-water",
+      "publication_date": "2023-09-13",
+      "access_date": "2026-10-12",
+      "jurisdiction": "Global",
+      "metadata_notes": null
+    },
+    {
+      "source_id": "src-who-water-guidelines",
+      "title": "WHO Guidelines for Drinking-water Quality (Fourth Edition Incorporating Addenda)",
+      "publisher": "World Health Organization",
+      "url": "https://www.who.int/publications/i/item/9789240121225",
+      "publication_date": "2022-03-21",
+      "access_date": "2026-10-12",
+      "jurisdiction": "Global",
+      "metadata_notes": null
+    }
+  ],
+  "users": [
+    {
+      "user_id": "user-admin",
+      "username": "admin",
+      "display_name": "Administrator",
+      "role": "admin",
+      "password_hash": "pbkdf2:sha256:600000$989a94f5c5779df8c5f78c500a49ff72$5fb91c267daf1610543596ce1ad84a04337d07b8671e25903ec32973f0817256",
+      "is_active": true
+    },
+    {
+      "user_id": "user-contributor",
+      "username": "contributor",
+      "display_name": "Health Contributor",
+      "role": "contributor",
+      "password_hash": "pbkdf2:sha256:600000$aa3ecc46ef3c687c5b6dc4f9ca85d5ad$97fa00271b5e4d28117898ba004f923ece7e43f8b3eef40d953bccb29446df40",
+      "is_active": true
+    },
+    {
+      "user_id": "user-reviewer",
+      "username": "reviewer",
+      "display_name": "Health Reviewer",
+      "role": "reviewer",
+      "password_hash": "pbkdf2:sha256:600000$62c368540b64bad305d0d39acd00f02f$aa3953837070513144f952324df53941ec5573cbd67f24ceb9e8c9da15992988",
+      "is_active": true
+    }
+  ]
+}

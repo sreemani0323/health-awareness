@@ -1,0 +1,63 @@
+/* ============================================================
+   HealthAware Creator Studio — Design Tokens
+   Oppia-derived educational authoring palette:
+   Professional, calm teal/blue/slate tokens with accessible contrast.
+   ============================================================ */
+
+:root {
+  /* Studio Base Palette */
+  --studio-bg: #f8fafc;
+  --studio-surface: #ffffff;
+  --studio-surface-subtle: #f1f5f9;
+  --studio-surface-hover: #f8fafc;
+  --studio-surface-muted: #e2e8f0;
+
+  /* Studio Borders & Lines */
+  --studio-border: #cbd5e1;
+  --studio-border-subtle: #e2e8f0;
+  --studio-border-hover: #94a3b8;
+  --studio-border-focus: #00645c;
+
+  /* Oppia Teal Primary Brand */
+  --studio-teal: #00645c;
+  --studio-teal-dark: #004d47;
+  --studio-teal-subtle: #e6f4f2;
+  --studio-teal-border: #80cbc4;
+
+  /* Ocean Blue Accents */
+  --studio-blue: #0d48a1;
+  --studio-blue-hover: #0b3d88;
+  --studio-blue-subtle: #e8f0fe;
+
+  /* Status Colors */
+  --studio-green: #059669;
+  --studio-green-subtle: #ecfdf5;
+  --studio-green-border: #a7f3d0;
+
+  --studio-amber: #d97706;
+  --studio-amber-subtle: #fffbeb;
+  --studio-amber-border: #fde68a;
+
+  --studio-rose: #dc2626;
+  --studio-rose-subtle: #fef2f2;
+  --studio-rose-border: #fecaca;
+
+  /* Typography Colors */
+  --studio-text: #0f172a;
+  --studio-text-muted: #475569;
+  --studio-text-subtle: #64748b;
+  --studio-text-dim: #94a3b8;
+
+  /* Geometry & Shadows */
+  --studio-radius-sm: 6px;
+  --studio-radius-md: 10px;
+  --studio-radius-lg: 14px;
+  --studio-radius-xl: 18px;
+
+  --studio-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --studio-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --studio-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --studio-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  --studio-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}

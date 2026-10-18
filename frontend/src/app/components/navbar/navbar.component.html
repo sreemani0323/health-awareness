@@ -1,0 +1,151 @@
+<!-- Oppia-Faithful Top Navigation Bar -->
+<nav class="oppia-top-navigation-bar" role="navigation" aria-label="Main navigation">
+  <div class="oppia-navbar-container container">
+    <!-- Brand / Logo -->
+    <div class="oppia-navbar-brand-name">
+      <a routerLink="/" class="oppia-logo-link" (click)="closeMobileMenu()" id="nav-brand">
+        <svg class="oppia-logo-icon" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <circle cx="14" cy="14" r="12" fill="white" fill-opacity="0.2"/>
+          <path d="M14 7v6h6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 17l3-3 2 2 5-5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="oppia-brand-text">HealthAware</span>
+      </a>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <ul class="oppia-navbar-tabs">
+      <li class="oppia-navbar-tab-item">
+        <a
+          routerLink="/"
+          routerLinkActive="oppia-navbar-tab--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="oppia-navbar-tab"
+          id="nav-home"
+        >
+          <span class="oppia-navbar-tab-content">Home</span>
+        </a>
+      </li>
+      <li class="oppia-navbar-tab-item">
+        <a
+          routerLink="/topics"
+          routerLinkActive="oppia-navbar-tab--active"
+          class="oppia-navbar-tab"
+          id="nav-learn"
+        >
+          <span class="oppia-navbar-tab-content">Learn</span>
+        </a>
+      </li>
+      <li class="oppia-navbar-tab-item">
+        <button
+          type="button"
+          class="oppia-navbar-tab oppia-navbar-tab--button"
+          (click)="onComingSoonClick('About page')"
+          id="nav-about"
+        >
+          <span class="oppia-navbar-tab-content">About</span>
+        </button>
+      </li>
+      <li class="oppia-navbar-tab-item">
+        <button
+          type="button"
+          class="oppia-navbar-tab oppia-navbar-tab--button"
+          (click)="onComingSoonClick('Get Involved')"
+          id="nav-get-involved"
+        >
+          <span class="oppia-navbar-tab-content">Get Involved</span>
+        </button>
+      </li>
+
+      <li class="oppia-navbar-tab-item">
+        <a
+          routerLink="/report"
+          routerLinkActive="oppia-navbar-tab--active"
+          class="oppia-navbar-tab"
+          id="nav-report"
+        >
+          <span class="oppia-navbar-tab-content">Report Concern</span>
+        </a>
+      </li>
+
+      <li class="oppia-navbar-tab-item">
+        <a
+          routerLink="/track"
+          routerLinkActive="oppia-navbar-tab--active"
+          class="oppia-navbar-tab"
+          id="nav-track"
+        >
+          <span class="oppia-navbar-tab-content">Track Concern</span>
+        </a>
+      </li>
+
+      <li class="oppia-navbar-tab-item">
+        <a
+          routerLink="/staff"
+          routerLinkActive="oppia-navbar-tab--active"
+          class="oppia-navbar-tab"
+          id="nav-staff"
+        >
+          <span class="oppia-navbar-tab-content">Staff Portal</span>
+        </a>
+      </li>
+
+      <li class="oppia-navbar-tab-item">
+        <a
+          routerLink="/creator"
+          routerLinkActive="oppia-navbar-tab--active"
+          class="oppia-navbar-tab"
+          id="nav-creator"
+        >
+          <span class="oppia-navbar-tab-content">Creator Studio</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Mobile Hamburger Toggle Button -->
+    <button
+      class="oppia-navbar-mobile-toggle"
+      type="button"
+      [attr.aria-expanded]="isMobileMenuOpen()"
+      aria-label="Toggle navigation menu"
+      (click)="toggleMobileMenu()"
+      id="nav-mobile-toggle"
+    >
+      <span class="hamburger-bar" [class.hamburger-bar--open]="isMobileMenuOpen()"></span>
+      <span class="hamburger-bar" [class.hamburger-bar--open]="isMobileMenuOpen()"></span>
+      <span class="hamburger-bar" [class.hamburger-bar--open]="isMobileMenuOpen()"></span>
+    </button>
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  @if (isMobileMenuOpen()) {
+    <div class="oppia-navbar-mobile-menu" id="nav-mobile-menu">
+      <ul class="oppia-mobile-links">
+        <li>
+          <a routerLink="/" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-home">Home</a>
+        </li>
+        <li>
+          <a routerLink="/topics" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-learn">Learn</a>
+        </li>
+        <li>
+          <a routerLink="/report" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-report">Report a Concern</a>
+        </li>
+        <li>
+          <a routerLink="/track" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-track">Track Concern</a>
+        </li>
+        <li>
+          <a routerLink="/staff" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-staff">Staff Portal</a>
+        </li>
+        <li>
+          <a routerLink="/creator" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-creator">Creator Studio</a>
+        </li>
+        <li>
+          <button type="button" (click)="onComingSoonClick('About page')" class="oppia-mobile-link" id="mobile-nav-about">About</button>
+        </li>
+        <li>
+          <button type="button" (click)="onComingSoonClick('Get Involved')" class="oppia-mobile-link" id="mobile-nav-get-involved">Get Involved</button>
+        </li>
+      </ul>
+    </div>
+  }
+</nav>

@@ -1,0 +1,548 @@
+<div class="studio-workspace">
+  <app-creator-navbar [currentSection]="isNewTopic ? 'create-topic' : 'dashboard'"></app-creator-navbar>
+
+  <main class="studio-main">
+    <div class="studio-container">
+      <!-- Breadcrumbs Hierarchy -->
+      <nav class="breadcrumb-bar" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+          <li class="breadcrumb-item">
+            <a routerLink="/creator" class="breadcrumb-link">My Content</a>
+          </li>
+          <li class="breadcrumb-separator">/</li>
+          @if (isNewTopic) {
+            <li class="breadcrumb-item active" aria-current="page">Create New Topic</li>
+          } @else {
+            <li class="breadcrumb-item active" aria-current="page">{{ topic.title || 'Topic Curriculum' }}</li>
+          }
+        </ol>
+      </nav>
+
+      <!-- Alert Banners -->
+      @if (saveMessage) {
+        <div class="alert-banner success" role="alert">
+          <span class="alert-icon">✓</span>
+          <span>{{ saveMessage }}</span>
+        </div>
+      }
+      @if (errorMessage) {
+        <div class="alert-banner error" role="alert">
+          <span class="alert-icon">⚠️</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      @if (isLoading) {
+        <div class="loading-panel">
+          <div class="spinner-teal"></div>
+          <p class="loading-label">Loading curriculum workspace…</p>
+        </div>
+      } @else if (isNewTopic) {
+        <!-- ========================================================
+             MODE 1: GUIDED TOPIC CREATION EXPERIENCE
+             ======================================================== -->
+        <div class="guided-create-card">
+          <header class="wizard-header">
+            <div class="wizard-badge">Step 1 of 1</div>
+            <h1 class="wizard-title">Create a Health Education Topic</h1>
+            <p class="wizard-subtitle">
+              Start by defining the topic topic identity and target audience. After creating, you will immediately enter the curriculum workspace to add and arrange chapters.
+            </p>
+          </header>
+
+          <form (ngSubmit)="saveTopic()" class="wizard-form" id="create-topic-form">
+            <!-- Group 1: Core Topic Info -->
+            <fieldset class="form-group-card">
+              <legend class="group-title">1. Topic Overview</legend>
+
+              <div class="field-item">
+                <label for="topic-title-input" class="field-label required">
+                  Topic Title
+                </label>
+                <input
+                  id="topic-title-input"
+                  type="text"
+                  [(ngModel)]="topic.title"
+                  name="topicTitle"
+                  (input)="onTitleChange()"
+                  placeholder="e.g. Clean Water & Household Purification"
+                  class="field-input"
+                  required
+                />
+                <span class="field-hint">A clear, engaging educational title suitable for community learners.</span>
+              </div>
+
+              <div class="field-item">
+                <label for="topic-desc-input" class="field-label required">
+                  Description
+                </label>
+                <textarea
+                  id="topic-desc-input"
+                  [(ngModel)]="topic.description"
+                  name="topicDesc"
+                  rows="3"
+                  placeholder="Explain what practical knowledge learners will acquire from this topic…"
+                  class="field-textarea"
+                  required
+                ></textarea>
+                <span class="field-hint">2-3 sentences summarizing the practical health objective.</span>
+              </div>
+            </fieldset>
+
+            <!-- Group 2: Audience & Context -->
+            <fieldset class="form-group-card">
+              <legend class="group-title">2. Context & Classification</legend>
+
+              <div class="fields-row">
+                <div class="field-item">
+                  <label for="topic-category" class="field-label">Health Category</label>
+                  <select id="topic-category" [(ngModel)]="category" name="topicCategory" class="field-select">
+                    <option value="general">General Health</option>
+                    <option value="hygiene">Personal & Domestic Hygiene</option>
+                    <option value="water">Safe Water & Sanitation</option>
+                    <option value="nutrition">Nutrition & Diet</option>
+                    <option value="disease">Infectious Disease Prevention</option>
+                  </select>
+                </div>
+
+                <div class="field-item">
+                  <label for="topic-audience" class="field-label">Target Audience</label>
+                  <select id="topic-audience" [(ngModel)]="targetAudience" name="topicAudience" class="field-select">
+                    <option value="all">All Community Learners</option>
+                    <option value="families">Families & Caregivers</option>
+                    <option value="youth">Youth & Students</option>
+                    <option value="workers">Community Health Workers</option>
+                  </select>
+                </div>
+
+                <div class="field-item">
+                  <label for="topic-lang" class="field-label">Language</label>
+                  <select id="topic-lang" [(ngModel)]="language" name="topicLang" class="field-select">
+                    <option value="en">English (en)</option>
+                    <option value="hi">Hindi (hi)</option>
+                    <option value="es">Spanish (es)</option>
+                    <option value="sw">Swahili (sw)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Slug Preview -->
+              <div class="field-item slug-preview-item">
+                <div class="slug-header">
+                  <label class="field-label">Web URL Address (Slug)</label>
+                  @if (!isCustomSlug) {
+                    <button type="button" class="btn-text-edit" (click)="toggleCustomSlug()">
+                      Edit custom slug
+                    </button>
+                  }
+                </div>
+                <div class="slug-input-wrapper">
+                  <span class="slug-prefix">healthaware.org/topics/</span>
+                  <input
+                    type="text"
+                    [(ngModel)]="topic.slug"
+                    name="topicSlug"
+                    [readonly]="!isCustomSlug"
+                    class="slug-input"
+                    placeholder="topic-slug"
+                  />
+                </div>
+                <span class="field-hint">Generated automatically from your title; must be lowercase letters and hyphens.</span>
+              </div>
+            </fieldset>
+
+            <!-- Group 3: Optional Media -->
+            <fieldset class="form-group-card">
+              <legend class="group-title">3. Optional Visual Assets</legend>
+              <div class="field-item">
+                <label for="topic-image-ref" class="field-label">Cover Image Asset URL</label>
+                <input
+                  id="topic-image-ref"
+                  type="text"
+                  [(ngModel)]="topic.cover_image_ref"
+                  name="coverImageRef"
+                  placeholder="https://… or /assets/images/…"
+                  class="field-input"
+                />
+                <span class="field-hint">Optional illustrative image URL for the topic header.</span>
+              </div>
+            </fieldset>
+
+            <!-- Wizard Footer Action -->
+            <div class="wizard-actions">
+              <a routerLink="/creator" class="btn-cancel">Cancel</a>
+              <button
+                type="submit"
+                class="btn-create-submit"
+                [disabled]="isSaving || !topic.title?.trim() || !topic.description?.trim()"
+                id="btn-submit-new-topic"
+              >
+                @if (isSaving) {
+                  <span class="spinner-inline"></span> Creating…
+                } @else {
+                  Create Topic & Open Curriculum →
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      } @else {
+        <!-- ========================================================
+             MODE 2: TOPIC & CURRICULUM WORKSPACE
+             ======================================================== -->
+        <div class="curriculum-workspace">
+          <!-- Topic Header Panel -->
+          <header class="topic-header-card">
+            <div class="topic-header-info">
+              <div class="topic-meta-row">
+                <span class="status-pill" [ngClass]="'status-' + (topic.status || 'draft')">
+                  <span class="status-dot"></span>
+                  {{ topic.status === 'published' ? 'Published' : 'Draft' }}
+                </span>
+                <span class="chapter-count-chip">
+                  {{ lessons.length }} {{ lessons.length === 1 ? 'Chapter' : 'Chapters' }}
+                </span>
+                <span class="slug-display">/topics/{{ topic.slug }}</span>
+              </div>
+
+              <h1 class="topic-workspace-title">{{ topic.title }}</h1>
+              <p class="topic-workspace-desc">{{ topic.description }}</p>
+            </div>
+
+            <div class="topic-header-actions">
+              <button class="btn-topic-settings" (click)="showTopicDetailsModal = true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                <span>Edit Topic Details</span>
+              </button>
+            </div>
+          </header>
+
+          <!-- Curriculum Structure Section -->
+          <section class="curriculum-section">
+            <div class="curriculum-section-header">
+              <div>
+                <h2 class="curriculum-title">Curriculum Chapters</h2>
+                <p class="curriculum-subtitle">
+                  Learners experience chapters sequentially in this exact order. Reorder or edit any chapter below.
+                </p>
+              </div>
+
+              <button class="btn-add-chapter" (click)="openAddChapterModal()" id="btn-add-chapter">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Add Chapter</span>
+              </button>
+            </div>
+
+            <!-- Chapters Outline List -->
+            @if (lessons.length === 0) {
+              <div class="empty-curriculum-panel">
+                <div class="empty-circle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="empty-svg">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  </svg>
+                </div>
+                <h3 class="empty-curriculum-title">No Chapters in this Topic Yet</h3>
+                <p class="empty-curriculum-desc">
+                  Create Chapter 1 to start building learning cards, explanation blocks, and knowledge checks.
+                </p>
+                <button class="btn-add-chapter empty-action" (click)="openAddChapterModal()">
+                  + Add Chapter 1
+                </button>
+              </div>
+            } @else {
+              <div class="chapter-list" role="list">
+                @for (lesson of lessons; track lesson.id; let i = $index) {
+                  <div class="chapter-card" role="listitem">
+                    <!-- Sequence Badge -->
+                    <div class="chapter-sequence-col">
+                      <div class="sequence-badge" aria-label="Chapter {{ i + 1 }}">
+                        {{ i + 1 }}
+                      </div>
+                      <!-- Accessible Reorder Buttons -->
+                      <div class="reorder-controls">
+                        <button
+                          type="button"
+                          class="btn-reorder"
+                          (click)="moveChapter(i, -1)"
+                          [disabled]="i === 0"
+                          title="Move Chapter Up"
+                          aria-label="Move Chapter {{ i + 1 }} Up"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-reorder"
+                          (click)="moveChapter(i, 1)"
+                          [disabled]="i === lessons.length - 1"
+                          title="Move Chapter Down"
+                          aria-label="Move Chapter {{ i + 1 }} Down"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Chapter Content Info -->
+                    <div class="chapter-info-col">
+                      <div class="chapter-meta-line">
+                        <span class="chapter-label">Chapter {{ i + 1 }}</span>
+                        @if (lesson.card_count !== undefined) {
+                          <span class="card-count-badge">
+                            {{ lesson.card_count }} {{ lesson.card_count === 1 ? 'Card' : 'Cards' }}
+                          </span>
+                        }
+                        @if (lesson.review_feedback && lesson.status === 'draft') {
+                          <span class="status-pill status-changes-requested">
+                            Changes Requested
+                          </span>
+                        } @else {
+                          <span class="status-pill status-draft-small">
+                            {{ lesson.status === 'published' ? 'Published' : (lesson.status === 'submitted_for_review' ? 'In Review' : 'Draft') }}
+                          </span>
+                        }
+                      </div>
+
+                      <h3 class="chapter-title">
+                        {{ lesson.title || 'Chapter ' + (i + 1) }}
+                      </h3>
+                      @if (lesson.summary) {
+                        <p class="chapter-summary">{{ lesson.summary }}</p>
+                      }
+                      @if (lesson.review_feedback && lesson.status === 'draft') {
+                        <div class="chapter-feedback-alert">
+                          <strong class="feedback-badge-mini">Reviewer Notes:</strong>
+                          <span class="feedback-text">{{ lesson.review_feedback }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Chapter Actions -->
+                    <div class="chapter-actions-col">
+                      <button
+                        type="button"
+                        class="btn-chapter-primary"
+                        (click)="openChapterEditor(lesson)"
+                        title="Open visual content editor for this chapter"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                          <path d="M12 20h9"/>
+                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                        <span>Edit Chapter</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn-chapter-preview"
+                        (click)="previewChapter(lesson)"
+                        title="Test chapter in authentic learner mode"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span>Preview</span>
+                      </button>
+
+                      @if (!lesson.published_version_id) {
+                        <button
+                          type="button"
+                          class="btn-chapter-delete"
+                          (click)="confirmDeleteChapter(lesson)"
+                          title="Delete draft chapter"
+                          aria-label="Delete chapter"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- ========================================================
+       MODAL 1: ADD CHAPTER DIALOG
+       ======================================================== -->
+  @if (showAddChapterModal) {
+    <div class="modal-backdrop" (click)="closeAddChapterModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Add Chapter to Curriculum</h2>
+          <button class="modal-close-btn" (click)="closeAddChapterModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <form (ngSubmit)="addChapter()" class="modal-body">
+          <div class="field-item">
+            <label for="new-ch-title" class="field-label required">Chapter Title</label>
+            <input
+              id="new-ch-title"
+              type="text"
+              [(ngModel)]="newChapterTitle"
+              name="chTitle"
+              placeholder="e.g. Recognizing Symptoms & Early Warning Signs"
+              class="field-input"
+              required
+              autofocus
+            />
+            <span class="field-hint">A concise name for this pedagogical milestone.</span>
+          </div>
+
+          <div class="field-item">
+            <label for="new-ch-summary" class="field-label">Chapter Summary</label>
+            <textarea
+              id="new-ch-summary"
+              [(ngModel)]="newChapterSummary"
+              name="chSummary"
+              rows="3"
+              placeholder="Brief description of what will be explained and tested…"
+              class="field-textarea"
+            ></textarea>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeAddChapterModal()">Cancel</button>
+            <button
+              type="submit"
+              class="btn-create-submit"
+              [disabled]="isAddingChapter || !newChapterTitle.trim()"
+            >
+              @if (isAddingChapter) {
+                <span class="spinner-inline"></span> Adding…
+              } @else {
+                Add Chapter
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 2: EDIT TOPIC DETAILS DIALOG
+       ======================================================== -->
+  @if (showTopicDetailsModal) {
+    <div class="modal-backdrop" (click)="showTopicDetailsModal = false">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Edit Topic Settings</h2>
+          <button class="modal-close-btn" (click)="showTopicDetailsModal = false" aria-label="Close dialog">×</button>
+        </header>
+
+        <form (ngSubmit)="saveTopic()" class="modal-body">
+          <div class="field-item">
+            <label for="edit-title" class="field-label required">Topic Title</label>
+            <input
+              id="edit-title"
+              type="text"
+              [(ngModel)]="topic.title"
+              name="editTitle"
+              class="field-input"
+              required
+            />
+          </div>
+
+          <div class="field-item">
+            <label for="edit-slug" class="field-label required">URL Slug</label>
+            <input
+              id="edit-slug"
+              type="text"
+              [(ngModel)]="topic.slug"
+              name="editSlug"
+              class="field-input"
+              required
+            />
+          </div>
+
+          <div class="field-item">
+            <label for="edit-desc" class="field-label required">Description</label>
+            <textarea
+              id="edit-desc"
+              [(ngModel)]="topic.description"
+              name="editDesc"
+              rows="3"
+              class="field-textarea"
+              required
+            ></textarea>
+          </div>
+
+          <div class="field-item">
+            <label for="edit-cover-ref" class="field-label">Cover Image URL</label>
+            <input
+              id="edit-cover-ref"
+              type="text"
+              [(ngModel)]="topic.cover_image_ref"
+              name="editCoverRef"
+              class="field-input"
+            />
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showTopicDetailsModal = false">Cancel</button>
+            <button type="submit" class="btn-create-submit" [disabled]="isSaving">
+              @if (isSaving) {
+                <span class="spinner-inline"></span> Saving…
+              } @else {
+                Save Settings
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL 3: CONFIRM DELETE CHAPTER DIALOG
+       ======================================================== -->
+  @if (chapterToDelete) {
+    <div class="modal-backdrop" (click)="cancelDeleteChapter()">
+      <div class="modal-dialog delete-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title delete-title">Delete Chapter?</h2>
+          <button class="modal-close-btn" (click)="cancelDeleteChapter()" aria-label="Close dialog">×</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="delete-warning-text">
+            Are you sure you want to remove <strong>"{{ chapterToDelete.title || chapterToDelete.id }}"</strong> from this topic curriculum?
+          </p>
+          <p class="delete-subtext">This draft chapter and its unpublished draft cards will be permanently deleted.</p>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="cancelDeleteChapter()">Keep Chapter</button>
+            <button
+              type="button"
+              class="btn-delete-confirm"
+              (click)="deleteChapter()"
+              [disabled]="isDeletingChapter"
+            >
+              @if (isDeletingChapter) {
+                Deleting…
+              } @else {
+                Delete Chapter
+              }
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+</div>

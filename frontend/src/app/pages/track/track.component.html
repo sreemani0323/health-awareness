@@ -1,0 +1,187 @@
+<div class="track-container">
+  <div class="track-header">
+    <div class="header-badge">Private Citizen Tracking</div>
+    <h1 class="track-title">Check the Progress of Your Concern</h1>
+    <p class="track-subtitle">
+      Enter the unique Reference ID and Private Tracking Token you received upon submitting your report.
+    </p>
+  </div>
+
+  <!-- Search Card -->
+  <div class="search-card">
+    <form (ngSubmit)="lookupConcern()">
+      <div class="search-grid">
+        <div class="form-group">
+          <label for="track-ref-id" class="form-label">Reference ID</label>
+          <input
+            id="track-ref-id"
+            type="text"
+            class="form-control"
+            placeholder="e.g. HA-2026-X8K92M"
+            [ngModel]="referenceId()"
+            (ngModelChange)="referenceId.set($event)"
+            name="referenceId"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="track-token" class="form-label">Private Tracking Token</label>
+          <input
+            id="track-token"
+            type="password"
+            class="form-control"
+            placeholder="Enter your 43-character tracking token"
+            [ngModel]="trackingToken()"
+            (ngModelChange)="trackingToken.set($event)"
+            name="trackingToken"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="search-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="loading()" id="track-submit-btn">
+          @if (loading()) {
+            <span>Looking up concern...</span>
+          } @else {
+            <span>Check Concern Status →</span>
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert-error" role="alert" id="track-error-banner">
+      <span class="alert-icon">⚠️</span>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Tracking Details Card -->
+  @if (reportData(); as r) {
+    <div class="details-card" id="track-result-card">
+      <div class="details-header">
+        <div class="header-left">
+          <span class="meta-label">Concern Reference</span>
+          <h2 class="ref-heading">{{ r.reference_id }}</h2>
+        </div>
+        <div class="header-right">
+          <span class="status-badge" [ngClass]="getStatusClass(r.status)">
+            {{ r.status_label }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Information Overview -->
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Category:</span>
+          <span class="info-value">{{ r.category_label }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Location:</span>
+          <span class="info-value">{{ r.locality }}, {{ r.district }}, {{ r.state }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Reported On:</span>
+          <span class="info-value">{{ r.created_at | date:'medium' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Observed Duration:</span>
+          <span class="info-value">{{ r.duration }}</span>
+        </div>
+      </div>
+
+      <div class="description-box">
+        <div class="desc-label">Issue Description:</div>
+        <div class="desc-content">{{ r.description }}</div>
+      </div>
+
+      <!-- Resolution / Rejection Notes -->
+      @if (r.status === 'resolved' && r.resolution_notes) {
+        <div class="resolution-banner">
+          <div class="banner-title">✓ Resolution Summary</div>
+          <div class="banner-body">{{ r.resolution_notes }}</div>
+        </div>
+      }
+      @if (r.status === 'rejected' && r.rejection_reason) {
+        <div class="rejection-banner">
+          <div class="banner-title">Report Update</div>
+          <div class="banner-body">{{ r.rejection_reason }}</div>
+        </div>
+      }
+
+      <!-- Citizen Reply Request Area -->
+      @if (r.citizen_reply_requested) {
+        <div class="reply-request-card" id="reply-request-section">
+          <div class="reply-card-header">
+            <span class="icon">ℹ️</span>
+            <strong>Additional Information Requested:</strong>
+          </div>
+          <p class="reply-prompt">
+            HealthAware case coordinators have requested additional information to assist in verifying or escalating this report. Please provide details below:
+          </p>
+          <textarea
+            class="form-control"
+            rows="3"
+            placeholder="Type your reply or additional details here..."
+            [ngModel]="replyText()"
+            (ngModelChange)="replyText.set($event)"
+            id="citizen-reply-input"
+          ></textarea>
+
+          @if (replySuccessMessage()) {
+            <div class="alert-success">{{ replySuccessMessage() }}</div>
+          }
+
+          <div class="reply-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="submittingReply() || !replyText().trim()"
+              (click)="submitCitizenReply()"
+              id="citizen-reply-submit-btn"
+            >
+              @if (submittingReply()) {
+                <span>Submitting reply...</span>
+              } @else {
+                <span>Submit Response</span>
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Timeline History -->
+      <div class="timeline-section">
+        <h3 class="timeline-title">Public Status History</h3>
+        <div class="timeline">
+          @for (event of r.timeline; track event.timestamp) {
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-header-row">
+                  <span class="timeline-status">{{ event.status_label }}</span>
+                  <span class="timeline-date">{{ event.timestamp | date:'short' }}</span>
+                </div>
+                @if (event.public_notes) {
+                  <p class="timeline-notes">{{ event.public_notes }}</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="track-footer-links">
+    <a routerLink="/report" class="btn btn-secondary" id="track-new-report-link">
+      + Report Another Concern
+    </a>
+    <a routerLink="/" class="link-home">
+      Return to Home
+    </a>
+  </div>
+</div>

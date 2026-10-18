@@ -1,0 +1,1067 @@
+/* ===================================================================
+   Oppia-Faithful Homepage (Splash Page) Styles
+   Reference: core/templates/pages/splash-page/splash-page.component.css
+              core/templates/base-components/oppia-footer.component.css
+   =================================================================== */
+
+.splash-page {
+  text-align: left;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* ===================================================================
+   Section One: Hero
+   =================================================================== */
+.oppia-splash-section-one {
+  background-color: #e7f6ff;
+  display: flex;
+  align-items: center;
+  min-height: 580px;
+  max-height: 75vw;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.oppia-splash-section-one-left {
+  flex: 1;
+  padding: 40px 0 40px 8vw;
+  z-index: 2;
+  max-width: 650px;
+}
+
+.oppia-splash-h1 {
+  color: #005c5e;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 1.25;
+  margin: 0 0 20px;
+}
+
+.oppia-splash-h2-container {
+  max-width: 540px;
+  margin-bottom: 36px;
+}
+
+.oppia-splash-h2 {
+  color: #005c5e;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.oppia-splash-button-container {
+  margin-bottom: 16px;
+}
+
+.btn.oppia-splash-button {
+  align-items: center;
+  background-color: #015c53;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  justify-content: center;
+  min-width: 290px;
+  padding: 13px 24px;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.btn.oppia-splash-button:hover,
+.btn.oppia-splash-button:focus {
+  background-color: #00796b;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn.oppia-splash-button-activity {
+  background-color: #00609c;
+}
+
+.btn.oppia-splash-button-activity:hover,
+.btn.oppia-splash-button-activity:focus {
+  background-color: #004c7c;
+}
+
+.btn.oppia-splash-button-report {
+  background-color: #059669;
+}
+
+.btn.oppia-splash-button-report:hover,
+.btn.oppia-splash-button-report:focus {
+  background-color: #047857;
+}
+
+/* Resume Card in Hero */
+.oppia-splash-resume-card {
+  background-color: #ffffff;
+  border: 2px solid #005c5e;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 92, 94, 0.12);
+  animation: fadeIn 0.3s ease-in;
+}
+
+.resume-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.resume-badge {
+  background-color: #e0f2f1;
+  color: #004d40;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.resume-step {
+  font-size: 12px;
+  color: #555;
+  font-weight: 500;
+}
+
+.resume-title {
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #005c5e;
+  margin-bottom: 12px;
+}
+
+.resume-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn.oppia-splash-button.resume-btn {
+  background-color: #005c5e;
+  min-width: 180px;
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+.btn.oppia-splash-button.resume-btn:hover {
+  background-color: #00796b;
+}
+
+.resume-clear-link {
+  background: none;
+  border: none;
+  color: #757575;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+.resume-clear-link:hover {
+  color: #d32f2f;
+}
+
+.app-link-container {
+  margin-top: 4px;
+}
+
+.oppia-splash-app-link {
+  background: none;
+  border: none;
+  color: #005c5e;
+  cursor: pointer;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: underline;
+  padding: 6px 0;
+}
+
+.oppia-splash-app-link:hover {
+  color: #00796b;
+}
+
+.progress-cleared-banner {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-bottom: 1px solid #c8e6c9;
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.oppia-splash-section-one-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  height: 100%;
+  overflow: hidden;
+}
+
+.oppia-splash-main-image {
+  display: flex;
+  align-items: flex-end;
+  max-height: 580px;
+}
+
+.splash-main-img-desktop {
+  max-height: 560px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: multiply;
+}
+
+.oppia-splash-main-image-mobile {
+  display: none;
+}
+
+/* ===================================================================
+   Section Two: Highlights Strip
+   =================================================================== */
+.oppia-splash-section-two {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-evenly;
+  padding: 28px 5vw;
+  text-align: center;
+}
+
+.oppia-splash-icon-1-container,
+.oppia-splash-icon-2-container,
+.oppia-splash-icon-3-container {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.splash-icon-text {
+  color: #333;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* ===================================================================
+   Featured Lesson & Practical Tip
+   =================================================================== */
+.featured-tip-section {
+  background-color: #f8fafc;
+  padding: 48px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.featured-tip-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.featured-lesson-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.featured-tag {
+  margin-bottom: 12px;
+}
+
+.featured-tag span {
+  background-color: #e0f2f1;
+  color: #00796b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.featured-lesson-title {
+  color: #005c5e;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.featured-lesson-desc {
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.featured-lesson-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.featured-lesson-action {
+  margin-top: auto;
+}
+
+.practical-tip-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.tip-icon-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tip-icon {
+  font-size: 20px;
+}
+
+.tip-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #b45309;
+  background-color: #fef3c7;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.tip-title {
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.tip-body {
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.family-challenge-entry-box {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: auto;
+}
+
+.challenge-sparkle {
+  font-size: 20px;
+}
+
+.challenge-entry-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #166534;
+  margin-bottom: 4px;
+}
+
+.challenge-entry-desc {
+  font-size: 13px;
+  color: #374151;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.challenge-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #15803d;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.challenge-link:hover {
+  text-decoration: underline;
+}
+
+/* ===================================================================
+   “Try This at Home” Practical Activities Section
+   =================================================================== */
+.family-activities-section {
+  background-color: #ffffff;
+  padding: 64px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.section-intro-center {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 48px;
+}
+
+.section-eyebrow {
+  color: #00796b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.section-main-heading {
+  color: #005c5e;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.section-main-subheading {
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.activities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.activity-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.activity-card:hover {
+  border-color: #00796b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.activity-card--completed {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.activity-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.activity-icon {
+  font-size: 28px;
+}
+
+.activity-toggle-btn {
+  background: #ffffff;
+  border: 1.5px solid #00796b;
+  color: #00796b;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.activity-toggle-btn:hover {
+  background: #e0f2f1;
+}
+
+.activity-toggle-btn--active {
+  background: #15803d;
+  border-color: #15803d;
+  color: #ffffff;
+}
+
+.activity-toggle-btn--active:hover {
+  background: #166534;
+}
+
+.activity-title {
+  color: #1e293b;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.activity-instruction {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.activity-safety-note {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  line-height: 1.4;
+  border: 1px solid #f1f5f9;
+}
+
+.activity-footer {
+  margin-top: auto;
+}
+
+.activity-lesson-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #00609c;
+  text-decoration: none;
+}
+
+.activity-lesson-link:hover {
+  text-decoration: underline;
+}
+
+/* ===================================================================
+   Device Progress Section
+   =================================================================== */
+.device-progress-section {
+  background-color: #f1f5f9;
+  padding: 48px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.device-progress-card {
+  max-width: 1140px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 32px;
+}
+
+.progress-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.progress-eyebrow {
+  color: #00796b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.progress-heading {
+  color: #005c5e;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.progress-subtext {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.clear-device-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-device-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.progress-stats-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+}
+
+.stat-number {
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #005c5e;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.milestones-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.milestone-pill {
+  background: #e0f2f1;
+  border: 1px solid #b2dfdb;
+  border-radius: 6px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 340px;
+}
+
+.milestone-icon {
+  font-size: 22px;
+}
+
+.milestone-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #004d40;
+}
+
+.milestone-desc {
+  display: block;
+  font-size: 12px;
+  color: #00695c;
+  line-height: 1.3;
+}
+
+/* ===================================================================
+   Section Three: Benefits Section
+   =================================================================== */
+.oppia-splash-section-three {
+  align-items: center;
+  background-color: #f4f4f4;
+  color: #2c4841;
+  display: flex;
+  gap: 6vw;
+  justify-content: center;
+  padding: 60px 8vw;
+}
+
+.oppia-splash-section-three-left {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.splash-matthew-image {
+  max-width: 100%;
+  height: auto;
+}
+
+.oppia-splash-section-three-right {
+  flex: 1;
+  max-width: 520px;
+}
+
+.oppia-splash-section-three-right h3 {
+  color: #005c5e;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0 0 28px;
+}
+
+.splash-benefits-list {
+  display: flex;
+  gap: 20px;
+}
+
+.splash-benefit-bullets-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 4px;
+}
+
+.splash-benefit-text-items-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.splash-benefits {
+  color: #333;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ===================================================================
+   Section Four: For Communities and Caregivers
+   =================================================================== */
+.oppia-splash-section-four {
+  align-items: center;
+  background-color: #fff;
+  display: flex;
+  gap: 6vw;
+  justify-content: center;
+  padding: 70px 8vw;
+}
+
+.oppia-splash-section-four-left {
+  flex: 1;
+  max-width: 520px;
+}
+
+.splash-subheading {
+  color: #00796b;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.oppia-splash-section-four-left h3 {
+  color: #005c5e;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0 0 18px;
+}
+
+.oppia-splash-section-four-left p {
+  color: #555;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.oppia-splash-section-four-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.splash-student-desk-image img,
+.splash-community-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ===================================================================
+   Section Six: For Community Educators and Health Workers
+   =================================================================== */
+.oppia-splash-section-six {
+  align-items: center;
+  background-color: #f7fafc;
+  display: flex;
+  gap: 6vw;
+  justify-content: center;
+  padding: 70px 8vw;
+}
+
+.oppia-splash-section-six-left {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.splash-books-image,
+.splash-educator-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.oppia-splash-section-six-right {
+  flex: 1;
+  max-width: 520px;
+}
+
+.oppia-splash-section-six-right h3 {
+  color: #005c5e;
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0 0 18px;
+}
+
+.oppia-splash-section-six-right p {
+  color: #555;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+
+
+/* ===================================================================
+   Newsletter Strip (immediately above footer)
+   Reference: core/templates/base-components/oppia-footer.component.css
+   =================================================================== */
+.oppia-footer-newsletter-container {
+  background-color: #00645c;
+  color: #fff;
+  padding: 36px 20px;
+}
+
+.oppia-footer-newsletter {
+  align-items: center;
+  display: flex;
+  gap: 40px;
+  justify-content: space-between;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.oppia-newsletter-content {
+  flex: 1;
+}
+
+.oppia-newsletter-content h2 {
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.oppia-newsletter-content p {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 15px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.oppia-footer-newsletter-input {
+  flex: 1;
+  max-width: 440px;
+}
+
+.oppia-newsletter-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.oppia-newsletter-input {
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #212121;
+  flex: 1;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 15px;
+  padding: 10px 14px;
+}
+
+.oppia-newsletter-input:focus {
+  outline: 2px solid #80cbc4;
+}
+
+.oppia-footer-newsletter-button {
+  background-color: #0d48a1;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 10px 22px;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.oppia-footer-newsletter-button:hover {
+  background-color: #1565c0;
+}
+
+/* ===================================================================
+   Coming Soon Toast
+   =================================================================== */
+.coming-soon-toast {
+  align-items: center;
+  background-color: #212121;
+  border-left: 4px solid #f5701b;
+  border-radius: 6px;
+  bottom: 24px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  display: flex;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  gap: 12px;
+  padding: 14px 20px;
+  position: fixed;
+  right: 24px;
+  z-index: 10000;
+  animation: slideInToast 0.25s ease-out;
+}
+
+.coming-soon-toast__icon {
+  font-size: 20px;
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================================================================
+   Responsive (Mobile: ~375px - 768px)
+   =================================================================== */
+@media (max-width: 900px) {
+  .oppia-splash-section-one {
+    flex-direction: column;
+    max-height: none;
+    min-height: auto;
+    padding-top: 24px;
+  }
+
+  .oppia-splash-section-one-left {
+    padding: 24px 20px;
+    max-width: 100%;
+  }
+
+  .oppia-splash-h1 {
+    font-size: 28px;
+  }
+
+  .oppia-splash-section-one-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .splash-main-img-desktop {
+    display: none;
+  }
+
+  .oppia-splash-main-image-mobile {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .splash-main-img-mobile {
+    max-width: 100%;
+    height: auto;
+    mix-blend-mode: multiply;
+  }
+
+  .oppia-splash-section-two {
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px 20px;
+  }
+
+  .featured-tip-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .activities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .oppia-splash-section-three,
+  .oppia-splash-section-four,
+  .oppia-splash-section-six {
+    flex-direction: column;
+    padding: 48px 20px;
+    gap: 32px;
+  }
+
+  .oppia-footer-newsletter {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .oppia-footer-newsletter-input {
+    width: 100%;
+    max-width: 100%;
+  }
+}

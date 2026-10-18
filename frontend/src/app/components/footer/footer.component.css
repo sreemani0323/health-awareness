@@ -1,0 +1,250 @@
+/* ===================================================================
+   Oppia-Faithful Footer Styles
+   Reference: core/templates/base-components/oppia-footer.component.css
+              core/templates/components/button-directives/social-buttons.component.css
+   =================================================================== */
+
+.oppia-footer {
+  background-color: #094142;
+  color: #fff;
+  font-family: 'Roboto', Arial, sans-serif;
+  margin-top: auto;
+  position: relative;
+  width: 100%;
+}
+
+.oppia-footer-container {
+  max-width: 1140px;
+  padding: 40px 20px;
+}
+
+.oppia-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  justify-content: space-between;
+}
+
+/* Mission Column */
+.oppia-mission-col {
+  flex: 2;
+  min-width: 280px;
+  max-width: 420px;
+}
+
+.oppia-mission {
+  color: #fff;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.oppia-footer-cta-wrapper {
+  margin-top: 16px;
+}
+
+.oppia-footer-cta-btn {
+  background-color: transparent;
+  border: 1.5px solid #fff;
+  border-radius: 4px;
+  color: #fff;
+  display: inline-block;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 18px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.oppia-footer-cta-btn:hover {
+  background-color: #fff;
+  color: #094142;
+}
+
+.oppia-footer-separator {
+  display: none;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 20px 0;
+  width: 100%;
+}
+
+/* Navigation Columns */
+.oppia-footer-col {
+  flex: 1;
+  min-width: 150px;
+}
+
+.oppia-footer-heading {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0 0 16px;
+  text-transform: uppercase;
+}
+
+.oppia-footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.oppia-footer-col li {
+  margin-bottom: 10px;
+}
+
+.oppia-footer-col a,
+.footer-text-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.oppia-footer-col a:hover,
+.footer-text-btn:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Social Icon Column (Oppia Reference: social-buttons.component.css) */
+.oppia-social-col {
+  min-width: 220px;
+}
+
+.oppia-footer-social-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.oppia-social-icon-btn {
+  align-items: center;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  width: 38px;
+}
+
+.oppia-social-icon-btn:hover {
+  box-shadow: 2px 2px 4px 1px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.oppia-youtube-follow {
+  background: #cd201f;
+}
+
+.oppia-facebook-follow {
+  background: #3b5998;
+}
+
+.oppia-instagram-follow {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+}
+
+.oppia-twitter-follow {
+  background: #000;
+}
+
+.oppia-github-follow {
+  background: #fff;
+}
+
+.oppia-linkedin-follow {
+  background: #0077b5;
+}
+
+/* Google Play Badge */
+.oppia-android-app-badge-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s ease;
+}
+
+.oppia-android-app-badge-btn:hover {
+  opacity: 0.9;
+}
+
+.oppia-android-app-button {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+/* Legal / Terms / Privacy bottom bar */
+.oppia-footer-terms-privacy {
+  background-color: #062e2f;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 20px;
+}
+
+.oppia-terms-inner {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  max-width: 1140px;
+}
+
+.oppia-footer-terms-privacy small,
+.footer-inline-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 0;
+  text-decoration: none;
+}
+
+.footer-inline-btn:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.oppia-footer-disclaimer {
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .oppia-footer-row {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .oppia-mission-col,
+  .oppia-footer-col {
+    max-width: 100%;
+  }
+  .oppia-footer-separator {
+    display: block;
+  }
+  .oppia-terms-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

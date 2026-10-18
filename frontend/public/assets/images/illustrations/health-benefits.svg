@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" width="100%" height="100%" fill="none" role="img" aria-labelledby="hb-title hb-desc">
+  <title id="hb-title">Practical Health Education Essentials</title>
+  <desc id="hb-desc">Comprehensive vector illustration depicting clean water, handwashing with soap, mosquito prevention, and immunization for community health.</desc>
+  <defs>
+    <linearGradient id="hb-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2F1" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#E8F5E9" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="hb-teal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00897B"/>
+      <stop offset="100%" stop-color="#004D40"/>
+    </linearGradient>
+    <linearGradient id="hb-water-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4FC3F7"/>
+      <stop offset="100%" stop-color="#0288D1"/>
+    </linearGradient>
+    <linearGradient id="hb-shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#26A69A"/>
+      <stop offset="100%" stop-color="#00695C"/>
+    </linearGradient>
+    <filter id="hb-shadow" x="-8%" y="-8%" width="116%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#004D40" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Background Soft Aura -->
+  <rect x="20" y="20" width="560" height="380" rx="32" fill="url(#hb-bg)"/>
+  <circle cx="300" cy="210" r="160" fill="#FFFFFF" fill-opacity="0.5"/>
+  <circle cx="480" cy="110" r="60" fill="#B2DFDB" fill-opacity="0.3"/>
+  <circle cx="110" cy="320" r="50" fill="#C8E6C9" fill-opacity="0.4"/>
+
+  <!-- Decorative Orbit Rings -->
+  <ellipse cx="300" cy="210" rx="230" ry="140" stroke="#80CBC4" stroke-width="2" stroke-dasharray="6 8" stroke-opacity="0.6"/>
+
+  <!-- ===================================================================
+       1. Centerpiece: Preventive Health Shield & Water Droplet
+       =================================================================== -->
+  <g filter="url(#hb-shadow)">
+    <!-- Main Protection Shield -->
+    <path d="M300 80 C360 80 400 95 400 150 C400 240 340 300 300 325 C260 300 200 240 200 150 C200 95 240 80 300 80 Z"
+          fill="url(#hb-shield-grad)"/>
+    <!-- Inner Shield Inset -->
+    <path d="M300 94 C348 94 382 106 382 152 C382 228 334 280 300 304 C266 280 218 228 218 152 C218 106 252 94 300 94 Z"
+          fill="#FFFFFF" fill-opacity="0.15"/>
+
+    <!-- Central Sparkling Water Drop -->
+    <path d="M300 130 C300 130 345 195 345 225 C345 250 325 270 300 270 C275 270 255 250 255 225 C255 195 300 130 300 130 Z"
+          fill="url(#hb-water-grad)"/>
+    <path d="M285 200 C280 215 282 235 295 245 C285 240 280 225 285 200 Z"
+          fill="#FFFFFF" fill-opacity="0.6"/>
+
+    <!-- Health Cross Badge in Center -->
+    <circle cx="300" cy="225" r="22" fill="#FFFFFF"/>
+    <rect x="295" y="213" width="10" height="24" rx="3" fill="#00796B"/>
+    <rect x="288" y="220" width="24" height="10" rx="3" fill="#00796B"/>
+  </g>
+
+  <!-- ===================================================================
+       2. Left Card: Proper Handwashing with Soap & Running Water
+       =================================================================== -->
+  <g transform="translate(60, 110)" filter="url(#hb-shadow)">
+    <!-- Card Frame -->
+    <rect x="0" y="0" width="170" height="190" rx="20" fill="#FFFFFF"/>
+    <rect x="0" y="0" width="170" height="42" rx="20" fill="#E0F2F1"/>
+    <rect x="0" y="24" width="170" height="18" fill="#E0F2F1"/>
+    <text x="85" y="28" font-family="'Capriola', 'Roboto', sans-serif" font-size="13" font-weight="bold" fill="#00695C" text-anchor="middle">SOAP &amp; WATER</text>
+
+    <!-- Water Stream from Tap -->
+    <path d="M85 46 Q85 68 85 80" stroke="#0288D1" stroke-width="4" stroke-linecap="round"/>
+    <path d="M78 60 Q75 75 74 85" stroke="#4FC3F7" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M92 60 Q95 75 96 85" stroke="#4FC3F7" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Lathering Hands Graphic -->
+    <!-- Left Hand -->
+    <path d="M50 115 C55 105 70 100 80 108 L100 120 C105 125 102 135 94 136 L70 138 C60 138 50 130 50 115 Z"
+          fill="#FFCCBC" stroke="#D84315" stroke-width="1.5"/>
+    <!-- Right Hand scrubbing -->
+    <path d="M120 115 C115 105 100 100 90 108 L70 120 C65 125 68 135 76 136 L100 138 C110 138 120 130 120 115 Z"
+          fill="#FFE0B2" stroke="#E65100" stroke-width="1.5"/>
+
+    <!-- Foaming Soap Bar -->
+    <rect x="65" y="88" width="40" height="20" rx="10" fill="#80CBC4" stroke="#00796B" stroke-width="1.5"/>
+    <ellipse cx="85" cy="98" rx="14" ry="4" fill="#FFFFFF" fill-opacity="0.5"/>
+
+    <!-- Soap Bubbles -->
+    <circle cx="56" cy="92" r="7" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.5"/>
+    <circle cx="114" cy="96" r="9" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.5"/>
+    <circle cx="108" cy="80" r="5" fill="#E0F7FA" stroke="#26A69A" stroke-width="1.2"/>
+    <circle cx="62" cy="78" r="4" fill="#E0F7FA" stroke="#26A69A" stroke-width="1"/>
+
+    <!-- 20-Second Tag -->
+    <rect x="35" y="150" width="100" height="24" rx="12" fill="#00796B"/>
+    <text x="85" y="166" font-family="'Roboto', sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">⏱ 20s Scrub</text>
+  </g>
+
+  <!-- ===================================================================
+       3. Right Card: Safe Water & Vector Control
+       =================================================================== -->
+  <g transform="translate(370, 110)" filter="url(#hb-shadow)">
+    <!-- Card Frame -->
+    <rect x="0" y="0" width="170" height="190" rx="20" fill="#FFFFFF"/>
+    <rect x="0" y="0" width="170" height="42" rx="20" fill="#E1F5FE"/>
+    <rect x="0" y="24" width="170" height="18" fill="#E1F5FE"/>
+    <text x="85" y="28" font-family="'Capriola', 'Roboto', sans-serif" font-size="13" font-weight="bold" fill="#0277BD" text-anchor="middle">SAFE DRINKING WATER</text>
+
+    <!-- Traditional Covered Water Pot with Dispenser Tap -->
+    <!-- Pot Body -->
+    <ellipse cx="85" cy="115" rx="42" ry="34" fill="#D7CCC8" stroke="#5D4037" stroke-width="2"/>
+    <path d="M55 95 C62 82 108 82 115 95 Z" fill="#BCAAA4" stroke="#5D4037" stroke-width="2"/>
+    <!-- Lid -->
+    <ellipse cx="85" cy="84" rx="22" ry="7" fill="#8D6E63" stroke="#4E342E" stroke-width="2"/>
+    <circle cx="85" cy="76" r="5" fill="#4E342E"/>
+
+    <!-- Clean Brass/Chrome Water Tap on Pot -->
+    <rect x="120" y="112" width="14" height="6" rx="2" fill="#F57C00" stroke="#E65100" stroke-width="1.5"/>
+    <path d="M134 115 L134 125" stroke="#E65100" stroke-width="3" stroke-linecap="round"/>
+    <path d="M134 128 Q134 135 134 138" stroke="#0288D1" stroke-width="3" stroke-dasharray="2 3" stroke-linecap="round"/>
+
+    <!-- Mosquito Protection Shield Badge -->
+    <circle cx="42" cy="74" r="18" fill="#43A047" stroke="#FFFFFF" stroke-width="2"/>
+    <!-- Mosquito icon with strike-through -->
+    <g transform="translate(42, 74) scale(0.65)">
+      <ellipse cx="0" cy="0" rx="4" ry="10" fill="#FFFFFF"/>
+      <line x1="-12" y1="-5" x2="12" y2="5" stroke="#FFFFFF" stroke-width="2"/>
+      <line x1="-10" y1="5" x2="10" y2="-5" stroke="#FFFFFF" stroke-width="2"/>
+      <line x1="-15" y1="12" x2="15" y2="-12" stroke="#D32F2F" stroke-width="3.5"/>
+    </g>
+
+    <!-- Vaccine Syringe Symbol -->
+    <g transform="translate(130, 64) rotate(40)">
+      <rect x="-3" y="-12" width="6" height="18" rx="2" fill="#00897B" stroke="#004D40" stroke-width="1.2"/>
+      <line x1="0" y1="-12" x2="0" y2="-19" stroke="#004D40" stroke-width="1.5"/>
+      <line x1="-5" y1="6" x2="5" y2="6" stroke="#004D40" stroke-width="1.5"/>
+      <rect x="-1" y="6" width="2" height="6" fill="#004D40"/>
+    </g>
+
+    <!-- Verified Badge -->
+    <rect x="35" y="150" width="100" height="24" rx="12" fill="#0288D1"/>
+    <text x="85" y="166" font-family="'Roboto', sans-serif" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">✓ Pure &amp; Covered</text>
+  </g>
+
+  <!-- ===================================================================
+       4. Bottom Growth & Trust Leaves Banner
+       =================================================================== -->
+  <g transform="translate(300, 350)">
+    <path d="M-80 0 C-40 -15 40 -15 80 0 C40 10 -40 10 -80 0 Z" fill="#A5D6A7" fill-opacity="0.6"/>
+    <!-- Central Leaf Motif -->
+    <path d="M0 5 C-15 -10 -25 -5 -30 15 C-15 15 -5 10 0 5 Z" fill="#43A047"/>
+    <path d="M0 5 C15 -10 25 -5 30 15 C15 15 5 10 0 5 Z" fill="#2E7D32"/>
+    <circle cx="0" cy="5" r="4" fill="#FFFFFF"/>
+  </g>
+</svg>

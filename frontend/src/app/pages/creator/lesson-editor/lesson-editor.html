@@ -1,0 +1,720 @@
+<div class="studio-workspace">
+  <app-creator-navbar currentSection="dashboard"></app-creator-navbar>
+
+  <!-- Top Editor Toolbar -->
+  <header class="editor-subnav">
+    <div class="subnav-container">
+      <!-- Breadcrumb Hierarchy -->
+      <nav class="subnav-breadcrumbs" aria-label="Breadcrumb">
+        <a routerLink="/creator" class="crumb-link">My Content</a>
+        <span class="crumb-sep">/</span>
+        @if (parentTopic) {
+          <a [routerLink]="['/creator/topic', parentTopic.id]" class="crumb-link">
+            {{ parentTopic.title }}
+          </a>
+          <span class="crumb-sep">/</span>
+        }
+        <span class="crumb-current">{{ version?.title || lesson?.title || lessonId }}</span>
+      </nav>
+
+      <!-- Status & Actions -->
+      <div class="subnav-actions">
+        <!-- Save State Indicator -->
+        <div class="save-status-pill" [ngClass]="'state-' + saveState" role="status" aria-live="polite">
+          @if (saveState === 'saved') {
+            <span class="state-dot">●</span> <span>Saved</span>
+          } @else if (saveState === 'unsaved') {
+            <span class="state-dot">●</span> <span>Unsaved changes</span>
+          } @else if (saveState === 'saving') {
+            <span class="spinner-small"></span> <span>Saving…</span>
+          } @else if (saveState === 'error') {
+            <span class="state-dot">✕</span> <span>Save failed</span>
+          }
+        </div>
+
+        @if (version) {
+          <!-- Version Status Pill -->
+          <span class="version-status-badge" [ngClass]="'status-' + version.status">
+            {{ version.status === 'submitted_for_review' ? 'In Review' : (version.status | titlecase) }}
+          </span>
+
+          <!-- Preview Chapter -->
+          <button type="button" class="btn-tool-preview" (click)="previewChapter()" title="Preview this chapter as a learner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span>Preview</span>
+          </button>
+
+          <!-- Save Draft -->
+          <button
+            type="button"
+            class="btn-tool-save"
+            (click)="saveDraft()"
+            [disabled]="saveState === 'saving' || version.status !== 'draft'"
+            title="Save draft changes to cloud"
+          >
+            @if (saveState === 'saving') {
+              <span class="spinner-small"></span> Saving…
+            } @else {
+              Save Draft
+            }
+          </button>
+
+          <!-- Submit for Review -->
+          @if (version.status === 'draft') {
+            <button
+              type="button"
+              class="btn-tool-submit"
+              (click)="openSubmitModal()"
+              title="Submit this chapter for peer review"
+            >
+              Submit for Review
+            </button>
+          } @else if (version.status === 'published') {
+            <button
+              type="button"
+              class="btn-tool-submit"
+              (click)="createRevision()"
+              title="Create a new draft revision to edit this published chapter"
+              id="btn-create-revision"
+            >
+              ✎ Create New Revision
+            </button>
+          }
+        }
+
+        <!-- Return to Curriculum -->
+        @if (parentTopic) {
+          <a [routerLink]="['/creator/topic', parentTopic.id]" class="btn-tool-back" title="Return to Topic Curriculum">
+            ← Curriculum
+          </a>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- Banner Alerts -->
+  @if (saveMessage) {
+    <div class="editor-alert success" role="alert">
+      <span>✓ {{ saveMessage }}</span>
+    </div>
+  }
+  @if (errorMessage) {
+    <div class="editor-alert error" role="alert">
+      <span>⚠️ {{ errorMessage }}</span>
+    </div>
+  }
+
+  <!-- Reviewer Feedback Callout -->
+  @if (version?.review_feedback && version?.status === 'draft') {
+    <div class="reviewer-feedback-callout" role="alert">
+      <div class="feedback-badge">⚠️ Action Required: Reviewer Requested Changes</div>
+      <div class="feedback-body">
+        <strong class="feedback-title">Feedback Notes from Peer Reviewer:</strong>
+        <p class="feedback-text">{{ version?.review_feedback }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-panel">
+      <div class="spinner-teal"></div>
+      <p class="loading-label">Loading lesson content builder…</p>
+    </div>
+  } @else if (version) {
+    <!-- ========================================================
+         TWO-PANE LESSON AUTHORING WORKSPACE (Oppia-inspired)
+         ======================================================== -->
+    <div class="builder-workspace">
+      <!-- ----------------------------------------------------
+           LEFT PANE: Card Outline & Sequence Navigator
+           ---------------------------------------------------- -->
+      <aside class="cards-navigator-pane" aria-label="Lesson Cards Outline">
+        <div class="navigator-header">
+          <div class="navigator-title-row">
+            <h2 class="navigator-title">Card Outline</h2>
+            <span class="card-total-badge">{{ version.cards.length }} Cards</span>
+          </div>
+          <p class="navigator-subtitle">Click a card to edit. Sequence matches learner progression.</p>
+        </div>
+
+        <!-- Cards Outline List -->
+        <div class="navigator-card-list" role="tablist">
+          @for (card of version.cards; track card.id; let i = $index) {
+            <div
+              class="nav-card-item"
+              [class.active]="i === selectedCardIndex"
+              (click)="selectCard(i)"
+              role="tab"
+              [attr.aria-selected]="i === selectedCardIndex"
+            >
+              <div class="nav-card-indicator">
+                <span class="nav-card-num">{{ i + 1 }}</span>
+              </div>
+
+              <div class="nav-card-content">
+                <div class="nav-card-type-row">
+                  <span class="nav-type-tag" [ngClass]="'tag-' + card.card_type">
+                    @if (card.card_type === 'explanation') {
+                      📖 Explanation
+                    } @else if (card.card_type === 'interaction') {
+                      ❓ Quiz
+                    } @else {
+                      📝 Recap
+                    }
+                  </span>
+                </div>
+                <div class="nav-card-summary">
+                  {{ getCardSummary(card) }}
+                </div>
+              </div>
+
+              <!-- Quick Card Reorder & Controls -->
+              @if (version.status === 'draft') {
+                <div class="nav-card-actions" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="btn-nav-mini"
+                    (click)="moveCard(i, -1)"
+                    [disabled]="i === 0"
+                    title="Move Card Up"
+                    aria-label="Move Card Up"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-nav-mini"
+                    (click)="moveCard(i, 1)"
+                    [disabled]="i === version.cards.length - 1"
+                    title="Move Card Down"
+                    aria-label="Move Card Down"
+                  >
+                    ▼
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-nav-mini"
+                    (click)="duplicateCard(i)"
+                    title="Duplicate Card"
+                    aria-label="Duplicate Card"
+                  >
+                    ⎘
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-nav-mini delete"
+                    (click)="removeCard(i)"
+                    [disabled]="version.cards.length <= 1"
+                    title="Delete Card"
+                    aria-label="Delete Card"
+                  >
+                    ×
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Add Card Toolbar -->
+        @if (version.status === 'draft') {
+          <div class="navigator-add-bar">
+            <span class="add-bar-label">+ Add New Card:</span>
+            <div class="add-button-grid">
+              <button type="button" class="btn-add-type" (click)="addCard('explanation')">
+                📖 Explanation
+              </button>
+              <button type="button" class="btn-add-type" (click)="addCard('interaction')">
+                ❓ Quiz Question
+              </button>
+              <button type="button" class="btn-add-type" (click)="addCard('recap')">
+                📝 Recap
+              </button>
+            </div>
+          </div>
+        }
+      </aside>
+
+      <!-- ----------------------------------------------------
+           CENTER PANE: Active Card Canvas & Content Builder
+           ---------------------------------------------------- -->
+      <section class="active-card-canvas" aria-label="Active Card Content Canvas">
+        @if (activeCard) {
+          <!-- Canvas Top Bar -->
+          <header class="canvas-header">
+            <div class="canvas-header-left">
+              <span class="card-sequence-chip">Card {{ selectedCardIndex + 1 }} of {{ version.cards.length }}</span>
+              <div class="type-picker">
+                <label for="card-type-select" class="type-picker-label">Card Type:</label>
+                <select
+                  id="card-type-select"
+                  [ngModel]="activeCard.card_type"
+                  (ngModelChange)="setCardType(activeCard, $event)"
+                  [disabled]="version.status !== 'draft'"
+                  class="type-select"
+                >
+                  <option value="explanation">Explanation Card</option>
+                  <option value="interaction">Knowledge Check Quiz (Single Choice)</option>
+                  <option value="recap">Chapter Recap</option>
+                </select>
+              </div>
+            </div>
+
+            @if (version.status === 'draft') {
+              <div class="canvas-header-right">
+                <button type="button" class="btn-canvas-action" (click)="duplicateCard(selectedCardIndex)" title="Duplicate Card">
+                  ⎘ Duplicate
+                </button>
+                <button
+                  type="button"
+                  class="btn-canvas-action delete"
+                  (click)="removeCard(selectedCardIndex)"
+                  [disabled]="version.cards.length <= 1"
+                  title="Delete Card"
+                >
+                  × Delete
+                </button>
+              </div>
+            }
+          </header>
+
+          <!-- Canvas Main Content Editor -->
+          <div class="canvas-body">
+            <!-- -----------------------------------------------
+                 CASE A: EXPLANATION OR RECAP CARD
+                 ----------------------------------------------- -->
+            @if (activeCard.card_type === 'explanation' || activeCard.card_type === 'recap') {
+              <div class="editor-section-card">
+                <h3 class="section-heading">Concept Content</h3>
+                <p class="section-guidance">
+                  Structured explanation cards present evidence-based concepts to learners before testing understanding.
+                </p>
+
+                <div class="blocks-container">
+                  @for (block of activeCard.content_blocks; track $index; let bi = $index) {
+                    <div class="content-block-item" [class.heading-block]="block.block_type === 'heading'">
+                      <div class="block-type-pill">
+                        {{ block.block_type === 'heading' ? 'Heading' : 'Paragraph Text' }}
+                      </div>
+
+                      @if (block.block_type === 'heading') {
+                        <input
+                          type="text"
+                          [(ngModel)]="block.body"
+                          (input)="markUnsaved()"
+                          [disabled]="version.status !== 'draft'"
+                          placeholder="Heading title (e.g. How Germs Spread Through Contact)"
+                          class="block-heading-input"
+                        />
+                      } @else {
+                        <textarea
+                          [(ngModel)]="block.body"
+                          (input)="markUnsaved()"
+                          [disabled]="version.status !== 'draft'"
+                          rows="4"
+                          placeholder="Write clear, accessible health information. Explain the mechanism, preventative habits, and health impact…"
+                          class="block-text-input"
+                        ></textarea>
+                      }
+
+                      @if (version.status === 'draft' && activeCard.content_blocks.length > 1) {
+                        <button
+                          type="button"
+                          class="btn-remove-block"
+                          (click)="removeContentBlock(activeCard, bi)"
+                          title="Remove block"
+                          aria-label="Remove block"
+                        >
+                          ×
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+
+                @if (version.status === 'draft') {
+                  <div class="block-controls-row">
+                    <button type="button" class="btn-add-block" (click)="addContentBlock(activeCard, 'heading')">
+                      + Add Heading
+                    </button>
+                    <button type="button" class="btn-add-block" (click)="addContentBlock(activeCard, 'text')">
+                      + Add Text Paragraph
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- -----------------------------------------------
+                 CASE B: MULTIPLE CHOICE QUIZ CARD
+                 ----------------------------------------------- -->
+            @if (activeCard.card_type === 'interaction' && activeCard.interaction) {
+              <div class="editor-section-card">
+                <div class="quiz-section-header">
+                  <div>
+                    <h3 class="section-heading">Knowledge Check (Single Choice)</h3>
+                    <p class="section-guidance">
+                      Reinforce learning by asking a specific question. Learners select one answer and receive immediate explanatory feedback.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Real-time Question Validation Box -->
+                @if (validationErrors.length > 0) {
+                  <div class="quiz-validation-alert" role="alert">
+                    <span class="val-icon">⚠️</span>
+                    <div class="val-messages">
+                      @for (err of validationErrors; track err) {
+                        <p class="val-item">{{ err }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Question Prompt -->
+                <div class="form-field-group">
+                  <label for="quiz-prompt-input" class="field-label required">
+                    Question Prompt
+                  </label>
+                  <textarea
+                    id="quiz-prompt-input"
+                    [(ngModel)]="activeCard.interaction.question_prompt"
+                    (input)="markUnsaved()"
+                    [disabled]="version.status !== 'draft'"
+                    rows="2"
+                    placeholder="e.g. Which of the following is the most reliable method for household water purification?"
+                    class="quiz-prompt-textarea"
+                    required
+                  ></textarea>
+                </div>
+
+                <!-- Answer Options Editor -->
+                <div class="options-editor-box">
+                  <div class="options-header-row">
+                    <span class="field-label required">Answer Choices (Select the 1 Correct Answer)</span>
+                    <span class="options-hint">Radio marks the single correct answer</span>
+                  </div>
+
+                  <div class="options-list">
+                    @for (option of activeCard.interaction.options; track option.id; let oi = $index) {
+                      <div class="option-item-card" [class.is-correct]="option.is_correct">
+                        <!-- Correct Radio Selector -->
+                        <div class="option-radio-col">
+                          <label class="correct-radio-label" title="Mark this answer as correct">
+                            <input
+                              type="radio"
+                              name="correctOptionChoice"
+                              [checked]="option.is_correct"
+                              (change)="setCorrectQuizOption(activeCard.interaction!, oi)"
+                              [disabled]="version.status !== 'draft'"
+                              class="correct-radio-input"
+                            />
+                            <span class="radio-custom" [class.active]="option.is_correct">
+                              {{ option.is_correct ? '✓ Correct' : 'Option ' + (oi + 1) }}
+                            </span>
+                          </label>
+                        </div>
+
+                        <!-- Option Label & Feedback Inputs -->
+                        <div class="option-inputs-col">
+                          <div class="input-wrap">
+                            <label class="mini-label">Answer Text:</label>
+                            <input
+                              type="text"
+                              [(ngModel)]="option.label"
+                              (input)="markUnsaved()"
+                              [disabled]="version.status !== 'draft'"
+                              placeholder="e.g. Bringing water to a rolling boil for at least 1 minute"
+                              class="option-label-input"
+                            />
+                          </div>
+
+                          <div class="input-wrap">
+                            <label class="mini-label">Learner Feedback (Explanation):</label>
+                            <input
+                              type="text"
+                              [(ngModel)]="option.feedback"
+                              (input)="markUnsaved()"
+                              [disabled]="version.status !== 'draft'"
+                              placeholder="Feedback shown when learner selects this option…"
+                              class="option-feedback-input"
+                            />
+                          </div>
+                        </div>
+
+                        <!-- Remove Option -->
+                        @if (version.status === 'draft') {
+                          <div class="option-actions-col">
+                            <button
+                              type="button"
+                              class="btn-remove-option"
+                              (click)="removeQuizOption(activeCard.interaction!, oi)"
+                              [disabled]="activeCard.interaction.options.length <= 2"
+                              title="Delete Option"
+                              aria-label="Delete Option"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  @if (version.status === 'draft') {
+                    <div class="add-option-row">
+                      <button type="button" class="btn-add-option" (click)="addQuizOption(activeCard.interaction)">
+                        + Add Choice Option
+                      </button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Incorrect Behavior Toggle -->
+                <div class="behavior-toggle-box">
+                  <label class="field-label">Learner Retry Policy:</label>
+                  <div class="radio-options-row">
+                    <label class="radio-inline">
+                      <input
+                        type="radio"
+                        value="retry"
+                        [(ngModel)]="activeCard.interaction.incorrect_behaviour"
+                        (change)="markUnsaved()"
+                        [disabled]="version.status !== 'draft'"
+                      />
+                      <span>Allow learner to retry after incorrect response</span>
+                    </label>
+                    <label class="radio-inline">
+                      <input
+                        type="radio"
+                        value="continue"
+                        [(ngModel)]="activeCard.interaction.incorrect_behaviour"
+                        (change)="markUnsaved()"
+                        [disabled]="version.status !== 'draft'"
+                      />
+                      <span>Continue immediately after explanation feedback</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- -----------------------------------------------
+                 SECTION 3: MEDICAL SOURCES & CITATIONS
+                 ----------------------------------------------- -->
+            <div class="editor-section-card sources-section">
+              <div class="sources-header-row">
+                <div>
+                  <h3 class="section-heading">Medical Evidence & Peer-Reviewed Sources</h3>
+                  <p class="section-guidance">
+                    Link verified clinical guidelines (e.g. WHO, CDC, Ministry of Health) supporting this chapter.
+                  </p>
+                </div>
+                @if (version.status === 'draft') {
+                  <button type="button" class="btn-add-source" (click)="openAddSourceModal()">
+                    + Add New Medical Source
+                  </button>
+                }
+              </div>
+
+              <!-- Attached Sources List -->
+              @if (version.source_ids.length === 0) {
+                <div class="empty-sources-notice">
+                  <span>ℹ No medical sources attached to this chapter yet. Select from the library below.</span>
+                </div>
+              } @else {
+                <div class="attached-sources-list">
+                  @for (sourceId of version.source_ids; track sourceId) {
+                    <div class="source-item-chip">
+                      <span class="source-tag">📚 Source: {{ sourceId }}</span>
+                      @if (version.status === 'draft') {
+                        <button
+                          type="button"
+                          class="btn-detach-source"
+                          (click)="toggleAttachSource(sourceId)"
+                          title="Detach source"
+                        >
+                          ×
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Available Sources Selector -->
+              @if (availableSources.length > 0 && version.status === 'draft') {
+                <div class="available-sources-picker">
+                  <label class="field-label">Attach Existing Sources from Library:</label>
+                  <div class="source-checkbox-grid">
+                    @for (source of availableSources; track source.id) {
+                      <label class="source-check-item" [class.checked]="isSourceAttached(source.id)">
+                        <input
+                          type="checkbox"
+                          [checked]="isSourceAttached(source.id)"
+                          (change)="toggleAttachSource(source.id)"
+                        />
+                        <div class="source-check-info">
+                          <span class="source-check-title">{{ source.title }}</span>
+                          <span class="source-check-pub">{{ source.publisher }} • {{ source.url }}</span>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </section>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL: ADD MEDICAL SOURCE
+       ======================================================== -->
+  @if (showAddSourceModal) {
+    <div class="modal-backdrop" (click)="closeAddSourceModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Add Medical Source Reference</h2>
+          <button class="modal-close-btn" (click)="closeAddSourceModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <form (ngSubmit)="createSource()" class="modal-body">
+          <div class="field-item">
+            <label for="src-title-input" class="field-label required">Source Document Title</label>
+            <input
+              id="src-title-input"
+              type="text"
+              [(ngModel)]="newSourceTitle"
+              name="srcTitle"
+              placeholder="e.g. WHO Guidelines on Drinking-water Quality, 4th edition"
+              class="field-input"
+              required
+            />
+          </div>
+
+          <div class="field-item">
+            <label for="src-pub-input" class="field-label required">Publisher / Organization</label>
+            <input
+              id="src-pub-input"
+              type="text"
+              [(ngModel)]="newSourcePublisher"
+              name="srcPublisher"
+              placeholder="e.g. World Health Organization"
+              class="field-input"
+              required
+            />
+          </div>
+
+          <div class="field-item">
+            <label for="src-url-input" class="field-label required">Canonical URL</label>
+            <input
+              id="src-url-input"
+              type="url"
+              [(ngModel)]="newSourceUrl"
+              name="srcUrl"
+              placeholder="https://www.who.int/publications/…"
+              class="field-input"
+              required
+            />
+          </div>
+
+          <div class="field-item">
+            <label for="src-jurisdiction" class="field-label">Jurisdiction / Scope</label>
+            <input
+              id="src-jurisdiction"
+              type="text"
+              [(ngModel)]="newSourceJurisdiction"
+              name="srcJurisdiction"
+              placeholder="e.g. Global, India, United States"
+              class="field-input"
+            />
+          </div>
+
+          <p class="source-clinical-notice">
+            ⚠️ <strong>Verification Policy:</strong> Entering a URL does not automatically certify medical verification. All sources are evaluated by accredited reviewers.
+          </p>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeAddSourceModal()">Cancel</button>
+            <button
+              type="submit"
+              class="btn-create-submit"
+              [disabled]="isAddingSource || !newSourceTitle.trim() || !newSourceUrl.trim() || !newSourcePublisher.trim()"
+            >
+              @if (isAddingSource) {
+                <span class="spinner-inline"></span> Adding…
+              } @else {
+                Add & Attach Source
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       MODAL: SUBMIT FOR PEER REVIEW
+       ======================================================== -->
+  @if (showSubmitModal) {
+    <div class="modal-backdrop" (click)="closeSubmitModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2 class="modal-title">Submit Chapter for Peer Review</h2>
+          <button class="modal-close-btn" (click)="closeSubmitModal()" aria-label="Close dialog">×</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="submit-modal-text">
+            You are submitting <strong>"{{ version?.title }}"</strong> for peer review.
+          </p>
+
+          @if (validationErrors.length > 0) {
+            <div class="submit-validation-error">
+              <h4>Cannot submit yet — please resolve errors:</h4>
+              <ul>
+                @for (err of validationErrors; track err) {
+                  <li>{{ err }}</li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <div class="submit-checklist">
+              <h4>Review Readiness Checklist:</h4>
+              <p class="check-item">✓ {{ version?.cards?.length }} content cards ready</p>
+              <p class="check-item">✓ All multiple-choice questions have verified correct answers</p>
+              <p class="check-item">✓ Medical references attached</p>
+            </div>
+
+            <p class="submit-policy-note">
+              Once submitted, the draft enters the Review Queue and is locked from immediate modification until reviewed.
+            </p>
+          }
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeSubmitModal()">Keep Editing</button>
+            <button
+              type="button"
+              class="btn-create-submit"
+              [disabled]="isSubmitting || validationErrors.length > 0"
+              (click)="confirmSubmitForReview()"
+            >
+              @if (isSubmitting) {
+                Submitting…
+              } @else {
+                Confirm Submission
+              }
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+</div>

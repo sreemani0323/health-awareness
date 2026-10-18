@@ -1,0 +1,203 @@
+<section class="family-challenge-page" aria-labelledby="challenge-heading">
+  <div class="challenge-container">
+
+    @if (loading()) {
+      <div class="challenge-skeleton" aria-busy="true">
+        <div class="skeleton" style="height: 36px; width: 60%; margin-bottom: 1rem;"></div>
+        <div class="skeleton" style="height: 18px; width: 45%; margin-bottom: 2rem;"></div>
+        <div class="skeleton" style="height: 360px; border-radius: 4px;"></div>
+      </div>
+    } @else if (error()) {
+      <div class="error-state" role="alert">
+        <span class="error-state__icon" aria-hidden="true">⚠️</span>
+        <h2 class="error-state__title">Challenge Unavailable</h2>
+        <p class="error-state__message">{{ error() }}</p>
+        <div class="error-state__actions">
+          <a routerLink="/topics" class="btn btn--primary" id="challenge-explore-topics-btn">Explore Topics Directly</a>
+          <a routerLink="/" class="btn btn--outline" id="challenge-home-btn">Back to Home</a>
+        </div>
+      </div>
+    } @else if (isCompleted()) {
+      <!-- Challenge Completion Summary -->
+      <article class="oppia-learner-view-card challenge-completion-card" id="challenge-completion-summary">
+        <div class="completion-icon-wrapper" aria-hidden="true">
+          <span class="completion-icon">🌟</span>
+        </div>
+
+        <header class="completion-header">
+          <span class="oppia-card-badge">Family Learning Milestone</span>
+          <h1 class="completion-title" id="challenge-heading">Family Health Challenge Completed!</h1>
+          <p class="completion-subtitle">
+            Great job learning together! You answered {{ completedQuestions().length }} of {{ totalQuestions() }} practical health questions.
+          </p>
+        </header>
+
+        <div class="completion-topics-list">
+          <h2 class="completion-section-title">Explore the Full Lessons Covered Today:</h2>
+          <div class="topics-grid">
+            @for (q of questions(); track q.id) {
+              <div class="topic-mini-card">
+                <span class="topic-mini-badge">{{ q.topicTitle }}</span>
+                <h3 class="topic-mini-title">{{ q.lessonTitle }}</h3>
+                <a [routerLink]="['/lessons', q.lessonId]" class="topic-mini-link" [id]="'lesson-link-' + q.id">
+                  <span>Open Full Lesson</span>
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            }
+          </div>
+        </div>
+
+        <footer class="completion-actions">
+          <a routerLink="/" class="oppia-learner-confirm-button" id="challenge-finish-home-btn">
+            <span>Back to Home</span>
+            <span aria-hidden="true">🏠</span>
+          </a>
+          <button type="button" class="btn btn--outline" (click)="restartChallenge()" id="challenge-restart-btn">
+            <span>Try Challenge Again</span>
+            <span aria-hidden="true">↺</span>
+          </button>
+        </footer>
+      </article>
+    } @else if (currentQuestion(); as q) {
+      <!-- Active Question Experience -->
+      <header class="challenge-header">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a routerLink="/" class="breadcrumb__link">Home</a>
+          <span class="breadcrumb__sep" aria-hidden="true">›</span>
+          <span class="breadcrumb__current" aria-current="page">Family Learning Challenge</span>
+        </nav>
+
+        <div class="challenge-header__intro">
+          <h1 class="challenge-header__title" id="challenge-heading">Family Health Check</h1>
+          <p class="challenge-header__desc">
+            A short, friendly check for family members and caregivers to practice everyday prevention together.
+          </p>
+        </div>
+      </header>
+
+      <!-- Milestone Progress Bar -->
+      <div class="oppia-milestone-progress-bar"
+           role="progressbar"
+           [attr.aria-valuenow]="progressPercent()"
+           aria-valuemin="0"
+           aria-valuemax="100"
+           [attr.aria-label]="'Challenge progress: ' + progressPercent() + '%'">
+        <div class="oppia-progress-bar-track">
+          <div class="oppia-progress-bar-fill" [style.width.%]="progressPercent()"></div>
+        </div>
+        <div class="oppia-progress-bar-meta">
+          <span class="oppia-progress-bar-label">Question {{ currentIndex() + 1 }} of {{ totalQuestions() }}</span>
+          <span class="oppia-progress-bar-percentage">{{ progressPercent() }}% completed</span>
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <article class="oppia-learner-view-card challenge-card" [id]="'challenge-card-' + q.id">
+        <div class="oppia-card-top-bar">
+          <span class="oppia-card-badge topic-badge">
+            {{ q.topicTitle }}
+          </span>
+          <span class="oppia-card-step-badge">
+            QUESTION {{ currentIndex() + 1 }} OF {{ totalQuestions() }}
+          </span>
+        </div>
+
+        <div class="challenge-question-body">
+          <span class="lesson-origin-note">From lesson: <em>{{ q.lessonTitle }}</em></span>
+          <h2 class="question-prompt" id="question-prompt-text">
+            {{ q.prompt }}
+          </h2>
+
+          <!-- Multiple Choice Options -->
+          <div class="quiz__options"
+               role="radiogroup"
+               aria-labelledby="question-prompt-text">
+            @for (opt of q.options; track opt.id) {
+              <div class="option-container">
+                <button
+                  type="button"
+                  class="multiple-choice-option {{ getOptionClass(opt) }}"
+                  [class.selected]="selectedOptionId() === opt.id"
+                  [id]="'challenge-option-' + opt.id"
+                  (click)="selectOption(opt.id)"
+                  [disabled]="answerSubmitted()"
+                  role="radio"
+                  [attr.aria-checked]="selectedOptionId() === opt.id"
+                >
+                  <div class="multiple-choice-radio-button-container">
+                    <span class="multiple-choice-outer-radio-button">
+                      <span class="multiple-choice-inner-radio-button"></span>
+                    </span>
+                  </div>
+
+                  <div class="multiple-choice-content-container">
+                    <span class="quiz__option-label">{{ opt.label }}</span>
+                  </div>
+
+                  @if (answerSubmitted()) {
+                    <span class="quiz__option-indicator">
+                      @if (opt.is_correct) {
+                        <span class="indicator-icon indicator-correct" title="Correct">✓</span>
+                      } @else if (selectedOptionId() === opt.id && !opt.is_correct) {
+                        <span class="indicator-icon indicator-incorrect" title="Incorrect">✗</span>
+                      }
+                    </span>
+                  }
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Submit Action -->
+          @if (!answerSubmitted() && selectedOptionId()) {
+            <div class="interaction-action-row">
+              <button class="oppia-learner-confirm-button btn--submit"
+                      (click)="submitAnswer()"
+                      id="challenge-submit-btn">
+                <span>Check Answer</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          }
+
+          <!-- Feedback and Progression -->
+          @if (answerSubmitted()) {
+            <div class="conversation-skin-response-pair quiz__feedback"
+                 [class.quiz__feedback--correct]="answerCorrect()"
+                 [class.quiz__feedback--incorrect]="!answerCorrect()"
+                 role="alert">
+
+              <div class="feedback-bubble-header">
+                <span class="feedback-badge" [class.feedback-badge--correct]="answerCorrect()">
+                  {{ answerCorrect() ? '✓ Well Done!' : '💡 Learning Insight' }}
+                </span>
+              </div>
+              <p class="feedback-bubble-text">{{ feedbackText() }}</p>
+
+              <div class="feedback-actions">
+                @if (!answerCorrect() && q.retryAllowed) {
+                  <button type="button"
+                          class="btn btn--retry"
+                          (click)="retryQuestion()"
+                          id="challenge-retry-btn">
+                    <span>Try Again</span>
+                    <span aria-hidden="true">↺</span>
+                  </button>
+                }
+
+                <button type="button"
+                        class="oppia-learner-confirm-button next-question-btn"
+                        (click)="nextQuestion()"
+                        id="challenge-next-btn">
+                  <span>{{ isLastQuestion() ? 'Complete Challenge' : 'Next Question' }}</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </article>
+    }
+  </div>
+</section>

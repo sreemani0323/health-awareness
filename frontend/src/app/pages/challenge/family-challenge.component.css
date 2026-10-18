@@ -1,0 +1,523 @@
+.family-challenge-page {
+  min-height: calc(100vh - 120px);
+  background-color: var(--color-bg, #f7f9fa);
+  padding: 2rem 1rem 4rem;
+  display: flex;
+  justify-content: center;
+}
+
+.challenge-container {
+  width: 100%;
+  max-width: 760px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #5f6368);
+  margin-bottom: 1rem;
+}
+
+.breadcrumb__link {
+  color: var(--color-primary, #00609c);
+  text-decoration: none;
+}
+
+.breadcrumb__link:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb__current {
+  color: var(--color-text-primary, #202124);
+  font-weight: 500;
+}
+
+/* Header */
+.challenge-header {
+  margin-bottom: 1.5rem;
+}
+
+.challenge-header__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #202124);
+  margin: 0 0 0.5rem;
+}
+
+.challenge-header__desc {
+  font-size: 1rem;
+  color: var(--color-text-secondary, #5f6368);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Milestone Progress Bar */
+.oppia-milestone-progress-bar {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.oppia-progress-bar-track {
+  height: 8px;
+  background-color: #e8eaed;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.oppia-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00609c, #00875a);
+  transition: width 0.3s ease-in-out;
+}
+
+.oppia-progress-bar-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+/* Challenge Card */
+.oppia-learner-view-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+  position: relative;
+}
+
+.oppia-card-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f3f4;
+  padding-bottom: 0.75rem;
+}
+
+.oppia-card-badge {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.oppia-card-step-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #70757a;
+}
+
+.lesson-origin-note {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: #5f6368;
+  margin-bottom: 0.75rem;
+}
+
+.lesson-origin-note em {
+  font-style: normal;
+  font-weight: 600;
+  color: #3c4043;
+}
+
+.question-prompt {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #202124;
+  line-height: 1.45;
+  margin: 0 0 1.5rem;
+}
+
+/* Options */
+.quiz__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.option-container {
+  width: 100%;
+}
+
+.multiple-choice-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1.125rem;
+  background-color: #ffffff;
+  border: 1.5px solid #dadce0;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: #3c4043;
+}
+
+.multiple-choice-option:hover:not(:disabled) {
+  border-color: #00609c;
+  background-color: #f8fbff;
+}
+
+.multiple-choice-option.selected {
+  border-color: #00609c;
+  background-color: #e8f0fe;
+  font-weight: 500;
+}
+
+.multiple-choice-option--correct {
+  border-color: #137333 !important;
+  background-color: #e6f4ea !important;
+  color: #137333 !important;
+}
+
+.multiple-choice-option--incorrect {
+  border-color: #d93025 !important;
+  background-color: #fce8e6 !important;
+  color: #c5221f !important;
+}
+
+.multiple-choice-option--disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Radio Button Visual */
+.multiple-choice-radio-button-container {
+  flex-shrink: 0;
+}
+
+.multiple-choice-outer-radio-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #70757a;
+}
+
+.multiple-choice-option.selected .multiple-choice-outer-radio-button {
+  border-color: #00609c;
+}
+
+.multiple-choice-inner-radio-button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.multiple-choice-option.selected .multiple-choice-inner-radio-button {
+  background-color: #00609c;
+}
+
+.multiple-choice-content-container {
+  flex: 1;
+}
+
+.quiz__option-indicator {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.indicator-correct {
+  color: #137333;
+}
+
+.indicator-incorrect {
+  color: #d93025;
+}
+
+/* Interaction Actions */
+.interaction-action-row {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.oppia-learner-confirm-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #00609c;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+}
+
+.oppia-learner-confirm-button:hover:not(:disabled) {
+  background-color: #004c7c;
+}
+
+/* Feedback Response Pair */
+.quiz__feedback {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid #00609c;
+  background-color: #f8f9fa;
+}
+
+.quiz__feedback--correct {
+  border-left-color: #137333;
+  background-color: #f1f8f3;
+}
+
+.quiz__feedback--incorrect {
+  border-left-color: #ea8600;
+  background-color: #fff8e8;
+}
+
+.feedback-bubble-header {
+  margin-bottom: 0.5rem;
+}
+
+.feedback-badge {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #b06000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feedback-badge--correct {
+  color: #137333;
+}
+
+.feedback-bubble-text {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #202124;
+  margin: 0 0 1rem;
+}
+
+.feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn--retry {
+  background: #ffffff;
+  color: #b06000;
+  border: 1px solid #ea8600;
+}
+
+.btn--retry:hover {
+  background: #fff3db;
+}
+
+.btn--outline {
+  background: #ffffff;
+  color: #00609c;
+  border: 1px solid #00609c;
+}
+
+.btn--outline:hover {
+  background: #e8f0fe;
+}
+
+.btn--primary {
+  background: #00609c;
+  color: #ffffff;
+  border: 1px solid #00609c;
+}
+
+/* Completion Card */
+.challenge-completion-card {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.completion-icon-wrapper {
+  margin-bottom: 1rem;
+}
+
+.completion-icon {
+  font-size: 3.5rem;
+}
+
+.completion-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #202124;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.completion-subtitle {
+  font-size: 1.0625rem;
+  color: #5f6368;
+  max-width: 540px;
+  margin: 0 auto 2rem;
+  line-height: 1.5;
+}
+
+.completion-topics-list {
+  text-align: left;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.completion-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #202124;
+  margin: 0 0 1rem;
+}
+
+.topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.topic-mini-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.topic-mini-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #00609c;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.375rem;
+}
+
+.topic-mini-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #202124;
+  margin: 0 0 0.75rem;
+}
+
+.topic-mini-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #00609c;
+  text-decoration: none;
+}
+
+.topic-mini-link:hover {
+  text-decoration: underline;
+}
+
+.completion-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Skeleton & Error */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.error-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.error-state__icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.error-state__title {
+  font-size: 1.5rem;
+  color: #202124;
+  margin-bottom: 0.5rem;
+}
+
+.error-state__message {
+  color: #5f6368;
+  margin-bottom: 1.5rem;
+}
+
+.error-state__actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .oppia-learner-view-card {
+    padding: 1.25rem;
+  }
+
+  .question-prompt {
+    font-size: 1.125rem;
+  }
+
+  .completion-actions {
+    flex-direction: column;
+  }
+
+  .completion-actions .oppia-learner-confirm-button,
+  .completion-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

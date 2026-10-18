@@ -1,0 +1,235 @@
+<div class="studio-workspace">
+  <app-creator-navbar [currentSection]="selectedTab === 'all' ? 'dashboard' : selectedTab"></app-creator-navbar>
+
+  <main class="studio-main" id="main-content">
+    <div class="studio-container">
+      <!-- Dashboard Hero / Header -->
+      <section class="dashboard-hero">
+        <div class="hero-content">
+          <div class="hero-titles">
+            <h1 class="hero-title">My Content</h1>
+            <p class="hero-subtitle">
+              Create, organize, and manage multi-chapter health education topics and interactive curriculum.
+            </p>
+          </div>
+          <div class="hero-actions">
+            @if (currentUser?.role === 'contributor' || currentUser?.role === 'admin') {
+              <button class="btn-create-topic" (click)="createNewTopic()" id="btn-create-topic-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Create Topic</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Attention Needed Banner (Shown when reviewers request changes) -->
+        @if (totalChangesRequestedCount > 0) {
+          <div class="attention-banner" role="alert">
+            <div class="attention-icon-badge">⚠️ Action Needed</div>
+            <div class="attention-body">
+              <strong class="attention-title">{{ totalChangesRequestedCount }} chapter{{ totalChangesRequestedCount === 1 ? '' : 's' }} returned with reviewer feedback.</strong>
+              <p class="attention-desc">Peer reviewers requested modifications before publication. Review the notes and resubmit.</p>
+            </div>
+            <button class="btn-attention-action" (click)="setTab('attention')">
+              View Feedback Topics →
+            </button>
+          </div>
+        }
+      </section>
+
+      <!-- Content Controls (Tabs + Search) -->
+      <section class="content-controls">
+        <div class="filter-tabs" role="tablist" aria-label="Content Status Filter">
+          <button
+            class="tab-btn"
+            [class.active]="selectedTab === 'all'"
+            (click)="setTab('all')"
+            role="tab"
+            [attr.aria-selected]="selectedTab === 'all'"
+          >
+            All Topics <span class="tab-badge">{{ topics.length }}</span>
+          </button>
+          @if (attentionTopicsCount > 0) {
+            <button
+              class="tab-btn tab-btn-attention"
+              [class.active]="selectedTab === 'attention'"
+              (click)="setTab('attention')"
+              role="tab"
+              [attr.aria-selected]="selectedTab === 'attention'"
+            >
+              ⚠️ Needs Attention <span class="tab-badge tab-badge-amber">{{ attentionTopicsCount }}</span>
+            </button>
+          }
+          <button
+            class="tab-btn"
+            [class.active]="selectedTab === 'drafts'"
+            (click)="setTab('drafts')"
+            role="tab"
+            [attr.aria-selected]="selectedTab === 'drafts'"
+          >
+            Drafts <span class="tab-badge">{{ draftCount }}</span>
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="selectedTab === 'submitted'"
+            (click)="setTab('submitted')"
+            role="tab"
+            [attr.aria-selected]="selectedTab === 'submitted'"
+          >
+            Submitted
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="selectedTab === 'published'"
+            (click)="setTab('published')"
+            role="tab"
+            [attr.aria-selected]="selectedTab === 'published'"
+          >
+            Published <span class="tab-badge">{{ publishedCount }}</span>
+          </button>
+        </div>
+
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Search topics by title or topic slug…"
+            aria-label="Search topics"
+            class="search-input"
+          />
+          @if (searchQuery) {
+            <button class="clear-search-btn" (click)="searchQuery = ''" aria-label="Clear search">×</button>
+          }
+        </div>
+      </section>
+
+      <!-- Content State Area -->
+      @if (isLoading) {
+        <div class="loading-panel">
+          <div class="spinner-teal"></div>
+          <p class="loading-label">Loading your authoring workspace…</p>
+        </div>
+      } @else if (errorMessage) {
+        <div class="error-panel">
+          <div class="error-icon">⚠️</div>
+          <div class="error-content">
+            <h3 class="error-title">Could not load topics</h3>
+            <p class="error-text">{{ errorMessage }}</p>
+            <button class="btn-retry" (click)="loadTopics()">Retry</button>
+          </div>
+        </div>
+      } @else if (filteredTopics.length === 0) {
+        <div class="empty-panel">
+          <div class="empty-icon-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="empty-svg">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <h2 class="empty-title">
+            @if (searchQuery) {
+              No topics match "{{ searchQuery }}"
+            } @else if (selectedTab === 'attention') {
+              No topics requiring reviewer feedback revisions!
+            } @else if (selectedTab === 'drafts') {
+              No draft topics in progress
+            } @else if (selectedTab === 'published') {
+              No topics published yet
+            } @else {
+              No authoring topics yet
+            }
+          </h2>
+          <p class="empty-desc">
+            @if (searchQuery) {
+              Try clearing your search query or switching tabs.
+            } @else {
+              Begin building health education topics with interactive explanation cards and knowledge checks.
+            }
+          </p>
+          @if (currentUser?.role === 'contributor' || currentUser?.role === 'admin') {
+            <button class="btn-create-topic empty-action" (click)="createNewTopic()">
+              + Create New Topic
+            </button>
+          }
+        </div>
+      } @else {
+        <!-- Topic Items List -->
+        <div class="topic-list" role="list">
+          @for (topic of filteredTopics; track topic.id) {
+            <article class="topic-item" role="listitem">
+              <!-- Item Left Info -->
+              <div class="item-primary">
+                <div class="item-header-meta">
+                  @if (topic.changesRequestedCount > 0) {
+                    <span class="status-pill status-changes-requested">
+                      <span class="status-dot"></span>
+                      Changes Requested ({{ topic.changesRequestedCount }})
+                    </span>
+                  } @else {
+                    <span class="status-pill" [ngClass]="'status-' + (topic.status === 'published' ? 'published' : 'draft')">
+                      <span class="status-dot"></span>
+                      {{ topic.status === 'published' ? 'Published' : (topic.inReviewCount > 0 ? 'In Review' : 'Draft') }}
+                    </span>
+                  }
+                  <span class="chapter-count-chip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="chip-svg">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                    {{ topic.chapterCount }} {{ topic.chapterCount === 1 ? 'Chapter' : 'Chapters' }}
+                  </span>
+                  @if (topic.inReviewCount > 0) {
+                    <span class="review-status-chip">
+                      {{ topic.inReviewCount }} Chapter awaiting review
+                    </span>
+                  }
+                  <span class="slug-tag">/topics/{{ topic.slug }}</span>
+                </div>
+
+                <h2 class="item-title">
+                  <a [routerLink]="['/creator/topic', topic.id]" class="item-title-link">
+                    {{ topic.title }}
+                  </a>
+                </h2>
+                <p class="item-desc">{{ topic.description }}</p>
+
+                @if (topic.latestFeedback) {
+                  <div class="feedback-preview-box">
+                    <span class="feedback-badge-mini">Reviewer Notes</span>
+                    <span class="feedback-quote">"{{ topic.latestFeedback }}"</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Item Right Next Action -->
+              <div class="item-actions">
+                <a
+                  [routerLink]="['/creator/topic', topic.id]"
+                  class="btn-next-action"
+                  [class.action-attention]="topic.changesRequestedCount > 0"
+                  [class.action-draft]="topic.changesRequestedCount === 0 && topic.status === 'draft'"
+                  [class.action-published]="topic.changesRequestedCount === 0 && topic.status === 'published'"
+                  title="{{ getNextActionLabel(topic) }}"
+                >
+                  <span>{{ getNextActionLabel(topic) }}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="arrow-svg">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+  </main>
+</div>

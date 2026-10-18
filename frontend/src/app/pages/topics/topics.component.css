@@ -1,0 +1,240 @@
+/* ===================================================================
+   Oppia Classroom / Topic Discovery Page Styles
+   Reference: core/templates/pages/classroom-page/classroom-page.component.css
+              core/templates/components/summary-tile/topic-summary-tile.component.css
+   =================================================================== */
+
+.oppia-classroom-page-container {
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 120px);
+  padding-bottom: 60px;
+}
+
+/* Banner area */
+.classroom-top {
+  background: linear-gradient(135deg, #00645c 0%, #004d40 100%);
+  color: #fff;
+  padding: 32px 0 40px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.classroom-breadcrumbs {
+  margin-bottom: 20px;
+}
+
+.desktop-breadcrumbs {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.desktop-breadcrumbs a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.desktop-breadcrumbs a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.breadcrumb-current {
+  color: #fff;
+  font-weight: 500;
+}
+
+.classroom-information-container {
+  max-width: 1140px;
+}
+
+.classroom-subtitle {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #80cbc4;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.classroom-name {
+  font-family: 'Capriola', 'Roboto', Arial, sans-serif;
+  font-size: 32px;
+  font-weight: 500;
+  color: #fff;
+  margin: 0 0 12px;
+}
+
+.classroom-intro {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 720px;
+  margin: 0;
+}
+
+/* Classroom Content Area */
+.classroom-content-container {
+  max-width: 1140px;
+  margin-top: 36px;
+}
+
+.classroom-content-heading {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: #212121;
+  margin: 0 0 8px;
+}
+
+.classroom-content-text {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #616161;
+  margin: 0 0 28px;
+}
+
+/* Topic Tiles Grid — Oppia layout */
+.topic-tiles-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 28px;
+  margin-top: 16px;
+}
+
+.oppia-topic-summary-tile {
+  width: 100%;
+}
+
+/* Oppia Topic Card */
+.topic-card {
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.topic-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.topic-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.topic-thumbnail {
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.topic-thumbnail-graphic {
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topic-thumbnail-emoji {
+  font-size: 36px;
+}
+
+.topic-details {
+  border-radius: 0 0 6px 6px;
+  color: #fff;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 13px;
+  min-height: 90px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.topic-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #fff;
+}
+
+.topic-lesson-count {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Skeleton loader */
+.skeleton-card {
+  height: 220px;
+  background: #e0e0e0;
+  border-radius: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Error / empty state */
+.error-state, .empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.error-text {
+  font-size: 16px;
+  color: #d32f2f;
+  margin-bottom: 16px;
+}
+
+.btn-retry {
+  background: #00645c;
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .classroom-name {
+    font-size: 26px;
+  }
+  .topic-tiles-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

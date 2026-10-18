@@ -1,0 +1,381 @@
+<div class="staff-container">
+  @if (loadingUser()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Verifying staff authorization...</p>
+    </div>
+  } @else if (unauthorized()) {
+    <div class="unauthorized-card" id="staff-unauthorized-banner">
+      <div class="lock-icon">🔒</div>
+      <h2>Staff Authentication Required</h2>
+      <p>
+        The Case Management Dashboard is restricted to authorized HealthAware case handlers, moderators, and verified municipal officers.
+      </p>
+      <div class="unauth-actions">
+        <a routerLink="/creator/login" class="btn btn-primary" id="staff-login-btn">
+          Sign In to Staff Account →
+        </a>
+        <a routerLink="/" class="link-home">Return to HealthAware Home</a>
+      </div>
+      <p class="staff-notice">
+        Note: Staff accounts cannot be self-registered. They must be provisioned by a HealthAware administrator.
+      </p>
+    </div>
+  } @else if (currentUser(); as user) {
+    <!-- Staff Header -->
+    <div class="staff-header">
+      <div class="header-left">
+        <div class="staff-badge">
+          @if (user.role === 'admin') {
+            🛡️ HealthAware Administrator
+          } @else if (user.role === 'case_handler') {
+            📋 Case Handler / Moderator
+          } @else if (user.role === 'jurisdiction_officer') {
+            🏛️ Jurisdiction Officer
+          } @else {
+            Staff ({{ user.role }})
+          }
+        </div>
+        <h1 class="staff-title">Sanitation Case Management</h1>
+      </div>
+      <div class="header-right">
+        <div class="user-pill">
+          <span class="user-name">{{ user.display_name }}</span>
+          <span class="user-role-sub">({{ user.username }})</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jurisdiction Scope Banner (for Officers) -->
+    @if (user.role === 'jurisdiction_officer') {
+      <div class="jurisdiction-banner" id="officer-jurisdiction-banner">
+        <span class="jur-icon">📍</span>
+        <div>
+          <strong>Authorized Municipal Scope:</strong>
+          @if (user.jurisdictions.length > 0) {
+            <span class="jur-tags">
+              @for (j of user.jurisdictions; track j.district) {
+                <span class="jur-tag">{{ j.district }}, {{ j.state }} {{ j.municipality ? '(' + j.municipality + ')' : '' }}</span>
+              }
+            </span>
+          } @else {
+            <span class="text-danger">No jurisdiction assigned. Please contact an administrator.</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Filters Bar -->
+    <div class="filters-card">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label class="filter-label" for="filter-status">Status</label>
+          <select id="filter-status" class="filter-control" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); loadConcerns()">
+            <option value="">All Statuses</option>
+            <option value="received">Received</option>
+            <option value="under_review">Under Review</option>
+            <option value="assigned">Assigned</option>
+            <option value="action_in_progress">Action in Progress</option>
+            <option value="needs_more_info">Needs More Info</option>
+            <option value="resolved">Resolved</option>
+            <option value="rejected">Rejected / Duplicate</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filter-category">Category</label>
+          <select id="filter-category" class="filter-control" [ngModel]="filterCategory()" (ngModelChange)="filterCategory.set($event); loadConcerns()">
+            <option value="">All Categories</option>
+            <option value="garbage">Accumulated Garbage</option>
+            <option value="stagnant_water">Stagnant Water / Mosquitoes</option>
+            <option value="drainage">Blocked Drains / Sewage</option>
+            <option value="sanitation">Public Toilet Sanitation</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="filter-district">District</label>
+          <input
+            id="filter-district"
+            type="text"
+            class="filter-control"
+            placeholder="Filter district..."
+            [ngModel]="filterDistrict()"
+            (ngModelChange)="filterDistrict.set($event)"
+            (keyup.enter)="loadConcerns()"
+          />
+        </div>
+
+        <div class="filter-btn-group">
+          <button type="button" class="btn btn-primary-sm" (click)="loadConcerns()" id="filter-search-btn">
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Concerns Table / List -->
+    <div class="concerns-table-card">
+      <div class="table-header-row">
+        <h2 class="table-heading">Active Reports ({{ concerns().length }})</h2>
+        <button type="button" class="btn btn-outline-sm" (click)="loadConcerns()" id="refresh-concerns-btn">
+          ↻ Refresh
+        </button>
+      </div>
+
+      @if (loadingConcerns()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading concerns...</p>
+        </div>
+      } @else if (concerns().length === 0) {
+        <div class="empty-state">
+          <p>No reports match the current filters.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="staff-table" id="staff-concerns-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Assigned Handler</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of concerns(); track c.report_id) {
+                <tr [id]="'concern-row-' + c.reference_id">
+                  <td>
+                    <span class="ref-code">{{ c.reference_id }}</span>
+                  </td>
+                  <td>{{ c.category_label }}</td>
+                  <td>{{ c.locality }}, {{ c.district }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="getStatusClass(c.status)">
+                      {{ c.status_label }}
+                    </span>
+                  </td>
+                  <td>{{ c.assigned_handler_name || 'Unassigned' }}</td>
+                  <td>{{ c.created_at | date:'shortDate' }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn btn-outline-sm"
+                      (click)="openConcernDetail(c.report_id)"
+                      [id]="'review-btn-' + c.reference_id"
+                    >
+                      Process Case →
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Detail & Action Drawer / Modal -->
+    @if (selectedConcern(); as detail) {
+      <div class="modal-backdrop" (click)="closeDetail()">
+        <div class="modal-card" (click)="$event.stopPropagation()" id="concern-detail-modal">
+          <div class="modal-header">
+            <div>
+              <span class="meta-label">Case Processing</span>
+              <h2 class="modal-title">{{ detail.reference_id }}</h2>
+            </div>
+            <button type="button" class="close-btn" (click)="closeDetail()" id="close-detail-modal-btn">✕</button>
+          </div>
+
+          <div class="modal-body">
+            @if (actionMessage()) {
+              <div class="alert-success">{{ actionMessage() }}</div>
+            }
+
+            <!-- Case Overview -->
+            <div class="detail-overview-grid">
+              <div><strong>Category:</strong> {{ detail.category_label }}</div>
+              <div><strong>Location:</strong> {{ detail.locality }}, {{ detail.district }}, {{ detail.state }}</div>
+              <div><strong>Observed Duration:</strong> {{ detail.duration }}</div>
+              <div><strong>Status:</strong> <span class="status-badge" [ngClass]="getStatusClass(detail.status)">{{ detail.status_label }}</span></div>
+              <div><strong>Reported:</strong> {{ detail.created_at | date:'medium' }}</div>
+              <div><strong>Assigned Handler:</strong> {{ detail.assigned_handler_name || 'None' }}</div>
+            </div>
+
+            <div class="desc-panel">
+              <strong>Citizen Description:</strong>
+              <p class="desc-text">{{ detail.description }}</p>
+            </div>
+
+            <!-- Evidence Attachments -->
+            @if (detail.attachments && detail.attachments.length > 0) {
+              <div class="attachments-panel">
+                <strong>Photo Evidence:</strong>
+                <div class="attachments-list">
+                  @for (att of detail.attachments; track att.attachment_id) {
+                    <div class="attachment-item">
+                      <img
+                        [src]="'/api/v1/concerns/' + detail.report_id + '/attachments/' + att.attachment_id"
+                        alt="Photo evidence"
+                        class="evidence-thumb"
+                      />
+                      <span class="att-size">{{ (att.file_size_bytes / 1024) | number:'1.0-0' }} KB</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Assign Handler Section (Admin & Case Handler) -->
+            @if (user.role === 'admin' || user.role === 'case_handler') {
+              <div class="action-box">
+                <h3 class="action-heading">Assign Case Handler</h3>
+                <div class="assign-row">
+                  <select class="form-control" [ngModel]="selectedHandlerId()" (ngModelChange)="selectedHandlerId.set($event)" id="select-handler-dropdown">
+                    <option value="">Select a Handler / Officer</option>
+                    @for (h of handlersList(); track h.user_id) {
+                      <option [value]="h.user_id">{{ h.display_name }} ({{ h.role }})</option>
+                    }
+                  </select>
+                  <button
+                    type="button"
+                    class="btn btn-primary-sm"
+                    [disabled]="!selectedHandlerId() || actionSubmitting()"
+                    (click)="assignSelectedHandler()"
+                    id="submit-assign-btn"
+                  >
+                    Assign
+                  </button>
+                </div>
+              </div>
+            }
+
+            <!-- Status Transition & Notes -->
+            <div class="action-box">
+              <h3 class="action-heading">Update Case Status & Audit Notes</h3>
+              <div class="form-group">
+                <label class="form-label" for="action-new-status">New Status</label>
+                <select id="action-new-status" class="form-control" [ngModel]="newStatus()" (ngModelChange)="newStatus.set($event)">
+                  <option value="under_review">Under Review</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="action_in_progress">Action in Progress</option>
+                  <option value="needs_more_info">Needs More Information</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="rejected">Rejected / Duplicate</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+
+              @if (newStatus() === 'needs_more_info') {
+                <div class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id="request-reply-checkbox"
+                    [ngModel]="citizenReplyRequested()"
+                    (ngModelChange)="citizenReplyRequested.set($event)"
+                  />
+                  <label for="request-reply-checkbox">Enable citizen response box on tracking page</label>
+                </div>
+              }
+
+              @if (newStatus() === 'resolved') {
+                <div class="form-group">
+                  <label class="form-label" for="resolution-notes-input">Resolution Summary</label>
+                  <textarea
+                    id="resolution-notes-input"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Describe how the concern was addressed or verified..."
+                    [ngModel]="resolutionNotes()"
+                    (ngModelChange)="resolutionNotes.set($event)"
+                  ></textarea>
+                </div>
+              }
+
+              @if (newStatus() === 'rejected') {
+                <div class="form-group">
+                  <label class="form-label" for="rejection-reason-input">Rejection / Duplicate Reason</label>
+                  <textarea
+                    id="rejection-reason-input"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Reason for closing without action (e.g. duplicate of HA-2026-..., not a public health hazard)..."
+                    [ngModel]="rejectionReason()"
+                    (ngModelChange)="rejectionReason.set($event)"
+                  ></textarea>
+                </div>
+              }
+
+              <div class="form-group">
+                <label class="form-label" for="public-notes-input">Public Citizen Update (Visible to Citizen)</label>
+                <textarea
+                  id="public-notes-input"
+                  class="form-control"
+                  rows="2"
+                  placeholder="Notes shown on citizen tracking page..."
+                  [ngModel]="publicNotes()"
+                  (ngModelChange)="publicNotes.set($event)"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="internal-notes-input">Internal Staff Audit Note (Confidential — Staff Only)</label>
+                <textarea
+                  id="internal-notes-input"
+                  class="form-control"
+                  rows="2"
+                  placeholder="Confidential observations, phone logs, or verification details..."
+                  [ngModel]="internalNotes()"
+                  (ngModelChange)="internalNotes.set($event)"
+                ></textarea>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-success"
+                [disabled]="actionSubmitting()"
+                (click)="submitStatusUpdate()"
+                id="submit-status-update-btn"
+              >
+                @if (actionSubmitting()) {
+                  <span>Updating Case...</span>
+                } @else {
+                  <span>Apply Status Transition ✓</span>
+                }
+              </button>
+            </div>
+
+            <!-- Complete Append-Only Audit Trail -->
+            <div class="audit-section">
+              <h3 class="action-heading">Complete Audit & Event History</h3>
+              <div class="timeline">
+                @for (ev of detail.timeline; track ev.event_id) {
+                  <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                      <div class="timeline-header-row">
+                        <span class="timeline-status">{{ ev.to_status_label }}</span>
+                        <span class="timeline-actor">by {{ ev.actor_name }} ({{ ev.actor_type }})</span>
+                        <span class="timeline-date">{{ ev.created_at | date:'short' }}</span>
+                      </div>
+                      @if (ev.public_notes) {
+                        <p class="timeline-public"><strong>Public:</strong> {{ ev.public_notes }}</p>
+                      }
+                      @if (ev.internal_notes) {
+                        <p class="timeline-internal"><strong>Internal Note:</strong> {{ ev.internal_notes }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

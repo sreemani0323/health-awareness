@@ -1,0 +1,156 @@
+<!--
+  Copyright 2014-2022 The Oppia Authors. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  Adapted for Health Awareness Application from Oppia:
+  core/templates/pages/topic-viewer-page/topic-story-section/topic-lesson-card/
+-->
+<section class="topic-lessons-page">
+  <div class="container">
+    <!-- Breadcrumb Navigation — Oppia style -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/" class="breadcrumb__link">Home</a>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+      <a routerLink="/topics" class="breadcrumb__link">Topics</a>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+      <span class="breadcrumb__current" aria-current="page">{{ topicTitle() || 'Loading...' }}</span>
+    </nav>
+
+    <!-- Topic Header — Oppia Topic Header Banner Pattern -->
+    <header class="topic-header" id="topic-header">
+      <div class="topic-header__inner">
+        <span class="topic-header__badge">TOPIC</span>
+        <h1 class="topic-header__title">{{ topicTitle() || 'Topic Lessons' }}</h1>
+        @if (topicDescription()) {
+          <p class="topic-header__desc">{{ topicDescription() }}</p>
+        }
+      </div>
+    </header>
+
+    <!-- Expected Learning Outcomes (Oppia Topic Viewer Pattern) -->
+    <section class="topic-outcomes-card" id="topic-outcomes-section" aria-labelledby="outcomes-heading">
+      <div class="topic-outcomes-header">
+        <span class="outcomes-badge">LEARNING OBJECTIVES</span>
+        <h2 class="outcomes-title" id="outcomes-heading">Expected Learning Outcomes</h2>
+      </div>
+      <ul class="outcomes-list">
+        @for (outcome of getTopicOutcomes(); track outcome) {
+          <li class="outcome-item">
+            <span class="outcome-icon" aria-hidden="true">✓</span>
+            <span class="outcome-text">{{ outcome }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- Practical Family Activity for this Topic -->
+    @if (getTopicActivity(); as act) {
+      <div class="topic-family-activity-card" id="topic-family-activity">
+        <div class="activity-top-row">
+          <span class="activity-pill">TRY THIS AT HOME</span>
+          <button
+            type="button"
+            class="activity-toggle-btn"
+            [class.activity-toggle-btn--done]="isActivityCompleted(act.id)"
+            (click)="toggleActivity(act.id)"
+            [id]="'topic-toggle-' + act.id"
+          >
+            <span>{{ isActivityCompleted(act.id) ? '✓ Practiced with Family' : 'Mark as Practiced Today' }}</span>
+          </button>
+        </div>
+        <h3 class="activity-heading">{{ act.icon }} {{ act.title }}</h3>
+        <p class="activity-text">{{ act.instruction }}</p>
+        <div class="activity-note">
+          <span aria-hidden="true">🛡️</span>
+          <span><strong>Safety note:</strong> {{ act.safetyNote }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- Content -->
+    @if (loading()) {
+      <div class="lessons-list" aria-busy="true" aria-label="Loading lessons">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="topic-lesson-card lesson-item skeleton" style="height: 140px;"></div>
+        }
+      </div>
+    } @else if (error()) {
+      <div class="error-state" role="alert">
+        <span class="error-state__icon" aria-hidden="true">⚠️</span>
+        <p class="error-state__message">{{ error() }}</p>
+        <button class="btn btn--outline" (click)="ngOnInit()" id="retry-lessons-btn">
+          Try Again
+        </button>
+      </div>
+    } @else if (lessons().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon" aria-hidden="true">📝</span>
+        <h2 class="empty-state__title">No Lessons Yet</h2>
+        <p class="empty-state__desc">
+          Lessons for this topic are being prepared. Check back soon!
+        </p>
+        <a routerLink="/" class="btn btn--outline" id="back-home-btn">Back to Home</a>
+      </div>
+    } @else {
+      <div class="lessons-list">
+        @for (lesson of lessons(); track lesson.id; let idx = $index) {
+          <div
+            class="topic-lesson-card lesson-item animate-in"
+            [id]="'lesson-item-' + lesson.id"
+            [attr.aria-label]="'Lesson: ' + lesson.title"
+          >
+            <!-- Left Accent Strip -->
+            <div class="topic-lesson-card__accent-strip" aria-hidden="true">
+              <span class="topic-lesson-card__accent-icon">📖</span>
+            </div>
+
+            <!-- Content Section -->
+            <div class="topic-lesson-card-content">
+              <div class="topic-lesson-card-title-row">
+                <!-- Oppia module circle badge -->
+                <div class="topic-module-circle-badge lesson-item__number">
+                  {{ idx + 1 }}
+                </div>
+                <div class="topic-lesson-card-header-info">
+                  <span class="topic-lesson-card-chapter-label">CHAPTER {{ idx + 1 }}</span>
+                  <h2 class="topic-lesson-card-title lesson-item__title">{{ lesson.title }}</h2>
+                </div>
+              </div>
+
+              <p class="topic-lesson-card-description lesson-item__summary">{{ lesson.summary }}</p>
+
+              <!-- Footer Actions Row -->
+              <div class="topic-lesson-card-footer">
+                <div class="topic-lesson-card-meta">
+                  <span class="topic-lesson-card-badge">
+                    <span aria-hidden="true">⏱</span>
+                    {{ formatDuration(lesson.estimated_duration_minutes) }}
+                  </span>
+                  <span class="topic-lesson-card-badge">
+                    <span aria-hidden="true">🌐</span>
+                    {{ lesson.language | uppercase }}
+                  </span>
+                  @if (isLessonCompleted(lesson.id)) {
+                    <span class="topic-lesson-completed-badge" [id]="'completed-badge-' + lesson.id">
+                      <span aria-hidden="true">✓</span> Completed
+                    </span>
+                  }
+                </div>
+
+                <a
+                  [routerLink]="['/lessons', lesson.id]"
+                  class="topic-lesson-card-start-button"
+                  [class.topic-lesson-card-start-button--review]="isLessonCompleted(lesson.id)"
+                  [id]="'start-lesson-' + lesson.id"
+                  [attr.aria-label]="(isLessonCompleted(lesson.id) ? 'Review lesson: ' : 'Start lesson: ') + lesson.title"
+                >
+                  <span>{{ isLessonCompleted(lesson.id) ? 'Review Lesson' : 'Start Lesson' }}</span>
+                  <span class="topic-lesson-card-start-arrow" aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>
