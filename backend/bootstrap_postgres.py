@@ -18,10 +18,19 @@ import json
 import logging
 import os
 import sys
-from datetime import date, datetime
 
-# Ensure project root is on sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Ensure repo root is on sys.path and remove script directory to prevent shadowing stdlib platform
+backend_dir = os.path.abspath(os.path.dirname(__file__))
+while backend_dir in sys.path:
+    sys.path.remove(backend_dir)
+repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
+
+if "platform" in sys.modules and not hasattr(sys.modules["platform"], "python_implementation"):
+    del sys.modules["platform"]
+import platform
+from datetime import date, datetime
 
 from backend.storage.db import (
     create_app_engine,
