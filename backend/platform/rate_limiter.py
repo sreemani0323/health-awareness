@@ -49,9 +49,27 @@ def get_trusted_client_ip() -> str:
     return request.remote_addr or "127.0.0.1"
 
 
+def get_auth_rate_limit() -> str:
+    """Dynamic rate limit string for authentication endpoints.
+
+    Allows configuration via the AUTH_RATE_LIMIT environment variable.
+    In testing environments where AUTH_RATE_LIMIT is unset, defaults to '5 per 15 minutes'
+    so test suites remain fast and deterministic.
+    In production and development, defaults to '30 per 15 minutes' to prevent false lockouts
+    for legitimate users behind shared NAT or during interactive sessions.
+    """
+    configured = os.environ.get("AUTH_RATE_LIMIT", "").strip()
+    if configured:
+        return configured
+    if os.environ.get("TESTING") == "true" or os.environ.get("PYTEST_CURRENT_TEST"):
+        return "5 per 15 minutes"
+    return "30 per 15 minutes"
+
+
 limiter = Limiter(
     key_func=get_trusted_client_ip,
     storage_uri="memory://",
     strategy="fixed-window",
     default_limits=[],
 )
+

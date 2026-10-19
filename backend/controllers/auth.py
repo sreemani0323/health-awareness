@@ -128,13 +128,18 @@ def _issue_csrf_token(response: Response) -> str:
     return token
 
 
-from backend.platform.rate_limiter import limiter
+from backend.platform.rate_limiter import limiter, get_auth_rate_limit
 
 
 class LoginHandler(BaseHandler):
     """POST /api/v1/auth/login — Authenticate and create session."""
 
-    decorators = [limiter.limit("5 per 15 minutes")]
+    decorators = [
+        limiter.limit(
+            get_auth_rate_limit,
+            deduct_when=lambda response: response.status_code >= 400,
+        )
+    ]
 
     def post(self) -> tuple[Response, int]:
 

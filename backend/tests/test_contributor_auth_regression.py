@@ -17,6 +17,8 @@ Validates:
 
 from __future__ import annotations
 
+import os
+from unittest.mock import patch
 import pytest
 from sqlalchemy import text
 
@@ -346,4 +348,54 @@ def test_contributor_can_list_creator_topics_and_lessons(client, pg_engine, test
     assert len(lessons_data) == 1
     assert lessons_data[0]["id"] == "les-creator-reg"
     assert lessons_data[0]["title"] == "Creator Version Title"
+
+
+def test_successful_logins_do_not_exhaust_rate_limit(client, pg_engine, test_db_url):
+    """Successful logins should not deduct from the rate limit quota, preventing false lockouts."""
+    from backend.platform.rate_limiter import limiter
+    limiter.reset()
+
+    provision_user(
+        username="contributor",
+        password="contributor123",
+        role="contributor",
+        database_url=test_db_url,
+        demo_password_opt_in=True,
+    )
+
+    # Perform 8 consecutive successful logins (exceeding the standard 5 limit)
+    for _ in range(8):
+        resp = client.post(
+            "/api/v1/auth/login",
+            json={"username": "contributor", "password": "contributor123"},
+        )
+        assert resp.status_code == 200
+        assert "csrf_token" in resp.get_json()["data"]
+
+    limiter.reset()
+
+
+def test_auth_rate_limit_env_override(client, pg_engine, test_db_url):
+    """AUTH_RATE_LIMIT environment variable dynamically overrides the rate limit threshold."""
+    from backend.platform.rate_limiter import limiter
+    limiter.reset()
+
+    with patch.dict(os.environ, {"AUTH_RATE_LIMIT": "2 per 10 minutes"}):
+        # 2 failed attempts allowed
+        for _ in range(2):
+            resp = client.post(
+                "/api/v1/auth/login",
+                json={"username": "unknown", "password": "wrongpassword"},
+            )
+            assert resp.status_code == 401
+
+        # 3rd failed attempt blocked with 429
+        limited_resp = client.post(
+            "/api/v1/auth/login",
+            json={"username": "unknown", "password": "wrongpassword"},
+        )
+        assert limited_resp.status_code == 429
+        assert limited_resp.get_json()["error"]["code"] == "RATE_LIMIT_EXCEEDED"
+
+    limiter.reset()
 
