@@ -21,11 +21,23 @@ from backend.storage.storage_models import UserModel
 
 def _serialize_user_admin(user: User) -> dict[str, Any]:
     """Serialize user for admin view, strictly omitting password_hash."""
-    # Lookup created_at if available in Datastore model
+    # Lookup created_at if available in Datastore model or PostgreSQL
     created_at_iso = None
-    model = UserModel.get_by_id(user.user_id)
-    if model and model.created_at:
-        created_at_iso = model.created_at.isoformat()
+    from google.cloud import ndb
+    if ndb.get_context(raise_context_error=False) is None:
+        try:
+            from backend.storage.db import get_db_session
+            from backend.storage.postgres_models import UserModel as PgUserModel
+            with get_db_session() as session:
+                pg_u = session.query(PgUserModel).filter_by(user_id=user.user_id).first()
+                if pg_u and pg_u.created_at:
+                    created_at_iso = pg_u.created_at.isoformat()
+        except Exception:
+            pass
+    else:
+        model = UserModel.get_by_id(user.user_id)
+        if model and model.created_at:
+            created_at_iso = model.created_at.isoformat()
 
     return {
         "user_id": user.user_id,
