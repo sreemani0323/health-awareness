@@ -279,14 +279,17 @@ export class LearnerAuthService {
       });
 
       const body = await resp.json();
-      if (!resp.ok || !body.success) {
-        const errorMsg = body?.error?.message || 'Registration failed. Please check your details.';
+      const payload = body?.data || body;
+      if (!resp.ok) {
+        const errorMsg = body?.error?.message || payload?.error?.message || 'Registration failed. Please check your details.';
         this.errorMessage.set(errorMsg);
         return { success: false, error: errorMsg };
       }
 
-      this.setSession(body.token, body.user);
-      return { success: true, token: body.token, user: body.user };
+      const token = payload.token || body.token;
+      const user = payload.user || body.user;
+      this.setSession(token, user);
+      return { success: true, token, user };
     } catch (err: any) {
       const errorMsg = err.message || 'Network error during registration.';
       this.errorMessage.set(errorMsg);
@@ -316,14 +319,17 @@ export class LearnerAuthService {
       });
 
       const body = await resp.json();
-      if (!resp.ok || !body.success) {
-        const errorMsg = body?.error?.message || 'Invalid email or password.';
+      const payload = body?.data || body;
+      if (!resp.ok) {
+        const errorMsg = body?.error?.message || payload?.error?.message || 'Invalid email or password.';
         this.errorMessage.set(errorMsg);
         return { success: false, error: errorMsg };
       }
 
-      this.setSession(body.token, body.user);
-      return { success: true, token: body.token, user: body.user };
+      const token = payload.token || body.token;
+      const user = payload.user || body.user;
+      this.setSession(token, user);
+      return { success: true, token, user };
     } catch (err: any) {
       const errorMsg = err.message || 'Network error during login.';
       this.errorMessage.set(errorMsg);
@@ -347,14 +353,15 @@ export class LearnerAuthService {
       });
 
       const body = await resp.json();
-      if (!resp.ok || !body.success) {
-        const errorMsg = body?.error?.message || 'Unable to process recovery request.';
+      const payload = body?.data || body;
+      if (!resp.ok) {
+        const errorMsg = body?.error?.message || payload?.error?.message || 'Unable to process recovery request.';
         return { success: false, error: errorMsg };
       }
 
       return {
         success: true,
-        message: body.message || 'If an account exists, instructions have been sent.',
+        message: payload.message || body.message || 'If an account exists, instructions have been sent.',
       };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error during recovery.' };
