@@ -769,3 +769,147 @@ def test_csrf_protection_on_authenticated_admin_application_decisions(client, se
     # Testing mode has CSRF_ENABLED=False by default unless explicitly configured,
     # but verify handler requires authentication and proper validation
     assert resp.status_code in (200, 403)
+
+
+# ============================================================================
+# Staff Application Tracking Recovery & Enumeration Prevention Tests
+# ============================================================================
+
+def test_staff_application_recover_existing_email_returns_generic_message_and_dispatches_email(client):
+    """POST /api/v1/staff/applications/recover returns a generic 200 response and dispatches email for valid applications."""
+    from unittest.mock import MagicMock
+    from backend.platform.email_service import get_email_service, set_email_service, EmailDeliveryResult
+
+    # Submit valid application
+    sub_resp = client.post("/api/v1/staff/apply", json={
+        "applicant_name": "Dr. Recovery Candidate",
+        "applicant_email": "recovery.candidate@healthaware.test",
+        "requested_role": "reviewer",
+        "statement_of_purpose": "Pediatrician with 12 years experience in child nutrition programs.",
+        "evidence_standards_acknowledged": True,
+        "child_safety_acknowledged": True,
+    })
+    assert sub_resp.status_code == 201
+
+    mock_email = MagicMock()
+    mock_email.is_configured = True
+    mock_email.send_staff_application_tracking.return_value = EmailDeliveryResult(
+        success=True, provider="smtp", message_id="msg-123"
+    )
+    original_service = get_email_service()
+    set_email_service(mock_email)
+
+    try:
+        resp = client.post("/api/v1/staff/applications/recover", json={
+            "email": "recovery.candidate@healthaware.test"
+        })
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+
+        # Crucial security assertion: Never leak credentials or internal state in HTTP response
+        assert "tracking_token" not in data
+        assert "reference_id" not in data
+        assert "email_sent" not in data
+        assert data["message"] == "If an active staff application exists for this email address, tracking recovery instructions have been sent."
+
+        # Verify email was dispatched to applicant with fresh tracking credentials
+        mock_email.send_staff_application_tracking.assert_called_once()
+        call_kwargs = mock_email.send_staff_application_tracking.call_args.kwargs
+        assert call_kwargs["to_email"] == "recovery.candidate@healthaware.test"
+        assert "tracking_token" in call_kwargs
+        assert call_kwargs["tracking_token"].startswith("sec_app_")
+    finally:
+        set_email_service(original_service)
+
+
+def test_staff_application_recover_unknown_email_returns_identical_generic_message(client):
+    """POST /api/v1/staff/applications/recover returns the exact same generic 200 message for non-existent emails."""
+    from unittest.mock import MagicMock
+    from backend.platform.email_service import get_email_service, set_email_service
+
+    mock_email = MagicMock()
+    mock_email.is_configured = True
+    original_service = get_email_service()
+    set_email_service(mock_email)
+
+    try:
+        resp = client.post("/api/v1/staff/applications/recover", json={
+            "email": "definitely.not.an.applicant.ever@healthaware.test"
+        })
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+
+        # Indistinguishable response
+        assert "tracking_token" not in data
+        assert "reference_id" not in data
+        assert data["message"] == "If an active staff application exists for this email address, tracking recovery instructions have been sent."
+
+        # No email dispatched for unknown address
+        mock_email.send_staff_application_tracking.assert_not_called()
+    finally:
+        set_email_service(original_service)
+
+
+def test_staff_application_recover_account_enumeration_indistinguishable(client):
+    """Responses for existing vs unknown emails must be indistinguishable in status, structure, and message."""
+    # 1. Existing email
+    client.post("/api/v1/staff/apply", json={
+        "applicant_name": "Enum Check User",
+        "applicant_email": "enum.check@healthaware.test",
+        "requested_role": "contributor",
+        "statement_of_purpose": "Community health worker applying for content contributor.",
+        "evidence_standards_acknowledged": True,
+        "child_safety_acknowledged": True,
+    })
+
+    resp_existing = client.post("/api/v1/staff/applications/recover", json={
+        "email": "enum.check@healthaware.test"
+    })
+    resp_unknown = client.post("/api/v1/staff/applications/recover", json={
+        "email": "never.exists@healthaware.test"
+    })
+
+    assert resp_existing.status_code == 200
+    assert resp_unknown.status_code == 200
+    assert resp_existing.get_json() == resp_unknown.get_json()
+
+
+def test_staff_application_recover_invalid_inputs(client):
+    """POST /api/v1/staff/applications/recover rejects invalid payloads with 400."""
+    # Missing email
+    r1 = client.post("/api/v1/staff/applications/recover", json={})
+    assert r1.status_code == 400
+    assert r1.get_json()["error"]["code"] == "BAD_REQUEST"
+
+    # Malformed email
+    r2 = client.post("/api/v1/staff/applications/recover", json={"email": "invalid-address-without-at"})
+    assert r2.status_code == 400
+    assert r2.get_json()["error"]["code"] == "BAD_REQUEST"
+
+    # Non-dictionary JSON
+    r3 = client.post("/api/v1/staff/applications/recover", data="just a raw string", content_type="application/json")
+    assert r3.status_code == 400
+
+
+def test_staff_application_recover_rate_limit():
+    """POST /api/v1/staff/applications/recover enforces 10 requests per hour rate limit."""
+    import os
+    from unittest.mock import patch
+
+    with patch.dict(os.environ, {"APP_ENV": "development", "PROXY_SECRET": ""}):
+        app = create_app({
+            "TESTING": True,
+            "RATELIMIT_ENABLED": True,
+            "SKIP_NDB_CONTEXT": True,
+            "SECRET_KEY": "a" * 32,
+        })
+        with app.test_client() as rl_client:
+            # 10 calls within limit
+            for _ in range(10):
+                r = rl_client.post("/api/v1/staff/applications/recover", json={"email": "applicant@test.org"})
+                assert r.status_code in (200, 400)
+
+            # 11th call exceeds rate limit -> 429
+            limited = rl_client.post("/api/v1/staff/applications/recover", json={"email": "applicant@test.org"})
+            assert limited.status_code == 429
+            assert limited.get_json()["error"]["code"] == "RATE_LIMIT_EXCEEDED"

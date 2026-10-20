@@ -84,9 +84,14 @@ class EmailService:
             if html_content:
                 msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-            with smtplib.SMTP(self._smtp_host, self._smtp_port, timeout=10.0) as server:
+            if self._smtp_port == 465:
+                server = smtplib.SMTP_SSL(self._smtp_host, self._smtp_port, timeout=10.0)
+            else:
+                server = smtplib.SMTP(self._smtp_host, self._smtp_port, timeout=10.0)
+
+            with server:
                 server.ehlo()
-                if server.has_extn("STARTTLS"):
+                if self._smtp_port != 465 and server.has_extn("STARTTLS"):
                     server.starttls()
                     server.ehlo()
                 if self._smtp_user and self._smtp_password:

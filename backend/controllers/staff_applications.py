@@ -16,6 +16,7 @@ from backend.domain.staff_application_service import (
     ApplicationSecurityError,
     get_staff_application_service,
 )
+from backend.platform.audit_log import SecurityAuditEvent, log_security_event
 from backend.platform.rate_limiter import get_trusted_client_ip, limiter
 
 logger = logging.getLogger(__name__)
@@ -103,36 +104,49 @@ class StaffApplicationSubmitHandler(BaseHandler):
 
 
 class StaffApplicationRecoverHandler(BaseHandler):
-    """POST /api/v1/staff/applications/recover — Secure tracking token recovery."""
+    """POST /api/v1/staff/applications/recover — Secure tracking token recovery.
+
+    Generic external response protects against account enumeration and token exposure.
+    Tracking credentials are never returned in public HTTP responses; they are delivered
+    only to the verified applicant inbox when an eligible application exists.
+    """
 
     decorators = [limiter.limit("10 per hour")]
 
     def post(self) -> tuple[Response, int]:
-        data = request.get_json(silent=True) or {}
+        data = request.get_json(silent=True)
+        if not data or not isinstance(data, dict):
+            return self.render_error("BAD_REQUEST", "Valid JSON payload required.", 400)
+
         email = (data.get("applicant_email") or data.get("email") or "").strip().lower()
         if not email or "@" not in email:
             return self.render_error("BAD_REQUEST", "Valid applicant email address is required.", 400)
 
+        client_ip = get_trusted_client_ip()
         service = get_staff_application_service()
         try:
-            app, raw_token, email_sent = service.recover_application_tracking(
+            service.recover_application_tracking(
                 applicant_email=email,
-                client_ip=get_trusted_client_ip(),
+                client_ip=client_ip,
             )
-            return self.render_json({
-                "reference_id": app.reference_id,
-                "tracking_token": raw_token,
-                "email_sent": email_sent,
-                "message": (
-                    "A new tracking token has been generated. "
-                    + ("A recovery copy was emailed to your address." if email_sent else "Please copy and store it securely now.")
-                ),
-            })
-        except ApplicationNotFoundError as exc:
-            return self.render_error("NOT_FOUND", str(exc), 404)
+        except ApplicationNotFoundError:
+            # Audit log attempt without leaking existence externally
+            logger.info("Staff tracking recovery requested for unknown or non-active application: %s", email)
+            log_security_event(
+                event=SecurityAuditEvent.STAFF_APP_RECOVERY_REQUESTED,
+                actor_id=email,
+                target_id="none",
+                client_ip=client_ip,
+                status="NOT_FOUND",
+            )
         except Exception as exc:
             logger.error("Error recovering staff tracking token for '%s': %s", email, exc)
             return self.render_error("SERVICE_UNAVAILABLE", "Tracking recovery service temporarily unavailable.", 503)
+
+        # Consistent generic response prevents account enumeration and credential exposure
+        return self.render_json({
+            "message": "If an active staff application exists for this email address, tracking recovery instructions have been sent."
+        })
 
 
 class StaffApplicationTrackHandler(BaseHandler):

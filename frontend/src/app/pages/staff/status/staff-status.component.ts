@@ -55,11 +55,19 @@ export class StaffStatusComponent implements OnInit {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await resp.json();
+      const data = await resp.json().catch(() => ({}));
       this.isRecovering.set(false);
       this.showRecoverModal.set(false);
       this.recoveryEmail.set('');
-      this.successMessage.set(data.message || 'If an application exists for this email, tracking recovery details have been processed.');
+
+      if (resp.ok) {
+        this.successMessage.set(
+          data.message || 'If an active staff application exists for this email address, tracking recovery instructions have been sent.'
+        );
+      } else {
+        const errorMsg = data.error?.message || 'Unable to process recovery request. Please try again.';
+        this.errorMessage.set(errorMsg);
+      }
     } catch {
       this.isRecovering.set(false);
       this.errorMessage.set('Network error during recovery request.');

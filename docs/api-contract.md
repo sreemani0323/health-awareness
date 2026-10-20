@@ -258,6 +258,36 @@ Confirms that the Flask WSGI application process is running and receptive to HTT
 }
 ```
 
+### 2.5 Endpoint E: Staff Application Tracking Recovery
+Enables applicants to recover access to active applications via their verified email address without disclosing application existence to third parties.
+
+- **Method / Route:** `POST /api/v1/staff/applications/recover`
+- **Authentication:** None (Public)
+- **Rate Limit:** 10 requests per hour per IP
+- **Security Guarantees:**
+  - **Account Enumeration Defense:** Returns identical `HTTP 200 OK` status and generic response message whether the email exists, does not exist, or is in an ineligible terminal state.
+  - **Zero Public Credential Disclosure:** `reference_id` and raw `tracking_token` are never returned in HTTP responses. They are dispatched solely to the verified applicant inbox via transactional email.
+  - **Audit Logging:** Every attempt is recorded in the structured security audit trail with client IP, timestamp, and verification outcome.
+
+#### Request Payload
+```json
+{
+  "email": "applicant@example.org"
+}
+```
+
+#### Consistent Generic Response (`200 OK`)
+```json
+{
+  "data": {
+    "message": "If an active staff application exists for this email address, tracking recovery instructions have been sent."
+  },
+  "meta": {
+    "api_version": "v1"
+  }
+}
+```
+
 ---
 
 ## 3. Interaction Mechanics & Frontend Consumption

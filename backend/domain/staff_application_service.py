@@ -292,6 +292,9 @@ class StaffApplicationService:
             if not model:
                 raise ApplicationNotFoundError(f"No active staff application found for '{clean_email}'.")
 
+            ref_id = model.reference_id
+            app_name = model.applicant_name
+
             raw_token = f"sec_app_{secrets.token_urlsafe(32)}"
             token_hash = self.hash_token(raw_token)
             expires_at = now + timedelta(days=STAFF_APPLICATION_TRACKING_EXPIRY_DAYS)
@@ -314,18 +317,34 @@ class StaffApplicationService:
             )
             session.add(hist)
             session.commit()
-            app = model.to_domain()
 
         from backend.platform.email_service import get_email_service
         email_svc = get_email_service()
         email_res = email_svc.send_staff_application_tracking(
             to_email=clean_email,
-            applicant_name=app.applicant_name,
-            reference_id=app.reference_id,
+            applicant_name=app_name,
+            reference_id=ref_id,
             tracking_token=raw_token,
-            tracking_url=f"/staff/application-status?reference_id={app.reference_id}",
+            tracking_url=f"/staff/application-status?reference_id={ref_id}",
         )
-        return app, raw_token, email_res.success
+        email_sent = bool(email_res.success)
+
+        log_security_event(
+            event=(
+                SecurityAuditEvent.STAFF_APP_RECOVERY_DISPATCHED
+                if email_sent
+                else SecurityAuditEvent.STAFF_APP_RECOVERY_REQUESTED
+            ),
+            actor_id=clean_email,
+            target_id=ref_id,
+            client_ip=client_ip,
+            status="SUCCESS" if email_sent else "EMAIL_FAILED_OR_UNCONFIGURED",
+            details={
+                "reference_id": ref_id,
+                "email_sent": email_sent,
+            },
+        )
+        return ref_id, raw_token, email_sent
 
     def get_application_for_applicant(
         self, reference_id: str, raw_token: str
