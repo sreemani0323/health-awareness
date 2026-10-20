@@ -270,6 +270,63 @@ class StaffApplicationService:
 
         return app, raw_token
 
+    def recover_application_tracking(
+        self, applicant_email: str, client_ip: Optional[str] = None
+    ) -> Tuple[StaffApplication, str, bool]:
+        """Recovers or reissues tracking token for an applicant with an active application."""
+        clean_email = applicant_email.strip().lower()
+        now = datetime.now(timezone.utc)
+        with self._get_session() as session:
+            model = (
+                session.query(StaffApplicationModel)
+                .filter(
+                    StaffApplicationModel.applicant_email == clean_email,
+                    StaffApplicationModel.status.in_([
+                        ApplicationStatus.PENDING_REVIEW.value,
+                        ApplicationStatus.UNDER_REVIEW.value,
+                        ApplicationStatus.MORE_INFO_REQUESTED.value,
+                    ]),
+                )
+                .first()
+            )
+            if not model:
+                raise ApplicationNotFoundError(f"No active staff application found for '{clean_email}'.")
+
+            raw_token = f"sec_app_{secrets.token_urlsafe(32)}"
+            token_hash = self.hash_token(raw_token)
+            expires_at = now + timedelta(days=STAFF_APPLICATION_TRACKING_EXPIRY_DAYS)
+
+            model.tracking_token_hash = token_hash
+            model.tracking_token_expires_at = expires_at
+            model.updated_at = now
+
+            hist = StaffApplicationHistoryModel(
+                history_id=f"hist_{uuid.uuid4().hex[:16]}",
+                application_id=model.application_id,
+                from_status=model.status,
+                to_status=model.status,
+                actor_id="applicant",
+                actor_name=model.applicant_name,
+                actor_role="applicant",
+                action="token_recovery",
+                decision_rationale="Applicant requested secure tracking token recovery.",
+                created_at=now,
+            )
+            session.add(hist)
+            session.commit()
+            app = model.to_domain()
+
+        from backend.platform.email_service import get_email_service
+        email_svc = get_email_service()
+        email_res = email_svc.send_staff_application_tracking(
+            to_email=clean_email,
+            applicant_name=app.applicant_name,
+            reference_id=app.reference_id,
+            tracking_token=raw_token,
+            tracking_url=f"/staff/application-status?reference_id={app.reference_id}",
+        )
+        return app, raw_token, email_res.success
+
     def get_application_for_applicant(
         self, reference_id: str, raw_token: str
     ) -> dict[str, Any]:

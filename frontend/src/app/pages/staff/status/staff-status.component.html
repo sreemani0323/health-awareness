@@ -55,6 +55,15 @@
               <span>Check Application Status</span>
             }
           </button>
+
+          <button
+            type="button"
+            class="btn-recover-link"
+            (click)="showRecoverModal.set(true)"
+            id="btn-open-recover-modal"
+          >
+            Lost your tracking token? Recover application access
+          </button>
         </div>
       </form>
     </div>
@@ -268,6 +277,54 @@
                 <span>Withdrawing...</span>
               } @else {
                 <span>Confirm Withdrawal</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+    <!-- Application Recovery Modal -->
+    @if (showRecoverModal()) {
+      <div class="modal-backdrop" (click)="showRecoverModal.set(false)" role="dialog" aria-modal="true">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <h3 class="modal-title">Recover Application Access</h3>
+          <p class="modal-text">
+            Enter the verified email address used during your staff or reviewer application. If an application exists, your tracking details will be securely sent to your verified inbox.
+          </p>
+
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label for="recover-staff-email" class="form-label">Applicant Email</label>
+            <input
+              id="recover-staff-email"
+              type="email"
+              class="form-input"
+              [ngModel]="recoveryEmail()"
+              (ngModelChange)="recoveryEmail.set($event)"
+              placeholder="e.g. applicant@example.com"
+              required
+            />
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              (click)="showRecoverModal.set(false)"
+              [disabled]="isRecovering()"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn-track-submit"
+              (click)="recoverApplication()"
+              [disabled]="isRecovering() || !recoveryEmail().trim()"
+              id="btn-submit-recovery"
+            >
+              @if (isRecovering()) {
+                <span>Processing...</span>
+              } @else {
+                <span>Send Tracking Details</span>
               }
             </button>
           </div>

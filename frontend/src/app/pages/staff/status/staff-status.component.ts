@@ -35,6 +35,38 @@ export class StaffStatusComponent implements OnInit {
   withdrawRationale = signal<string>('');
   submittingWithdraw = signal<boolean>(false);
 
+  // Recovery state
+  showRecoverModal = signal<boolean>(false);
+  recoveryEmail = signal<string>('');
+  isRecovering = signal<boolean>(false);
+
+  async recoverApplication(): Promise<void> {
+    const email = this.recoveryEmail().trim();
+    if (!email || !email.includes('@')) {
+      this.errorMessage.set('Please enter a valid email address.');
+      return;
+    }
+
+    this.isRecovering.set(true);
+    this.errorMessage.set(null);
+    try {
+      const resp = await fetch('/api/v1/staff/applications/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await resp.json();
+      this.isRecovering.set(false);
+      this.showRecoverModal.set(false);
+      this.recoveryEmail.set('');
+      this.successMessage.set(data.message || 'If an application exists for this email, tracking recovery details have been processed.');
+    } catch {
+      this.isRecovering.set(false);
+      this.errorMessage.set('Network error during recovery request.');
+    }
+  }
+
+
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
       const ref = params['ref'];

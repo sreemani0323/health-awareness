@@ -743,14 +743,16 @@ def seed_database():
         # Demo accounts are restricted strictly to explicitly enabled local development/testing.
         # They must NEVER be silently provisioned into a production environment.
         env_mode = os.environ.get("FLASK_ENV", "").lower()
+        app_env = os.environ.get("APP_ENV", "").lower()
         is_prod = (
             env_mode == "production"
+            or app_env == "production"
             or bool(os.environ.get("GAE_APPLICATION"))
             or bool(os.environ.get("GAE_ENV"))
+            or bool(os.environ.get("RENDER"))
         )
-        enable_demo = os.environ.get("ENABLE_DEMO_ACCOUNTS", "true").lower() in ("true", "1")
-        if is_prod:
-            enable_demo = False
+        # Never enable demo accounts in production
+        enable_demo = False if is_prod else (os.environ.get("ENABLE_DEMO_ACCOUNTS", "false").lower() in ("true", "1"))
 
         if enable_demo:
             from backend.platform.security import hash_password

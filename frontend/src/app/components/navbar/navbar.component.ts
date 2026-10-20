@@ -1,19 +1,24 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, ViewChild } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ComingSoonService } from '../../services/coming-soon.service';
 import { LearnerAuthService } from '../../services/learner-auth.service';
+import { LearningProgressService } from '../../services/learning-progress.service';
+import { LearnerAuthModalComponent } from '../learner-auth-modal/learner-auth-modal.component';
 
 @Component({
   selector: 'ha-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, LearnerAuthModalComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
 export class NavbarComponent {
   private readonly comingSoonService = inject(ComingSoonService);
   readonly learnerAuth = inject(LearnerAuthService, { optional: true });
+  readonly progressService = inject(LearningProgressService, { optional: true });
+
+  @ViewChild(LearnerAuthModalComponent) authModal?: LearnerAuthModalComponent;
 
   readonly isMobileMenuOpen = signal<boolean>(false);
 
@@ -25,6 +30,11 @@ export class NavbarComponent {
     this.isMobileMenuOpen.set(false);
   }
 
+  openLearnerAuth(tab: 'login' | 'register' = 'login'): void {
+    this.closeMobileMenu();
+    this.authModal?.open(tab);
+  }
+
   onComingSoonClick(featureName: string, event?: Event): void {
     if (event) {
       event.preventDefault();
@@ -33,11 +43,16 @@ export class NavbarComponent {
     this.comingSoonService.show(featureName);
   }
 
-  onSaveProgressClick(): void {
+  async onSyncClick(): Promise<void> {
     this.closeMobileMenu();
-    this.comingSoonService.show(
-      'Cloud sync (Neon Auth): Learning progress is automatically saved on this device. Cloud account sync is coming in Stage 2!'
-    );
+    if (this.progressService) {
+      await this.progressService.syncWithRemote();
+    }
+  }
+
+  onSaveProgressClick(): void {
+    // Open learner auth modal to log in / create account and sync
+    this.openLearnerAuth('login');
   }
 
   onSignOutClick(): void {
@@ -45,3 +60,4 @@ export class NavbarComponent {
     this.learnerAuth?.logout();
   }
 }
+

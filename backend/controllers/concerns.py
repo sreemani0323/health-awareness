@@ -163,10 +163,32 @@ class ConcernSubmitHandler(MethodView):
 
             ref_id = report.reference_id
 
+        user = get_current_user()
+        email_sent = False
+        user_email = user.username if (user and "@" in getattr(user, "username", "")) else None
+        if user_email:
+            from backend.platform.email_service import get_email_service
+            email_svc = get_email_service()
+            res = email_svc.send_concern_tracking(
+                to_email=user_email,
+                reference_id=ref_id,
+                tracking_token=raw_token,
+                tracking_url=f"/track?reference_id={ref_id}",
+            )
+            email_sent = res.success
+
+        delivery_notice = (
+            "A copy of your tracking credentials was sent to your verified account email."
+            if email_sent
+            else "Anonymous submission. Save your Reference ID and Tracking Token now; they cannot be recovered after leaving this screen."
+        )
+
         # Return reference ID and tracking token once
         return jsonify({
             "message": "Your concern has been received by HealthAware.",
             "notice": "This reference confirms intake by HealthAware. It does not represent an official municipal government filing.",
+            "delivery_notice": delivery_notice,
+            "email_sent": email_sent,
             "data": {
                 "reference_id": ref_id,
                 "tracking_token": raw_token,

@@ -1,0 +1,256 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="close()" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <!-- Close Button -->
+      <button type="button" class="modal-close-btn" (click)="close()" aria-label="Close dialog" id="learner-modal-close-btn">
+        ✕
+      </button>
+
+      <!-- Tabs Header -->
+      <div class="modal-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          class="tab-btn"
+          [class.tab-btn--active]="activeTab() === 'login'"
+          (click)="switchTab('login')"
+          id="learner-tab-login"
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="tab-btn"
+          [class.tab-btn--active]="activeTab() === 'register'"
+          (click)="switchTab('register')"
+          id="learner-tab-register"
+        >
+          Create Account
+        </button>
+      </div>
+
+      <!-- Alerts / Feedback -->
+      @if (errorMessage()) {
+        <div class="alert alert-error" role="alert" id="learner-modal-error">
+          {{ errorMessage() }}
+        </div>
+      }
+      @if (successMessage()) {
+        <div class="alert alert-success" role="status" id="learner-modal-success">
+          {{ successMessage() }}
+        </div>
+      }
+
+      <!-- Tab: Sign In -->
+      @if (activeTab() === 'login') {
+        <form (ngSubmit)="onLogin()" class="auth-form" id="learner-login-form">
+          <div class="form-header">
+            <h2 id="modal-title">Sign In to HealthAware</h2>
+            <p>Access your synced learning history, certificates, and achievements.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="learner-login-email">Email Address</label>
+            <input
+              type="email"
+              id="learner-login-email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="you@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="learner-login-password">Password</label>
+            <input
+              type="password"
+              id="learner-login-password"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="••••••••"
+              required
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary btn-block"
+              [disabled]="isLoading()"
+              id="learner-submit-login-btn"
+            >
+              @if (isLoading()) {
+                <span>Signing in...</span>
+              } @else {
+                <span>Sign In</span>
+              }
+            </button>
+          </div>
+
+          <div class="form-footer">
+            <button
+              type="button"
+              class="link-btn"
+              (click)="switchTab('recover')"
+              id="learner-goto-recover-btn"
+            >
+              Forgot your password?
+            </button>
+            <span class="footer-separator">•</span>
+            <button
+              type="button"
+              class="link-btn"
+              (click)="switchTab('register')"
+              id="learner-goto-register-btn"
+            >
+              Need an account? Register
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Tab: Register -->
+      @if (activeTab() === 'register') {
+        <form (ngSubmit)="onRegister()" class="auth-form" id="learner-register-form">
+          <div class="form-header">
+            <h2 id="modal-title">Create Learner Account</h2>
+            <p>Save and sync your learning progress across all your devices securely.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="learner-reg-name">Full Name or Display Name</label>
+            <input
+              type="text"
+              id="learner-reg-name"
+              name="displayName"
+              [(ngModel)]="displayName"
+              placeholder="e.g. Maya Sharma"
+              required
+              autocomplete="name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="learner-reg-email">Email Address</label>
+            <input
+              type="email"
+              id="learner-reg-email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="you@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="learner-reg-password">Password (min 8 characters)</label>
+            <input
+              type="password"
+              id="learner-reg-password"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="••••••••"
+              required
+              minlength="8"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="learner-reg-confirm">Confirm Password</label>
+            <input
+              type="password"
+              id="learner-reg-confirm"
+              name="confirmPassword"
+              [(ngModel)]="confirmPassword"
+              placeholder="••••••••"
+              required
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary btn-block"
+              [disabled]="isLoading()"
+              id="learner-submit-register-btn"
+            >
+              @if (isLoading()) {
+                <span>Creating Account...</span>
+              } @else {
+                <span>Create Account &amp; Sync</span>
+              }
+            </button>
+          </div>
+
+          <div class="form-footer">
+            <span>Already have an account?</span>
+            <button
+              type="button"
+              class="link-btn"
+              (click)="switchTab('login')"
+              id="learner-goto-login-btn"
+            >
+              Sign In
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Tab: Recover / Reset -->
+      @if (activeTab() === 'recover') {
+        <form (ngSubmit)="onRecover()" class="auth-form" id="learner-recover-form">
+          <div class="form-header">
+            <h2 id="modal-title">Reset Your Password</h2>
+            <p>Enter the email address associated with your learner account.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="learner-recover-email">Email Address</label>
+            <input
+              type="email"
+              id="learner-recover-email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="you@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary btn-block"
+              [disabled]="isLoading()"
+              id="learner-submit-recover-btn"
+            >
+              @if (isLoading()) {
+                <span>Sending...</span>
+              } @else {
+                <span>Send Recovery Instructions</span>
+              }
+            </button>
+          </div>
+
+          <div class="form-footer">
+            <button
+              type="button"
+              class="link-btn"
+              (click)="switchTab('login')"
+              id="learner-recover-back-btn"
+            >
+              ← Back to Sign In
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </div>
+}

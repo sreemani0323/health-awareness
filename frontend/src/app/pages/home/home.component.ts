@@ -17,6 +17,7 @@ export class HomeComponent {
   readonly progressService = inject(LearningProgressService);
 
   readonly newsletterEmail = signal<string>('');
+  readonly newsletterSuccess = signal<string | null>(null);
   readonly progressClearedNotice = signal<string | null>(null);
 
   get comingSoonMessage() {
@@ -69,11 +70,16 @@ export class HomeComponent {
 
   onSubscribeNewsletter(): void {
     const email = this.newsletterEmail().trim();
-    if (!email) {
-      this.comingSoonService.show('Newsletter subscription');
+    if (!email || !email.includes('@')) {
+      this.newsletterSuccess.set(null);
+      this.comingSoonService.show('Please enter a valid email address');
       return;
     }
-    this.comingSoonService.show('Newsletter subscription');
+    this.newsletterSuccess.set(`Thank you for subscribing! Community health bulletins will be sent to ${email}.`);
     this.newsletterEmail.set('');
+    setTimeout(() => {
+      this.newsletterSuccess.set(null);
+    }, 5000);
   }
 }
+

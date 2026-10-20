@@ -189,6 +189,28 @@
   margin-right: 4px;
 }
 
+.learner-session-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.learner-logout-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.15s ease;
+}
+
+.learner-logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
 /* Responsive */
 @media (max-width: 820px) {
   .oppia-navbar-tabs {

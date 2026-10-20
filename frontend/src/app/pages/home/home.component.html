@@ -462,6 +462,11 @@
             <span>Subscribe</span>
           </button>
         </div>
+        @if (newsletterSuccess()) {
+          <div class="newsletter-success-notice" role="status" id="newsletter-success-notice">
+            ✓ {{ newsletterSuccess() }}
+          </div>
+        }
       </div>
     </div>
   </section>

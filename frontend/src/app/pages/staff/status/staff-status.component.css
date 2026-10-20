@@ -96,7 +96,26 @@
 
 .lookup-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-recover-link {
+  background: none;
+  border: none;
+  color: #0284c7;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.btn-recover-link:hover {
+  color: #0369a1;
 }
 
 .btn-track-submit {

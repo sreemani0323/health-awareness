@@ -1,0 +1,250 @@
+.get-involved-container {
+  padding-bottom: 4rem;
+  background-color: var(--bg-neutral, #f8fafc);
+  min-height: calc(100vh - 70px);
+}
+
+.get-involved-hero {
+  background: linear-gradient(135deg, #006056 0%, #004d40 100%);
+  color: #ffffff;
+  padding: 4rem 1.5rem;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.container {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  padding: 0.35rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+}
+
+.hero-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  margin-bottom: 1.25rem;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+  opacity: 0.92;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.option-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.09), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+.option-card--featured {
+  border-top: 5px solid #006056;
+}
+
+.card-icon-wrapper {
+  margin-bottom: 1.25rem;
+}
+
+.card-icon {
+  font-size: 2.5rem;
+}
+
+.card-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+}
+
+.card-badge--learn {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.card-badge--report {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.card-badge--staff {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.card-badge--creator {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+}
+
+.card-content h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.85rem;
+}
+
+.card-content p {
+  color: #475569;
+  line-height: 1.55;
+  font-size: 0.95rem;
+  margin-bottom: 1.25rem;
+}
+
+.card-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.card-features li {
+  position: relative;
+  padding-left: 1.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.card-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #006056;
+  font-weight: 800;
+}
+
+.card-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.15rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background-color: #006056;
+  color: #ffffff;
+  border: 1px solid #006056;
+}
+
+.btn-primary:hover {
+  background-color: #004d40;
+  border-color: #004d40;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: #006056;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-outline:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  color: #006056;
+  border: 1px solid #ffffff;
+}
+
+.btn-secondary:hover {
+  background-color: #e6fffa;
+}
+
+.standards-section {
+  margin-top: 2rem;
+}
+
+.standards-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.standards-text {
+  max-width: 720px;
+}
+
+.standards-text h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #38bdf8;
+}
+
+.standards-text p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  .standards-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

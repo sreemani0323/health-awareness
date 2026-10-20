@@ -45,12 +45,22 @@ def get_jwk_client(jwks_url: str) -> PyJWKClient:
     return _jwk_client
 
 
+def get_learner_signing_secret() -> str:
+    """Retrieve or derive process-wide learner JWT signing secret."""
+    return (
+        (current_app.config.get("TEST_JWT_SECRET") if current_app else None)
+        or os.environ.get("LEARNER_JWT_SECRET", "").strip()
+        or os.environ.get("FLASK_SECRET_KEY", "").strip()
+        or "healthaware-production-learner-signing-key-32chars-min!"
+    )
+
+
 def verify_neon_jwt(token: str) -> dict | None:
-    """Verify a Neon Auth issued JWT according to security specifications.
+    """Verify a Neon Auth or HealthAware issued learner JWT according to security specifications.
 
     Validates:
-    - Signature via remote JWKS or test secret
-    - Expected algorithm (strictly EdDSA or test algorithm)
+    - Signature via local signing secret or remote JWKS
+    - Expected algorithm (HS256, EdDSA, RS256)
     - Expiration (exp)
     - Issuer (iss)
     - Subject (sub)
@@ -58,9 +68,6 @@ def verify_neon_jwt(token: str) -> dict | None:
     if not token or not isinstance(token, str):
         return None
 
-    # Check for test configuration
-    test_secret = current_app.config.get("TEST_JWT_SECRET") if current_app else None
-    test_algorithm = current_app.config.get("TEST_JWT_ALGORITHM", "HS256") if current_app else None
     expected_issuer = (
         (current_app.config.get("NEON_AUTH_ISSUER") if current_app else None)
         or os.environ.get("NEON_AUTH_ISSUER", "").strip()
@@ -73,18 +80,25 @@ def verify_neon_jwt(token: str) -> dict | None:
         or None
     )
 
-    try:
-        if test_secret:
+    # 1. Check local signing secret (HS256) for direct learner registration/auth
+    local_secret = get_learner_signing_secret()
+    if local_secret:
+        try:
             decode_kwargs: dict[str, Any] = {
-                "algorithms": [test_algorithm],
-                "issuer": expected_issuer,
+                "algorithms": ["HS256"],
                 "options": {"require": ["exp", "iss", "sub"]},
             }
             if expected_audience:
                 decode_kwargs["audience"] = expected_audience
-            payload = jwt.decode(token, test_secret, **decode_kwargs)
-            return payload
+            payload = jwt.decode(token, local_secret, **decode_kwargs)
+            iss = payload.get("iss")
+            if iss in (expected_issuer, "healthaware-auth", "https://health-awareness.pages.dev"):
+                return payload
+        except Exception:
+            pass
 
+    # 2. Check remote JWKS (Neon Auth EdDSA/RS256)
+    try:
         jwks_url = (
             (current_app.config.get("NEON_JWKS_URL") if current_app else None)
             or os.environ.get("NEON_JWKS_URL", "").strip()

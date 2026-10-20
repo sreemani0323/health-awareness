@@ -72,11 +72,27 @@ class StaffApplicationSubmitHandler(BaseHandler):
             logger.error("Failed to submit staff application: %s", exc)
             return self.render_error("SERVICE_UNAVAILABLE", "Application intake service temporarily unavailable.", 503)
 
+        email_sent = False
+        try:
+            from backend.platform.email_service import get_email_service
+            email_svc = get_email_service()
+            res = email_svc.send_staff_application_tracking(
+                to_email=app.applicant_email,
+                applicant_name=app.applicant_name,
+                reference_id=app.reference_id,
+                tracking_token=raw_token,
+                tracking_url=f"/staff/application-status?reference_id={app.reference_id}",
+            )
+            email_sent = res.success
+        except Exception:
+            pass
+
         return self.render_json(
             {
                 "reference_id": app.reference_id,
                 "tracking_token": raw_token,
                 "status": app.status.value,
+                "email_sent": email_sent,
                 "message": (
                     "Staff application submitted successfully. "
                     "Save your Reference ID and Tracking Token to check review progress."
@@ -84,6 +100,39 @@ class StaffApplicationSubmitHandler(BaseHandler):
             },
             status_code=201,
         )
+
+
+class StaffApplicationRecoverHandler(BaseHandler):
+    """POST /api/v1/staff/applications/recover — Secure tracking token recovery."""
+
+    decorators = [limiter.limit("10 per hour")]
+
+    def post(self) -> tuple[Response, int]:
+        data = request.get_json(silent=True) or {}
+        email = (data.get("applicant_email") or data.get("email") or "").strip().lower()
+        if not email or "@" not in email:
+            return self.render_error("BAD_REQUEST", "Valid applicant email address is required.", 400)
+
+        service = get_staff_application_service()
+        try:
+            app, raw_token, email_sent = service.recover_application_tracking(
+                applicant_email=email,
+                client_ip=get_trusted_client_ip(),
+            )
+            return self.render_json({
+                "reference_id": app.reference_id,
+                "tracking_token": raw_token,
+                "email_sent": email_sent,
+                "message": (
+                    "A new tracking token has been generated. "
+                    + ("A recovery copy was emailed to your address." if email_sent else "Please copy and store it securely now.")
+                ),
+            })
+        except ApplicationNotFoundError as exc:
+            return self.render_error("NOT_FOUND", str(exc), 404)
+        except Exception as exc:
+            logger.error("Error recovering staff tracking token for '%s': %s", email, exc)
+            return self.render_error("SERVICE_UNAVAILABLE", "Tracking recovery service temporarily unavailable.", 503)
 
 
 class StaffApplicationTrackHandler(BaseHandler):

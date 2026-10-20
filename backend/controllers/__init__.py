@@ -70,6 +70,34 @@ def create_api_blueprint() -> Blueprint:
         view_func=LearnerProgressHandler.as_view("learner_progress"),
         methods=["GET", "PUT"],
     )
+
+    from backend.controllers.learner_auth import (
+        LearnerRegisterHandler,
+        LearnerLoginHandler,
+        LearnerMeHandler,
+        LearnerRecoverHandler,
+    )
+    bp.add_url_rule(
+        "/learner/auth/register",
+        view_func=LearnerRegisterHandler.as_view("learner_auth_register"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/learner/auth/login",
+        view_func=LearnerLoginHandler.as_view("learner_auth_login"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/learner/auth/me",
+        view_func=LearnerMeHandler.as_view("learner_auth_me"),
+        methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/learner/auth/recover",
+        view_func=LearnerRecoverHandler.as_view("learner_auth_recover"),
+        methods=["POST"],
+    )
+
     bp.add_url_rule(
         "/health",
         view_func=HealthCheckHandler.as_view("health_check"),
@@ -310,6 +338,7 @@ def create_api_blueprint() -> Blueprint:
         StaffApplicationRespondHandler,
         StaffApplicationSubmitHandler,
         StaffApplicationTrackHandler,
+        StaffApplicationRecoverHandler,
         StaffApplicationWithdrawHandler,
     )
 
@@ -321,6 +350,11 @@ def create_api_blueprint() -> Blueprint:
     bp.add_url_rule(
         "/staff/applications/track",
         view_func=StaffApplicationTrackHandler.as_view("staff_applications_track"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/staff/applications/recover",
+        view_func=StaffApplicationRecoverHandler.as_view("staff_applications_recover"),
         methods=["POST"],
     )
     bp.add_url_rule(

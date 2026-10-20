@@ -2,7 +2,6 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { environment } from '../../../../environments/environment';
 import { CreatorApiService } from '../../../services/creator-api.service';
 
 @Component({
@@ -17,7 +16,6 @@ export class Login {
   password = '';
   errorMessage = '';
   isLoading = false;
-  readonly isProduction = environment.production;
 
   constructor(
     private creatorApi: CreatorApiService,

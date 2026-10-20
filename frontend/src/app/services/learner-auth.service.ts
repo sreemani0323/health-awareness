@@ -253,4 +253,111 @@ export class LearnerAuthService {
       return null;
     }
   }
+
+  /**
+   * Register a new learner account.
+   */
+  async register(
+    displayName: string,
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; token?: string; user?: LearnerUser; error?: string }> {
+    this.errorMessage.set(null);
+    try {
+      const resp = await fetch('/api/v1/learner/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          display_name: displayName,
+          email,
+          password,
+        }),
+      });
+
+      const body = await resp.json();
+      if (!resp.ok || !body.success) {
+        const errorMsg = body?.error?.message || 'Registration failed. Please check your details.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      this.setSession(body.token, body.user);
+      return { success: true, token: body.token, user: body.user };
+    } catch (err: any) {
+      const errorMsg = err.message || 'Network error during registration.';
+      this.errorMessage.set(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Log in to an existing learner account.
+   */
+  async login(
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; token?: string; user?: LearnerUser; error?: string }> {
+    this.errorMessage.set(null);
+    try {
+      const resp = await fetch('/api/v1/learner/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const body = await resp.json();
+      if (!resp.ok || !body.success) {
+        const errorMsg = body?.error?.message || 'Invalid email or password.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      this.setSession(body.token, body.user);
+      return { success: true, token: body.token, user: body.user };
+    } catch (err: any) {
+      const errorMsg = err.message || 'Network error during login.';
+      this.errorMessage.set(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Request account recovery / password reset instructions.
+   */
+  async recover(email: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    this.errorMessage.set(null);
+    try {
+      const resp = await fetch('/api/v1/learner/auth/recover', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const body = await resp.json();
+      if (!resp.ok || !body.success) {
+        const errorMsg = body?.error?.message || 'Unable to process recovery request.';
+        return { success: false, error: errorMsg };
+      }
+
+      return {
+        success: true,
+        message: body.message || 'If an account exists, instructions have been sent.',
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error during recovery.' };
+    }
+  }
 }
+

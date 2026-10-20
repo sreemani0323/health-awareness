@@ -37,24 +37,24 @@
         </a>
       </li>
       <li class="oppia-navbar-tab-item">
-        <button
-          type="button"
-          class="oppia-navbar-tab oppia-navbar-tab--button"
-          (click)="onComingSoonClick('About page')"
+        <a
+          routerLink="/about"
+          routerLinkActive="oppia-navbar-tab--active"
+          class="oppia-navbar-tab"
           id="nav-about"
         >
           <span class="oppia-navbar-tab-content">About</span>
-        </button>
+        </a>
       </li>
       <li class="oppia-navbar-tab-item">
-        <button
-          type="button"
-          class="oppia-navbar-tab oppia-navbar-tab--button"
-          (click)="onComingSoonClick('Get Involved')"
+        <a
+          routerLink="/get-involved"
+          routerLinkActive="oppia-navbar-tab--active"
+          class="oppia-navbar-tab"
           id="nav-get-involved"
         >
           <span class="oppia-navbar-tab-content">Get Involved</span>
-        </button>
+        </a>
       </li>
 
       <li class="oppia-navbar-tab-item">
@@ -103,27 +103,38 @@
 
       <li class="oppia-navbar-tab-item oppia-navbar-tab-item--learner">
         @if (learnerAuth?.isAuthenticated()) {
-          <button
-            type="button"
-            class="oppia-navbar-tab oppia-navbar-tab--button learner-status-btn"
-            (click)="onSignOutClick()"
-            id="nav-learner-signed-in"
-            title="Signed in to cloud sync. Click to sign out."
-          >
-            <span class="oppia-navbar-tab-content">
-              <span class="learner-badge-dot">●</span> {{ learnerAuth?.displayName() }}
-            </span>
-          </button>
+          <div class="learner-session-group">
+            <button
+              type="button"
+              class="oppia-navbar-tab oppia-navbar-tab--button learner-status-btn"
+              (click)="onSyncClick()"
+              id="nav-learner-sync-now"
+              title="Click to sync learning progress across devices"
+            >
+              <span class="oppia-navbar-tab-content">
+                <span class="learner-badge-dot">●</span> {{ learnerAuth?.displayName() }} (Sync)
+              </span>
+            </button>
+            <button
+              type="button"
+              class="oppia-navbar-tab oppia-navbar-tab--button learner-logout-btn"
+              (click)="onSignOutClick()"
+              id="nav-learner-signed-in"
+              title="Sign Out of Learner Account"
+            >
+              <span class="oppia-navbar-tab-content">Sign Out</span>
+            </button>
+          </div>
         } @else {
           <button
             type="button"
             class="oppia-navbar-tab oppia-navbar-tab--button learner-sync-btn"
-            (click)="onSaveProgressClick()"
+            (click)="openLearnerAuth('login')"
             id="nav-learner-save-progress"
-            title="Save your learning progress across devices"
+            title="Sign in to save and sync your learning progress"
           >
             <span class="oppia-navbar-tab-content">
-              <span>☁️ Sync Progress</span>
+              <span>👤 Sign In to Sync Progress</span>
             </span>
           </button>
         }
@@ -156,6 +167,12 @@
           <a routerLink="/topics" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-learn">Learn</a>
         </li>
         <li>
+          <a routerLink="/get-involved" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-get-involved">Get Involved</a>
+        </li>
+        <li>
+          <a routerLink="/about" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-about">About</a>
+        </li>
+        <li>
           <a routerLink="/report" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-report">Report a Concern</a>
         </li>
         <li>
@@ -167,22 +184,21 @@
         <li>
           <a routerLink="/creator" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-creator">Creator Studio</a>
         </li>
-        <li>
-          <button type="button" (click)="onComingSoonClick('About page')" class="oppia-mobile-link" id="mobile-nav-about">About</button>
-        </li>
-        <li>
-          <button type="button" (click)="onComingSoonClick('Get Involved')" class="oppia-mobile-link" id="mobile-nav-get-involved">Get Involved</button>
-        </li>
         @if (learnerAuth?.isAuthenticated()) {
           <li>
+            <button type="button" (click)="onSyncClick()" class="oppia-mobile-link" id="mobile-nav-learner-sync">
+              ☁️ Sync Now ({{ learnerAuth?.displayName() }})
+            </button>
+          </li>
+          <li>
             <button type="button" (click)="onSignOutClick()" class="oppia-mobile-link" id="mobile-nav-learner-logout">
-              Signed in as {{ learnerAuth?.displayName() }} (Sign Out)
+              Sign Out ({{ learnerAuth?.displayName() }})
             </button>
           </li>
         } @else {
           <li>
-            <button type="button" (click)="onSaveProgressClick()" class="oppia-mobile-link" id="mobile-nav-learner-sync">
-              ☁️ Sync Progress Across Devices
+            <button type="button" (click)="openLearnerAuth('login')" class="oppia-mobile-link" id="mobile-nav-learner-sync">
+              👤 Learner Sign In / Register (Cloud Sync)
             </button>
           </li>
         }
@@ -190,3 +206,6 @@
     </div>
   }
 </nav>
+
+<ha-learner-auth-modal></ha-learner-auth-modal>
+

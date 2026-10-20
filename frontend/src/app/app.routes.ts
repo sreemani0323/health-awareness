@@ -16,6 +16,8 @@ import { TrackConcernComponent } from './pages/track/track.component';
 import { StaffDashboardComponent } from './pages/staff/staff.component';
 import { StaffApplyComponent } from './pages/staff/apply/staff-apply.component';
 import { StaffStatusComponent } from './pages/staff/status/staff-status.component';
+import { GetInvolvedComponent } from './pages/get-involved/get-involved.component';
+import { AboutComponent } from './pages/about/about.component';
 
 export const routes: Routes = [
   {
@@ -23,6 +25,16 @@ export const routes: Routes = [
     component: HomeComponent,
     pathMatch: 'full',
     title: 'HealthAware — Evidence-Based Health Education',
+  },
+  {
+    path: 'about',
+    component: AboutComponent,
+    title: 'About — HealthAware',
+  },
+  {
+    path: 'get-involved',
+    component: GetInvolvedComponent,
+    title: 'Get Involved — HealthAware',
   },
   {
     path: 'topics',
