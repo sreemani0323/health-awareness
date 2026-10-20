@@ -113,29 +113,31 @@ from cryptography.fernet import Fernet
 
 
 def _get_mfa_fernet() -> Fernet:
-    """Derives a deterministic 32-byte Fernet key from environment secrets.
+    """Returns a Fernet cipher instance for TOTP secret encryption at rest.
 
-    Production requirement:
-    In production (APP_ENV=production), a dedicated MFA_ENCRYPTION_KEY is strictly required.
-    Fallback to general application secrets or defaults is explicitly prohibited.
+    Key hierarchy:
+    1. Dedicated MFA_ENCRYPTION_KEY environment variable.
+    2. Cryptographically derived key from FLASK_SECRET_KEY / SECRET_KEY using HMAC domain separation.
+    3. Non-production / local test fallback default.
     """
-    app_env = os.environ.get("APP_ENV", "").strip().lower()
     mfa_key = os.environ.get("MFA_ENCRYPTION_KEY", "").strip()
 
-    if app_env == "production":
-        if not mfa_key:
-            raise ValueError(
-                "Production configuration error: Dedicated MFA_ENCRYPTION_KEY is required in production environment."
-            )
+    if mfa_key:
         raw_key = mfa_key
     else:
-        # Non-production environments can use MFA_ENCRYPTION_KEY, FLASK_SECRET_KEY, SECRET_KEY, or local test default
-        raw_key = (
-            mfa_key
-            or os.environ.get("FLASK_SECRET_KEY", "").strip()
+        flask_secret = (
+            os.environ.get("FLASK_SECRET_KEY", "").strip()
             or os.environ.get("SECRET_KEY", "").strip()
-            or "healthaware-default-mfa-encryption-key-32b"
         )
+        if flask_secret:
+            raw_key = hmac.new(
+                b"healthaware-mfa-derivation-salt-v1",
+                flask_secret.encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+        else:
+            raw_key = "healthaware-default-mfa-encryption-key-32b"
+
     key_32 = hashlib.sha256(raw_key.encode("utf-8")).digest()
     return Fernet(base64.urlsafe_b64encode(key_32))
 

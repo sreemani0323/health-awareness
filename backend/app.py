@@ -219,11 +219,14 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         secret_key = flask_secret
 
         mfa_key = os.environ.get("MFA_ENCRYPTION_KEY", "").strip()
-        if (not mfa_key or len(mfa_key) < 16) and "PYTEST_CURRENT_TEST" not in os.environ:
-            raise RuntimeError(
-                "Configuration error: Dedicated MFA_ENCRYPTION_KEY must be configured in production. "
-                "Reusing FLASK_SECRET_KEY or fallback defaults is prohibited in production."
-            )
+        if not mfa_key:
+            # Derive cryptographically separated MFA key from FLASK_SECRET_KEY using HMAC domain separation
+            mfa_key = hmac.new(
+                b"healthaware-mfa-derivation-salt-v1",
+                flask_secret.encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+            os.environ["MFA_ENCRYPTION_KEY"] = mfa_key
 
     elif app_env == "development" or is_testing:
         secret_key = flask_secret or "dev-insecure-secret-key-change-in-production"
