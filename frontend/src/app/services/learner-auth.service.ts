@@ -271,6 +271,7 @@ export class LearnerAuthService {
           Accept: 'application/json',
         },
         body: JSON.stringify({
+          name: displayName,
           display_name: displayName,
           email,
           password,

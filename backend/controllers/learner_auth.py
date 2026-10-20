@@ -62,7 +62,7 @@ class LearnerRegisterHandler(BaseHandler):
         if not data or not isinstance(data, dict):
             return self.render_error("BAD_REQUEST", "JSON body required.", 400)
 
-        name = str(data.get("name", "")).strip()
+        name = str(data.get("name") or data.get("display_name") or "").strip()
         email = str(data.get("email", "")).strip().lower()
         password = str(data.get("password", ""))
 
