@@ -22,6 +22,8 @@ Flask-Limiter==3.8.0
 
 # Authentication & Cryptography
 PyJWT[crypto]>=2.9.0
+pyotp==2.9.0
+cryptography>=43.0.0
 
 # Testing
 pytest==8.3.5
