@@ -133,8 +133,8 @@ class LearnerLoginHandler(BaseHandler):
 
         client_ip = get_trusted_client_ip()
         throttle_mgr = get_login_throttle_manager()
-        is_locked, retry_after = throttle_mgr.is_locked(email, client_ip)
-        if is_locked:
+        is_throttled, retry_after, _ = throttle_mgr.is_throttled(email, client_ip)
+        if is_throttled:
             resp, status = self.render_error(
                 "LOCKED",
                 f"Too many failed login attempts. Please try again in {retry_after} seconds.",
