@@ -1,9 +1,23 @@
 """Transactional email delivery service with safe provider abstractions.
 
-Supports:
-- SMTP with STARTTLS (configurable via SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_EMAIL)
-- Safe fallback / audit mode when no external transactional email provider is configured.
-- Rejection of email dispatch to unverified or blank addresses.
+Configuration:
+- Canonical Environment Variables:
+  * SMTP_HOST: Hostname of SMTP relay (e.g. smtp.sendgrid.net, smtp.resend.com)
+  * SMTP_PORT: Port number (e.g. 587 for STARTTLS, 465 for SSL, 25 for unauthenticated relay). Default: 587
+  * SMTP_USERNAME: Username or API key user (e.g. apikey, resend)
+  * SMTP_PASSWORD: Password or secret API token
+  * SMTP_FROM_EMAIL: Outbound sender email address (e.g. no-reply@healthaware.org)
+
+- Backward-Compatible Alias Fallbacks (in order of precedence):
+  * Host: SMTP_HOST -> SMTP_SERVER
+  * Username: SMTP_USERNAME -> SMTP_USER
+  * Password: SMTP_PASSWORD -> SMTP_PASS
+  * Sender: SMTP_FROM_EMAIL -> SMTP_FROM -> EMAIL_FROM -> "noreply@healthaware.org"
+
+Safety & Privacy Guarantees:
+- When unconfigured or missing credentials, dispatch is truthfully skipped without throwing exceptions.
+- Failed deliveries are never reported as successful.
+- No password, token, or secret is ever exposed in logs or exception messages.
 """
 
 from __future__ import annotations
@@ -30,21 +44,71 @@ class EmailDeliveryResult:
 class EmailService:
     """Manages transactional email dispatch for HealthAware."""
 
+    # Canonical environment variable names
+    ENV_SMTP_HOST = "SMTP_HOST"
+    ENV_SMTP_PORT = "SMTP_PORT"
+    ENV_SMTP_USERNAME = "SMTP_USERNAME"
+    ENV_SMTP_PASSWORD = "SMTP_PASSWORD"
+    ENV_SMTP_FROM_EMAIL = "SMTP_FROM_EMAIL"
+
+    # Backward-compatible alias environment variable names
+    ALIAS_SMTP_SERVER = "SMTP_SERVER"
+    ALIAS_SMTP_USER = "SMTP_USER"
+    ALIAS_SMTP_PASS = "SMTP_PASS"
+    ALIAS_SMTP_FROM = "SMTP_FROM"
+    ALIAS_EMAIL_FROM = "EMAIL_FROM"
+
+    DEFAULT_FROM_EMAIL = "noreply@healthaware.org"
+
     def __init__(self):
-        self._smtp_host = os.environ.get("SMTP_HOST", "").strip()
-        self._smtp_port = int(os.environ.get("SMTP_PORT", "587")) if os.environ.get("SMTP_PORT") else 587
-        self._smtp_user = os.environ.get("SMTP_USER", "").strip()
-        self._smtp_password = os.environ.get("SMTP_PASSWORD", "").strip()
+        # Host: SMTP_HOST (canonical) -> SMTP_SERVER (alias)
+        self._smtp_host = (
+            os.environ.get(self.ENV_SMTP_HOST, "").strip()
+            or os.environ.get(self.ALIAS_SMTP_SERVER, "").strip()
+        )
+
+        # Port: SMTP_PORT (default 587)
+        port_raw = os.environ.get(self.ENV_SMTP_PORT, "").strip()
+        try:
+            self._smtp_port = int(port_raw) if port_raw else 587
+        except ValueError:
+            logger.warning("Invalid SMTP_PORT '%s', defaulting to 587", port_raw)
+            self._smtp_port = 587
+
+        # Username: SMTP_USERNAME (canonical) -> SMTP_USER (alias)
+        self._smtp_user = (
+            os.environ.get(self.ENV_SMTP_USERNAME, "").strip()
+            or os.environ.get(self.ALIAS_SMTP_USER, "").strip()
+        )
+
+        # Password: SMTP_PASSWORD (canonical) -> SMTP_PASS (alias)
+        self._smtp_password = (
+            os.environ.get(self.ENV_SMTP_PASSWORD, "").strip()
+            or os.environ.get(self.ALIAS_SMTP_PASS, "").strip()
+        )
+
+        # Sender: SMTP_FROM_EMAIL (canonical) -> SMTP_FROM (alias) -> EMAIL_FROM (alias) -> default
         self._from_email = (
-            os.environ.get("SMTP_FROM_EMAIL", "").strip()
-            or os.environ.get("EMAIL_FROM", "").strip()
-            or "noreply@healthaware.org"
+            os.environ.get(self.ENV_SMTP_FROM_EMAIL, "").strip()
+            or os.environ.get(self.ALIAS_SMTP_FROM, "").strip()
+            or os.environ.get(self.ALIAS_EMAIL_FROM, "").strip()
+            or self.DEFAULT_FROM_EMAIL
         )
 
     @property
     def is_configured(self) -> bool:
-        """Returns True if a real outbound email delivery provider is configured."""
-        return bool(self._smtp_host and (self._smtp_user or self._smtp_port == 25))
+        """Returns True if a real outbound email delivery provider is truthfully configured.
+        
+        Requires:
+        - Host is non-empty.
+        - For standard ports (587 STARTTLS, 465 SSL, etc.), both username and password must be set.
+        - For port 25, unauthenticated internal relay is permitted if credentials are omitted.
+        """
+        if not self._smtp_host:
+            return False
+        if self._smtp_port == 25:
+            return True
+        return bool(self._smtp_user and self._smtp_password)
 
     def send_email(
         self,
@@ -101,11 +165,18 @@ class EmailService:
             logger.info("Successfully delivered email to %s via SMTP (%s)", clean_to, self._smtp_host)
             return EmailDeliveryResult(success=True, provider="smtp", message_id="smtp-ok")
         except Exception as exc:
-            logger.error("Failed to deliver email to %s: %s", clean_to, exc)
+            # Sanitize exception message to ensure credentials, secrets, or internal details are never reflected
+            raw_err = str(exc)
+            sanitized_err = raw_err
+            if self._smtp_password and self._smtp_password in sanitized_err:
+                sanitized_err = sanitized_err.replace(self._smtp_password, "[REDACTED_PASSWORD]")
+            if self._smtp_user and self._smtp_user in sanitized_err:
+                sanitized_err = sanitized_err.replace(self._smtp_user, "[REDACTED_USER]")
+            logger.error("Failed to deliver email to %s via SMTP (%s): %s", clean_to, self._smtp_host, sanitized_err)
             return EmailDeliveryResult(
                 success=False,
                 provider="smtp",
-                error=f"Delivery failed: {str(exc)}",
+                error=f"Delivery failed: {sanitized_err}",
             )
 
     def send_staff_application_tracking(
@@ -127,6 +198,28 @@ class EmailService:
             f"Track your application status online at:\n{tracking_url}\n\n"
             f"Please keep this token secure. It will not be sent again.\n\n"
             f"— The HealthAware Team\n"
+        )
+        return self.send_email(to_email, subject, text)
+
+    def send_staff_account_setup(
+        self,
+        to_email: str,
+        applicant_name: str,
+        username: str,
+        setup_token: str,
+        setup_url: str,
+    ) -> EmailDeliveryResult:
+        """Sends staff account provisioning credentials and setup link to approved applicant."""
+        subject = "HealthAware Staff Account Provisioned — Initial Account Setup"
+        text = (
+            f"Dear {applicant_name},\n\n"
+            f"Congratulations! Your application for a staff role with HealthAware has been approved.\n\n"
+            f"Your staff username is: {username}\n\n"
+            f"Please complete your initial account password setup using your single-use setup token:\n"
+            f"Setup Token: {setup_token}\n\n"
+            f"Set up your account online at:\n{setup_url}\n\n"
+            f"This setup token is valid for 48 hours and can only be used once.\n\n"
+            f"— HealthAware Administration\n"
         )
         return self.send_email(to_email, subject, text)
 
@@ -165,3 +258,4 @@ def set_email_service(service: Optional[EmailService]) -> None:
     """Allows tests to inject mock email service."""
     global _email_service
     _email_service = service
+

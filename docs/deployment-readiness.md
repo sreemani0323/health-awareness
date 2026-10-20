@@ -790,6 +790,11 @@ All sensitive credentials and connection strings must be configured exclusively 
 * `AWS_SECRET_ACCESS_KEY`: S3 secret key.
 * `AWS_REGION`: `us-east-2` (matching Neon region).
 * `PYTHON_VERSION`: `3.12.9`
+* `SMTP_HOST`: Canonical hostname of transactional SMTP relay (e.g. `smtp.sendgrid.net`, `smtp.resend.com`). Alias fallback: `SMTP_SERVER`.
+* `SMTP_PORT`: Canonical port number (`587` for STARTTLS, `465` for SSL, `25` for unauthenticated relay; default: `587`).
+* `SMTP_USERNAME`: Canonical SMTP username / API key user (e.g. `apikey`, `resend`). Alias fallback: `SMTP_USER`.
+* `SMTP_PASSWORD`: Canonical SMTP password / API secret key. Alias fallback: `SMTP_PASS`.
+* `SMTP_FROM_EMAIL`: Canonical outbound sender email (e.g. `no-reply@healthaware.org`). Alias fallbacks: `SMTP_FROM`, `EMAIL_FROM`. Defaults to `noreply@healthaware.org`.
 
 ---
 

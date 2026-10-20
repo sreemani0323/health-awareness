@@ -1,11 +1,17 @@
 """Comprehensive Unit and Safety Tests for HealthAware Email Service.
 
 Validates:
-1. Safe skipping and unconfigured detection when SMTP_HOST or credentials are missing.
-2. Rejection of invalid recipient email addresses without network attempts.
-3. Successful SMTP dispatch with STARTTLS and proper message MIME headers.
-4. Exception resilience when SMTP server returns errors (timeouts, connection refused).
-5. Safe templating of staff application tracking and community concern notifications.
+1. Canonical configuration resolution (SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM_EMAIL).
+2. Backward-compatible alias fallback resolution (SMTP_SERVER, SMTP_USER, SMTP_PASS, SMTP_FROM, EMAIL_FROM).
+3. Precedence rules: Canonical variable names strictly override aliases when both are defined.
+4. Truthful unconfigured detection when host or credentials are missing/incomplete on authenticated ports.
+5. Safe unauthenticated internal relay support on port 25.
+6. Graceful port number validation with safe fallback to port 587.
+7. Rejection of invalid recipient email addresses without network attempts.
+8. Successful SMTP dispatch with STARTTLS (port 587) and SSL (port 465).
+9. Failure resilience: failed delivery is never reported as successful (success=False).
+10. Credential redaction: passwords and usernames are scrubbed from delivery failure errors.
+11. Safe templating of staff application tracking, staff account setup, and community concern notifications.
 """
 
 from __future__ import annotations
@@ -34,9 +40,111 @@ def test_email_service_unconfigured_when_no_smtp_host():
         assert result.error == "EMAIL_PROVIDER_NOT_CONFIGURED"
 
 
+def test_canonical_smtp_variable_resolution():
+    """EmailService resolves canonical variable names cleanly."""
+    env = {
+        "SMTP_HOST": "smtp.canonical-provider.com",
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "canonical_user_apikey",
+        "SMTP_PASSWORD": "canonical_secret_token",
+        "SMTP_FROM_EMAIL": "official@healthaware.org",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        assert svc.is_configured is True
+        assert svc._smtp_host == "smtp.canonical-provider.com"
+        assert svc._smtp_port == 587
+        assert svc._smtp_user == "canonical_user_apikey"
+        assert svc._smtp_password == "canonical_secret_token"
+        assert svc._from_email == "official@healthaware.org"
+
+
+def test_backward_compatible_alias_resolution():
+    """EmailService resolves legacy aliases (SMTP_SERVER, SMTP_USER, SMTP_PASS, SMTP_FROM)."""
+    env = {
+        "SMTP_SERVER": "smtp.legacy-alias.com",
+        "SMTP_PORT": "465",
+        "SMTP_USER": "legacy_user",
+        "SMTP_PASS": "legacy_secret_pass",
+        "SMTP_FROM": "legacy-sender@healthaware.org",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        assert svc.is_configured is True
+        assert svc._smtp_host == "smtp.legacy-alias.com"
+        assert svc._smtp_port == 465
+        assert svc._smtp_user == "legacy_user"
+        assert svc._smtp_password == "legacy_secret_pass"
+        assert svc._from_email == "legacy-sender@healthaware.org"
+
+
+def test_variable_precedence_canonical_over_alias():
+    """Canonical variable names take strict precedence over legacy aliases."""
+    env = {
+        "SMTP_HOST": "smtp.canonical.com",
+        "SMTP_SERVER": "smtp.alias-ignored.com",
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "canonical_user",
+        "SMTP_USER": "alias_user_ignored",
+        "SMTP_PASSWORD": "canonical_password",
+        "SMTP_PASS": "alias_password_ignored",
+        "SMTP_FROM_EMAIL": "canonical@healthaware.org",
+        "SMTP_FROM": "alias-from-ignored@healthaware.org",
+        "EMAIL_FROM": "email-from-ignored@healthaware.org",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        assert svc._smtp_host == "smtp.canonical.com"
+        assert svc._smtp_user == "canonical_user"
+        assert svc._smtp_password == "canonical_password"
+        assert svc._from_email == "canonical@healthaware.org"
+
+
+def test_truthful_unconfigured_scenarios():
+    """Missing or incomplete credentials on authenticated ports evaluate truthfully as unconfigured."""
+    # 1. Missing password on port 587
+    with patch.dict(os.environ, {"SMTP_HOST": "smtp.mail.org", "SMTP_USERNAME": "user_only"}, clear=True):
+        svc = EmailService()
+        assert svc.is_configured is False
+
+    # 2. Missing username on port 587
+    with patch.dict(os.environ, {"SMTP_HOST": "smtp.mail.org", "SMTP_PASSWORD": "pass_only"}, clear=True):
+        svc = EmailService()
+        assert svc.is_configured is False
+
+    # 3. Missing host
+    with patch.dict(os.environ, {"SMTP_USERNAME": "user", "SMTP_PASSWORD": "pass"}, clear=True):
+        svc = EmailService()
+        assert svc.is_configured is False
+
+    # 4. Port 25 allows unauthenticated internal relay with host only
+    with patch.dict(os.environ, {"SMTP_HOST": "127.0.0.1", "SMTP_PORT": "25"}, clear=True):
+        svc = EmailService()
+        assert svc.is_configured is True
+
+
+def test_invalid_port_fallback_safely_defaults_to_587():
+    """Invalid non-integer port values fall back safely to 587 without crashing."""
+    env = {
+        "SMTP_HOST": "smtp.testmail.org",
+        "SMTP_PORT": "not-a-valid-port-number",
+        "SMTP_USERNAME": "test_user",
+        "SMTP_PASSWORD": "test_password",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        assert svc._smtp_port == 587
+        assert svc.is_configured is True
+
+
 def test_email_service_rejects_invalid_recipient():
     """EmailService validates recipient format before attempting any connection."""
-    with patch.dict(os.environ, {"SMTP_HOST": "smtp.example.com", "SMTP_USER": "testuser"}):
+    env = {
+        "SMTP_HOST": "smtp.example.com",
+        "SMTP_USERNAME": "testuser",
+        "SMTP_PASSWORD": "testpassword",
+    }
+    with patch.dict(os.environ, env, clear=True):
         svc = EmailService()
         assert svc.is_configured is True
 
@@ -56,11 +164,11 @@ def test_email_service_smtp_success():
     env = {
         "SMTP_HOST": "smtp.testmail.org",
         "SMTP_PORT": "587",
-        "SMTP_USER": "test_smtp_user",
+        "SMTP_USERNAME": "test_smtp_user",
         "SMTP_PASSWORD": "test_smtp_password",
         "SMTP_FROM_EMAIL": "alerts@healthaware.org",
     }
-    with patch.dict(os.environ, env):
+    with patch.dict(os.environ, env, clear=True):
         svc = EmailService()
         assert svc.is_configured is True
 
@@ -91,11 +199,11 @@ def test_email_service_smtp_ssl_port_465_success():
     env = {
         "SMTP_HOST": "smtp.testmail.org",
         "SMTP_PORT": "465",
-        "SMTP_USER": "test_smtp_user",
+        "SMTP_USERNAME": "test_smtp_user",
         "SMTP_PASSWORD": "test_smtp_password",
         "SMTP_FROM_EMAIL": "alerts@healthaware.org",
     }
-    with patch.dict(os.environ, env):
+    with patch.dict(os.environ, env, clear=True):
         svc = EmailService()
         assert svc.is_configured is True
 
@@ -116,17 +224,22 @@ def test_email_service_smtp_ssl_port_465_success():
 
 
 def test_email_service_smtp_exception_handled_safely():
-    """EmailService catches SMTP exceptions and returns structured failure result."""
+    """EmailService catches SMTP exceptions, redacts credentials, and returns structured failure result."""
     env = {
         "SMTP_HOST": "smtp.testmail.org",
         "SMTP_PORT": "587",
-        "SMTP_USER": "test_smtp_user",
-        "SMTP_PASSWORD": "test_smtp_password",
+        "SMTP_USERNAME": "secret_username",
+        "SMTP_PASSWORD": "super_secret_password_999",
     }
-    with patch.dict(os.environ, env):
+    with patch.dict(os.environ, env, clear=True):
         svc = EmailService()
 
-        with patch("smtplib.SMTP", side_effect=smtplib.SMTPConnectError(421, b"Connection refused")):
+        # Simulate exception that includes the password and username in the raw error
+        raw_exc = smtplib.SMTPAuthenticationError(
+            535,
+            b"Auth failed for secret_username with password super_secret_password_999",
+        )
+        with patch("smtplib.SMTP", side_effect=raw_exc):
             res = svc.send_email(
                 to_email="recipient@example.com",
                 subject="Test Fail",
@@ -136,10 +249,13 @@ def test_email_service_smtp_exception_handled_safely():
             assert res.success is False
             assert res.provider == "smtp"
             assert "Delivery failed" in (res.error or "")
+            # Verify credentials are redacted
+            assert "super_secret_password_999" not in (res.error or "")
+            assert "[REDACTED_PASSWORD]" in (res.error or "")
 
 
 def test_email_service_templates_do_not_leak_secrets():
-    """Staff tracking and concern email templates include references and tracking URLs cleanly."""
+    """Staff tracking, staff account setup, and concern email templates format clean notifications."""
     svc = EmailService()
 
     with patch.object(svc, "send_email", return_value=EmailDeliveryResult(success=True, provider="mock")) as mock_send:
@@ -156,6 +272,21 @@ def test_email_service_templates_do_not_leak_secrets():
         assert args[0] == "applicant@test.org"
         assert "APP-2026-999999" in args[1]
         assert "sec_app_secret123" in args[2]
+
+    with patch.object(svc, "send_email", return_value=EmailDeliveryResult(success=True, provider="mock")) as mock_send:
+        # Staff account setup
+        svc.send_staff_account_setup(
+            to_email="approved_staff@test.org",
+            applicant_name="Dr. Meera",
+            username="staff_meera_2026",
+            setup_token="set_single_use_token_12345",
+            setup_url="/creator/setup?token=set_single_use_token_12345",
+        )
+        mock_send.assert_called_once()
+        args = mock_send.call_args[0]
+        assert args[0] == "approved_staff@test.org"
+        assert "staff_meera_2026" in args[2]
+        assert "set_single_use_token_12345" in args[2]
 
     with patch.object(svc, "send_email", return_value=EmailDeliveryResult(success=True, provider="mock")) as mock_send:
         # Concern tracking
