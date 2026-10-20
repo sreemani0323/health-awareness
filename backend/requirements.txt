@@ -20,6 +20,9 @@ boto3==1.36.21
 gunicorn==23.0.0
 Flask-Limiter==3.8.0
 
+# Authentication & Cryptography
+PyJWT[crypto]>=2.9.0
+
 # Testing
 pytest==8.3.5
 

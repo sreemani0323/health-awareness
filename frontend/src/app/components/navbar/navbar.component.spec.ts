@@ -39,4 +39,13 @@ describe('NavbarComponent', () => {
     component.closeMobileMenu();
     expect(component.isMobileMenuOpen()).toBe(false);
   });
+
+  it('should render learner sync progress button when anonymous', () => {
+    const fixture = TestBed.createComponent(NavbarComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const syncBtn = compiled.querySelector('#nav-learner-save-progress');
+    expect(syncBtn).toBeTruthy();
+    expect(syncBtn?.textContent).toContain('Sync Progress');
+  });
 });

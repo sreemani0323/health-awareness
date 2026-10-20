@@ -43,6 +43,8 @@ from backend.domain.domain_objects import (
 # Serializers for creator context (include status, drafts, etc.)
 # ---------------------------------------------------------------------------
 
+CREATOR_ROLES = (UserRole.CONTRIBUTOR, UserRole.REVIEWER, UserRole.ADMIN)
+
 
 def _serialize_topic_full(topic: Topic) -> dict[str, Any]:
     """Serialize a topic with all fields for creator view."""
@@ -153,7 +155,7 @@ def _parse_cards_from_json(cards_data: list[dict]) -> list[LessonCard]:
 class CreatorTopicListHandler(BaseHandler):
     """GET/POST /api/v1/creator/topics"""
 
-    decorators = [auth_required]
+    decorators = [role_required(*CREATOR_ROLES)]
 
     def get(self) -> tuple[Response, int]:
         """List all topics (any status) for the creator dashboard."""
@@ -188,7 +190,7 @@ class CreatorTopicListHandler(BaseHandler):
 class CreatorTopicDetailHandler(BaseHandler):
     """PUT /api/v1/creator/topics/<topic_id>"""
 
-    decorators = [auth_required]
+    decorators = [role_required(*CREATOR_ROLES)]
 
     @role_required(UserRole.CONTRIBUTOR, UserRole.ADMIN)
     def put(self, topic_id: str) -> tuple[Response, int]:
@@ -233,7 +235,7 @@ class CreatorTopicDetailHandler(BaseHandler):
 class CreatorTopicLessonsHandler(BaseHandler):
     """GET/POST /api/v1/creator/topics/<topic_id>/lessons"""
 
-    decorators = [auth_required]
+    decorators = [role_required(*CREATOR_ROLES)]
 
     def get(self, topic_id: str) -> tuple[Response, int]:
         """List all lessons for a topic (any status)."""
@@ -313,7 +315,7 @@ class CreatorTopicLessonsHandler(BaseHandler):
 class CreatorLessonDetailHandler(BaseHandler):
     """GET/PUT/DELETE /api/v1/creator/lessons/<lesson_id>"""
 
-    decorators = [auth_required]
+    decorators = [role_required(*CREATOR_ROLES)]
 
     def get(self, lesson_id: str) -> tuple[Response, int]:
         """Get chapter details."""
@@ -371,7 +373,7 @@ class CreatorLessonDetailHandler(BaseHandler):
 class CreatorVersionListHandler(BaseHandler):
     """POST /api/v1/creator/lessons/<lesson_id>/versions"""
 
-    decorators = [auth_required]
+    decorators = [role_required(*CREATOR_ROLES)]
 
     def get(self, lesson_id: str) -> tuple[Response, int]:
         """List versions for a lesson filtered by user role and ownership."""
@@ -431,7 +433,7 @@ class CreatorVersionListHandler(BaseHandler):
 class CreatorVersionDetailHandler(BaseHandler):
     """GET/PUT /api/v1/creator/versions/<version_id>"""
 
-    decorators = [auth_required]
+    decorators = [role_required(*CREATOR_ROLES)]
 
     def get(self, version_id: str) -> tuple[Response, int]:
         """Get a version with full detail, enforcing ownership and review boundaries."""
@@ -608,7 +610,7 @@ class CreatorReviewQueueHandler(BaseHandler):
 class CreatorSourceListHandler(BaseHandler):
     """GET/POST /api/v1/creator/sources"""
 
-    decorators = [auth_required]
+    decorators = [role_required(*CREATOR_ROLES)]
 
     def get(self) -> tuple[Response, int]:
         """List all health sources."""

@@ -158,6 +158,37 @@
   border-radius: 4px;
 }
 
+/* Learner Sync & Status Styles */
+.learner-sync-btn {
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 6px 12px;
+  margin-left: 4px;
+}
+
+.learner-sync-btn:hover {
+  background-color: rgba(255, 255, 255, 0.22);
+}
+
+.learner-status-btn {
+  background-color: rgba(0, 200, 83, 0.2);
+  border: 1px solid rgba(0, 200, 83, 0.5);
+  border-radius: 16px;
+  padding: 6px 12px;
+  margin-left: 4px;
+}
+
+.learner-status-btn:hover {
+  background-color: rgba(0, 200, 83, 0.3);
+}
+
+.learner-badge-dot {
+  color: #00e676;
+  font-size: 11px;
+  margin-right: 4px;
+}
+
 /* Responsive */
 @media (max-width: 820px) {
   .oppia-navbar-tabs {

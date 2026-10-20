@@ -2,6 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ComingSoonService } from '../../services/coming-soon.service';
+import { LearnerAuthService } from '../../services/learner-auth.service';
 
 @Component({
   selector: 'ha-navbar',
@@ -12,6 +13,7 @@ import { ComingSoonService } from '../../services/coming-soon.service';
 })
 export class NavbarComponent {
   private readonly comingSoonService = inject(ComingSoonService);
+  readonly learnerAuth = inject(LearnerAuthService, { optional: true });
 
   readonly isMobileMenuOpen = signal<boolean>(false);
 
@@ -29,5 +31,17 @@ export class NavbarComponent {
     }
     this.closeMobileMenu();
     this.comingSoonService.show(featureName);
+  }
+
+  onSaveProgressClick(): void {
+    this.closeMobileMenu();
+    this.comingSoonService.show(
+      'Cloud sync (Neon Auth): Learning progress is automatically saved on this device. Cloud account sync is coming in Stage 2!'
+    );
+  }
+
+  onSignOutClick(): void {
+    this.closeMobileMenu();
+    this.learnerAuth?.logout();
   }
 }

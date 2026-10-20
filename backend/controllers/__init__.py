@@ -28,6 +28,7 @@ from backend.controllers.creator import (
     CreatorVersionListHandler,
 )
 from backend.controllers.health import HealthCheckHandler
+from backend.controllers.learner import LearnerProgressHandler
 from backend.controllers.lessons import LessonDetailHandler
 from backend.controllers.topics import TopicLessonsHandler, TopicListHandler
 
@@ -52,6 +53,11 @@ def create_api_blueprint() -> Blueprint:
         "/lessons/<lesson_id>",
         view_func=LessonDetailHandler.as_view("lesson_detail"),
         methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/learner/progress",
+        view_func=LearnerProgressHandler.as_view("learner_progress"),
+        methods=["GET", "PUT"],
     )
     bp.add_url_rule(
         "/health",

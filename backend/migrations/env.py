@@ -29,15 +29,28 @@ if config is not None and config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
-def get_url():
+def get_url() -> str:
     """Retrieve connection URL with fail-closed environment validation.
     
-    1. Validates APP_ENV: accepts only 'development' or 'production'.
-    2. For 'production': strictly requires MIGRATION_DATABASE_URL and never falls back to DATABASE_URL.
-    3. For 'development': prioritizes MIGRATION_DATABASE_URL, permits fallback to DATABASE_URL.
-    4. For missing or unsupported APP_ENV: raises ValueError configuration error immediately.
+    1. Validates APP_ENV: strictly requires explicit 'development' or 'production'.
+       Missing, empty, or unexpected values fail closed immediately.
+    2. For 'production':
+       - Strictly requires MIGRATION_DATABASE_URL (direct, unpooled connection).
+       - Never falls back to DATABASE_URL.
+       - Disallows pooled connection hosts (e.g. '-pooler.').
+    3. For 'development':
+       - Strictly uses the explicitly selected local/test DATABASE_URL (or TEST_DATABASE_URL).
+       - Never falls back to or permits MIGRATION_DATABASE_URL to override local targets.
+       - If no development URL is configured, fails closed immediately.
+    4. Never prints credentials, tokens, or full connection strings in logs or exceptions.
     """
     app_env = os.environ.get("APP_ENV", "").strip()
+
+    if not app_env:
+        raise ValueError(
+            "Configuration error: Unsupported or missing APP_ENV. "
+            "Alembic environment must be explicitly configured as 'development' or 'production'."
+        )
 
     if app_env == "production":
         migration_url = os.environ.get("MIGRATION_DATABASE_URL", "").strip()
@@ -46,20 +59,39 @@ def get_url():
                 "Configuration error: MIGRATION_DATABASE_URL is required for production schema migrations. "
                 "Alembic must use a direct, unpooled connection (port 5432) and will not fall back to DATABASE_URL in production."
             )
+        if "-pooler." in migration_url:
+            raise ValueError(
+                "Configuration error: MIGRATION_DATABASE_URL points to a pooled connection host. "
+                "Production schema migrations must use a direct, unpooled connection to preserve transaction locks."
+            )
         target_url = migration_url
+
     elif app_env == "development":
-        target_url = os.environ.get("MIGRATION_DATABASE_URL", "").strip() or get_database_url()
-        if not target_url and config is not None:
-            target_url = config.get_main_option("sqlalchemy.url")
-        if not target_url:
-            raise ValueError("Configuration error: Neither MIGRATION_DATABASE_URL nor DATABASE_URL is configured for development.")
+        # Strictly prioritize explicit DATABASE_URL, followed by TEST_DATABASE_URL
+        dev_url = os.environ.get("DATABASE_URL", "").strip() or os.environ.get("TEST_DATABASE_URL", "").strip()
+        if not dev_url and config is not None:
+            dev_url = (config.get_main_option("sqlalchemy.url") or "").strip()
+        
+        if not dev_url:
+            raise ValueError(
+                "Configuration error: DATABASE_URL is required for development migrations. "
+                "MIGRATION_DATABASE_URL cannot be used in development mode."
+            )
+        
+        target_url = dev_url
+
     else:
         raise ValueError(
             f"Configuration error: Unsupported or missing APP_ENV '{app_env}'. "
             "Alembic environment must be explicitly configured as 'development' or 'production'."
         )
 
-    return normalize_database_url(target_url)
+    normalized = normalize_database_url(target_url)
+    if not normalized:
+        raise ValueError("Configuration error: Resolved database URL is empty or invalid.")
+
+    return normalized
+
 
 
 def run_migrations_offline() -> None:

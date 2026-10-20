@@ -8,28 +8,229 @@ and CSRF protection with double-submit cookies.
 from __future__ import annotations
 
 import functools
+import logging
+import os
 import secrets
+import uuid
 from typing import Callable
 
-from flask import Response, current_app, jsonify, request, session
+from flask import Response, current_app, g, jsonify, request, session
+import jwt
+from jwt import PyJWKClient
 
 from backend.controllers.base import BaseHandler
 from backend.domain import domain_services
 from backend.domain.domain_objects import User, UserRole
 
+logger = logging.getLogger(__name__)
+
+# Cached JWKS client
+_jwk_client: PyJWKClient | None = None
+_jwk_client_url: str | None = None
+
+
+def get_jwk_client(jwks_url: str) -> PyJWKClient:
+    """Retrieve or initialize the process-wide PyJWKClient with safe caching and timeout."""
+    global _jwk_client, _jwk_client_url
+    if _jwk_client is None or _jwk_client_url != jwks_url:
+        _jwk_client = PyJWKClient(
+            jwks_url,
+            cache_keys=True,
+            max_cached_keys=16,
+            cache_jwk_set=True,
+            lifespan=3600,
+            timeout=3.0,
+        )
+        _jwk_client_url = jwks_url
+    return _jwk_client
+
+
+def verify_neon_jwt(token: str) -> dict | None:
+    """Verify a Neon Auth issued JWT according to security specifications.
+
+    Validates:
+    - Signature via remote JWKS or test secret
+    - Expected algorithm (strictly EdDSA or test algorithm)
+    - Expiration (exp)
+    - Issuer (iss)
+    - Subject (sub)
+    """
+    if not token or not isinstance(token, str):
+        return None
+
+    # Check for test configuration
+    test_secret = current_app.config.get("TEST_JWT_SECRET") if current_app else None
+    test_algorithm = current_app.config.get("TEST_JWT_ALGORITHM", "HS256") if current_app else None
+    expected_issuer = (
+        (current_app.config.get("NEON_AUTH_ISSUER") if current_app else None)
+        or os.environ.get("NEON_AUTH_ISSUER", "").strip()
+        or os.environ.get("NEON_AUTH_URL", "").strip()
+        or "https://ep-raspy-moon-a1st7amb.neon.tech/neondb/auth"
+    )
+    expected_audience = (
+        (current_app.config.get("NEON_AUTH_AUDIENCE") if current_app else None)
+        or os.environ.get("NEON_AUTH_AUDIENCE", "").strip()
+        or None
+    )
+
+    try:
+        if test_secret:
+            decode_kwargs: dict[str, Any] = {
+                "algorithms": [test_algorithm],
+                "issuer": expected_issuer,
+                "options": {"require": ["exp", "iss", "sub"]},
+            }
+            if expected_audience:
+                decode_kwargs["audience"] = expected_audience
+            payload = jwt.decode(token, test_secret, **decode_kwargs)
+            return payload
+
+        jwks_url = (
+            (current_app.config.get("NEON_JWKS_URL") if current_app else None)
+            or os.environ.get("NEON_JWKS_URL", "").strip()
+            or f"{expected_issuer}/.well-known/jwks.json"
+        )
+        client = get_jwk_client(jwks_url)
+        signing_key = client.get_signing_key_from_jwt(token)
+
+        allowed_algs = (
+            current_app.config.get("NEON_ALLOWED_ALGORITHMS")
+            if current_app else None
+        )
+        if not allowed_algs:
+            raw_env = os.environ.get("NEON_ALLOWED_ALGORITHMS", "").strip()
+            if raw_env:
+                allowed_algs = [a.strip() for a in raw_env.split(",") if a.strip()]
+            else:
+                allowed_algs = ["EdDSA", "RS256"]
+
+        decode_kwargs = {
+            "algorithms": allowed_algs,
+            "issuer": expected_issuer,
+            "options": {"require": ["exp", "iss", "sub"]},
+        }
+        if expected_audience:
+            decode_kwargs["audience"] = expected_audience
+
+        payload = jwt.decode(token, signing_key.key, **decode_kwargs)
+        return payload
+    except Exception as exc:
+        logger.debug("Neon JWT verification failed: %s", exc)
+        return None
+
+
+def _provision_learner(neon_uuid: uuid.UUID, display_name: str) -> User | None:
+    """Safely, idempotently, and concurrency-safe provision a learner user in PostgreSQL."""
+    from backend.storage.db import get_db_session
+    from backend.storage.postgres_models import UserModel as PgUserModel
+
+    user_id = f"usr_{uuid.uuid4().hex[:16]}"
+    username = f"lrn_{neon_uuid.hex[:16]}"
+    clean_name = (display_name or "Learner").strip()[:100]
+
+    with get_db_session() as db_sess:
+        bind = db_sess.get_bind()
+        is_postgres = bind.dialect.name == "postgresql"
+
+        if is_postgres:
+            from sqlalchemy.dialects.postgresql import insert as pg_insert
+            stmt = (
+                pg_insert(PgUserModel)
+                .values(
+                    user_id=user_id,
+                    username=username,
+                    display_name=clean_name,
+                    role=UserRole.LEARNER.value,
+                    password_hash=None,
+                    neon_auth_user_id=neon_uuid,
+                    is_active=True,
+                )
+                .on_conflict_do_nothing(index_elements=["neon_auth_user_id"])
+            )
+            db_sess.execute(stmt)
+            db_sess.commit()
+        else:
+            # SQLite fallback for test environment
+            try:
+                new_user = PgUserModel(
+                    user_id=user_id,
+                    username=username,
+                    display_name=clean_name,
+                    role=UserRole.LEARNER.value,
+                    password_hash=None,
+                    neon_auth_user_id=neon_uuid,
+                    is_active=True,
+                )
+                db_sess.add(new_user)
+                db_sess.commit()
+            except Exception:
+                db_sess.rollback()
+
+        # Re-query by neon_auth_user_id to get the single authoritative row
+        row = db_sess.query(PgUserModel).filter_by(neon_auth_user_id=neon_uuid).first()
+        if row is not None:
+            return row.to_domain()
+    return None
+
 
 def get_current_user() -> User | None:
-    """Retrieve the current user from session, verifying against Datastore.
+    """Retrieve the current user from Bearer JWT or session cookie.
 
-    Validates that:
-    1. A user_id exists in the session.
-    2. The user entity exists in Datastore.
-    3. The account is active (is_active is True).
-    4. The session role reflects the database record.
-
-    If the user has been deleted or deactivated, the session is cleared immediately.
+    Precedence rules:
+    1. Bearer token present:
+       - Validate it first.
+       - Invalid, expired, malformed, wrong issuer, or wrong signature -> FAIL CLOSED immediately.
+       - NEVER fall back to a session cookie when a bearer token was supplied!
+       - Inactive account -> fails closed with 403.
+       - Unmapped identity -> safely auto-provisioned as 'learner'.
+    2. No bearer token:
+       - Continue using existing Flask session authentication.
     """
-    user_id = session.get("user_id")
+    auth_header = request.headers.get("Authorization", "").strip() if request else ""
+
+    if auth_header.startswith("Bearer "):
+        raw_token = auth_header[len("Bearer "):].strip()
+        payload = verify_neon_jwt(raw_token)
+        if not payload:
+            g.auth_error = ("UNAUTHORIZED", "Invalid or expired authentication token.", 401)
+            return None
+
+        sub_str = payload.get("sub")
+        if not sub_str:
+            g.auth_error = ("UNAUTHORIZED", "Missing token subject.", 401)
+            return None
+
+        try:
+            neon_uuid = uuid.UUID(str(sub_str))
+        except (ValueError, TypeError):
+            g.auth_error = ("UNAUTHORIZED", "Invalid token subject format.", 401)
+            return None
+
+        # Look up mapped user in PostgreSQL
+        try:
+            from backend.storage.db import get_db_session
+            from backend.storage.postgres_models import UserModel as PgUserModel
+            with get_db_session() as db_sess:
+                pg_u = db_sess.query(PgUserModel).filter_by(neon_auth_user_id=neon_uuid).first()
+                if pg_u is not None:
+                    if not pg_u.is_active:
+                        g.auth_error = ("FORBIDDEN", "Account deactivated.", 403)
+                        return None
+                    return pg_u.to_domain()
+        except Exception as exc:
+            logger.error("Error looking up user by neon_auth_user_id: %s", exc)
+
+        # Unmapped identity: auto-provision strictly as learner
+        try:
+            user = _provision_learner(neon_uuid, payload.get("name", "Learner"))
+            return user
+        except Exception as exc:
+            logger.error("Failed to provision learner: %s", exc)
+            g.auth_error = ("SERVICE_UNAVAILABLE", "Failed to initialize learner profile.", 503)
+            return None
+
+    # No Bearer token -> Check legacy session
+    user_id = session.get("user_id") if session else None
     if not user_id:
         return None
 
@@ -42,6 +243,7 @@ def get_current_user() -> User | None:
             if pg_u is not None:
                 if not pg_u.is_active:
                     session.clear()
+                    g.auth_error = ("FORBIDDEN", "Account deactivated.", 403)
                     return None
                 user = pg_u.to_domain()
                 if session.get("role") != user.role.value:
@@ -64,18 +266,19 @@ def get_current_user() -> User | None:
 
 
 def auth_required(fn: Callable) -> Callable:
-    """Decorator requiring an authenticated session."""
+    """Decorator requiring an authenticated session or valid bearer token."""
 
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
         user = get_current_user()
         if user is None:
+            err = getattr(g, "auth_error", ("UNAUTHORIZED", "Authentication required.", 401))
             return jsonify({
                 "error": {
-                    "code": "UNAUTHORIZED",
-                    "message": "Authentication required.",
+                    "code": err[0],
+                    "message": err[1],
                 }
-            }), 401
+            }), err[2]
         return fn(*args, **kwargs)
 
     return wrapper
@@ -89,12 +292,13 @@ def role_required(*roles: UserRole) -> Callable:
         def wrapper(*args, **kwargs):
             user = get_current_user()
             if user is None:
+                err = getattr(g, "auth_error", ("UNAUTHORIZED", "Authentication required.", 401))
                 return jsonify({
                     "error": {
-                        "code": "UNAUTHORIZED",
-                        "message": "Authentication required.",
+                        "code": err[0],
+                        "message": err[1],
                     }
-                }), 401
+                }), err[2]
             if user.role not in roles:
                 return jsonify({
                     "error": {
@@ -107,6 +311,7 @@ def role_required(*roles: UserRole) -> Callable:
         return wrapper
 
     return decorator
+
 
 
 def _issue_csrf_token(response: Response) -> str:
@@ -218,7 +423,8 @@ class MeHandler(BaseHandler):
     def get(self) -> tuple[Response, int]:
         user = get_current_user()
         if user is None:
-            return self.render_error("UNAUTHORIZED", "Not authenticated.", 401)
+            err = getattr(g, "auth_error", ("UNAUTHORIZED", "Not authenticated.", 401))
+            return self.render_error(err[0], err[1], err[2])
 
         token = session.get("csrf_token")
         if not token:

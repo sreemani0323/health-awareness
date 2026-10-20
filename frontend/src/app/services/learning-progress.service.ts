@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, Optional } from '@angular/core';
+import { LearnerAuthService } from './learner-auth.service';
 
 export interface LessonResumeState {
   lessonId: string;
@@ -89,8 +90,11 @@ export class LearningProgressService {
   readonly completedCount = computed(() => this.completedLessonIds().length);
   readonly activitiesCount = computed(() => this.completedActivityIds().length);
 
-  constructor() {
+  constructor(@Optional() private readonly learnerAuth?: LearnerAuthService) {
     this.loadFromStorage();
+    if (this.learnerAuth?.isAuthenticated()) {
+      this.syncWithRemote().catch((e) => console.warn('Startup sync failed:', e));
+    }
   }
 
   /**
@@ -238,6 +242,127 @@ export class LearningProgressService {
     } catch (e) {
       console.warn('Error saving learning progress to localStorage:', e);
     }
+
+    if (this.learnerAuth && this.learnerAuth.isAuthenticated()) {
+      this.learnerAuth
+        .pushRemoteProgress({
+          last_lesson: this.resumeState(),
+          completed_lesson_ids: this.completedLessonIds(),
+          completed_activity_ids: this.completedActivityIds(),
+          achieved_milestones: this.achievedMilestones(),
+          client_updated_at: new Date().toISOString(),
+        })
+        .catch((err) => console.warn('Background progress sync failed:', err));
+    }
+  }
+
+  /**
+   * Syncs device learning progress with the authenticated learner account.
+   * Performs deterministic merge:
+   * - completedLessonIds: set union
+   * - completedActivityIds: set union
+   * - achievedMilestones: union deduplicated by id (keeping earliest achievedAt)
+   * - lastLesson: latest by updatedAt timestamp
+   */
+  async syncWithRemote(): Promise<void> {
+    if (!this.learnerAuth || !this.learnerAuth.isAuthenticated()) {
+      return;
+    }
+
+    const remote = await this.learnerAuth.fetchRemoteProgress();
+    if (!remote) return;
+
+    // 1. Merge completed lesson IDs
+    const mergedLessons = Array.from(
+      new Set([...this.completedLessonIds(), ...(remote.completed_lesson_ids || [])])
+    );
+
+    // 2. Merge completed activity IDs
+    const mergedActivities = Array.from(
+      new Set([...this.completedActivityIds(), ...(remote.completed_activity_ids || [])])
+    );
+
+    // 3. Merge milestones (deduplicate by id, preserving earliest timestamp)
+    const milestoneMap = new Map<string, Milestone>();
+    for (const m of this.achievedMilestones()) {
+      milestoneMap.set(m.id, m);
+    }
+    for (const rm of remote.achieved_milestones || []) {
+      const existing = milestoneMap.get(rm.id);
+      if (!existing) {
+        milestoneMap.set(rm.id, {
+          id: rm.id,
+          title: rm.title,
+          description: rm.description,
+          icon: rm.icon,
+          achievedAt: rm.achievedAt,
+        });
+      } else {
+        if (rm.achievedAt && existing.achievedAt && rm.achievedAt < existing.achievedAt) {
+          existing.achievedAt = rm.achievedAt;
+        }
+      }
+    }
+    const mergedMilestones = Array.from(milestoneMap.values());
+
+    // 4. Merge last lesson resume state (choose newer updatedAt)
+    const localResume = this.resumeState();
+    const remoteResume = remote.last_lesson;
+    let mergedResume: LessonResumeState | null = localResume;
+
+    if (!localResume && remoteResume) {
+      mergedResume = {
+        lessonId: remoteResume.lessonId,
+        lessonTitle: remoteResume.lessonTitle,
+        topicId: remoteResume.topicId,
+        cardIndex: remoteResume.cardIndex,
+        totalCards: remoteResume.totalCards,
+        updatedAt: remoteResume.updatedAt,
+      };
+    } else if (localResume && remoteResume) {
+      if (
+        remoteResume.updatedAt &&
+        (!localResume.updatedAt || remoteResume.updatedAt > localResume.updatedAt)
+      ) {
+        mergedResume = {
+          lessonId: remoteResume.lessonId,
+          lessonTitle: remoteResume.lessonTitle,
+          topicId: remoteResume.topicId,
+          cardIndex: remoteResume.cardIndex,
+          totalCards: remoteResume.totalCards,
+          updatedAt: remoteResume.updatedAt,
+        };
+      }
+    }
+
+    // Update local signals
+    this.completedLessonIds.set(mergedLessons);
+    this.completedActivityIds.set(mergedActivities);
+    this.achievedMilestones.set(mergedMilestones);
+    this.resumeState.set(mergedResume);
+
+    // Persist to local storage
+    try {
+      const payload: StoredProgressData = {
+        version: 1,
+        lastLesson: mergedResume,
+        completedLessonIds: mergedLessons,
+        completedActivityIds: mergedActivities,
+        achievedMilestones: mergedMilestones,
+      };
+      localStorage.setItem(this.storageKey, JSON.stringify(payload));
+    } catch (e) {
+      console.warn('Error saving merged progress to localStorage:', e);
+    }
+
+    // Push merged state back to server
+    await this.learnerAuth.pushRemoteProgress({
+      last_lesson: mergedResume,
+      completed_lesson_ids: mergedLessons,
+      completed_activity_ids: mergedActivities,
+      achieved_milestones: mergedMilestones,
+      client_updated_at: new Date().toISOString(),
+    });
   }
 
   /**

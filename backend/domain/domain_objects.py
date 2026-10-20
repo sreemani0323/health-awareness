@@ -77,6 +77,7 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
     CASE_HANDLER = "case_handler"
     JURISDICTION_OFFICER = "jurisdiction_officer"
+    LEARNER = "learner"
 
 
 class ReviewStatus(str, enum.Enum):
@@ -439,8 +440,9 @@ class User:
     username: str
     display_name: str
     role: UserRole
-    password_hash: str
+    password_hash: Optional[str] = None
     is_active: bool = True
+    neon_auth_user_id: Optional[str] = None
 
     def validate(self) -> None:
         _validate_id(self.user_id, "user_id")
@@ -451,7 +453,8 @@ class User:
         _validate_nonempty_str(self.display_name, "display_name", MAX_TITLE_LEN)
         if not isinstance(self.role, UserRole):
             raise ValueError(f"role must be a UserRole.  Got: {self.role!r}")
-        if not isinstance(self.password_hash, str) or not self.password_hash.strip():
-            raise ValueError("password_hash must be a non-empty string.")
+        if self.password_hash is not None:
+            if not isinstance(self.password_hash, str) or not self.password_hash.strip():
+                raise ValueError("password_hash must be a non-empty string or None.")
         if not isinstance(self.is_active, bool):
             raise ValueError(f"is_active must be a boolean.  Got: {self.is_active!r}")

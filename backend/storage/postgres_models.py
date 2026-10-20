@@ -23,8 +23,9 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    Uuid,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.types import JSON
 
@@ -346,8 +347,14 @@ class UserModel(Base):
     username = Column(String(64), nullable=False, unique=True, index=True)
     display_name = Column(String(255), nullable=False)
     role = Column(String(64), nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
+    neon_auth_user_id = Column(
+        Uuid(as_uuid=True).with_variant(PG_UUID(as_uuid=True), "postgresql"),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime(timezone=True),
@@ -361,6 +368,12 @@ class UserModel(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    learner_progress = relationship(
+        "LearnerProgressModel",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def to_domain(self) -> User:
         return User(
@@ -370,11 +383,16 @@ class UserModel(Base):
             role=UserRole(self.role),
             password_hash=self.password_hash,
             is_active=self.is_active,
+            neon_auth_user_id=str(self.neon_auth_user_id) if self.neon_auth_user_id else None,
         )
 
     @classmethod
     def from_domain(cls, obj: User) -> "UserModel":
         obj.validate()
+        import uuid as _uuid
+        neon_uuid = None
+        if obj.neon_auth_user_id:
+            neon_uuid = _uuid.UUID(str(obj.neon_auth_user_id)) if not isinstance(obj.neon_auth_user_id, _uuid.UUID) else obj.neon_auth_user_id
         return cls(
             user_id=obj.user_id,
             username=obj.username,
@@ -382,7 +400,38 @@ class UserModel(Base):
             role=obj.role.value,
             password_hash=obj.password_hash,
             is_active=obj.is_active,
+            neon_auth_user_id=neon_uuid,
         )
+
+
+class LearnerProgressModel(Base):
+    """PostgreSQL table for cross-device synchronized learner progress."""
+
+    __tablename__ = "learner_progress"
+
+    progress_id = Column(String(64), primary_key=True)
+    user_id = Column(
+        String(64),
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    version = Column(Integer, nullable=False, default=1)
+    last_lesson = Column(JsonType, nullable=True)
+    completed_lesson_ids = Column(JsonType, nullable=False, default=list)
+    completed_activity_ids = Column(JsonType, nullable=False, default=list)
+    achieved_milestones = Column(JsonType, nullable=False, default=list)
+    client_updated_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    user = relationship("UserModel", back_populates="learner_progress")
 
 
 # ---------------------------------------------------------------------------
