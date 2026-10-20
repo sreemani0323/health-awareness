@@ -234,6 +234,33 @@ def get_current_user() -> User | None:
     if not user_id:
         return None
 
+    # Server-side session revocation check
+    session_auth_time = session.get("auth_time", 0)
+    try:
+        from backend.platform.mfa_service import get_mfa_service, MfaStorageError
+        mfa_service = get_mfa_service()
+        revoked_at = mfa_service.get_session_revoked_at(user_id)
+        if revoked_at is not None:
+            revoked_ts = revoked_at.timestamp()
+            if session_auth_time < revoked_ts:
+                session.clear()
+                g.auth_error = (
+                    "UNAUTHORIZED",
+                    "Session has been revoked due to a security credential change. Please log in again.",
+                    401,
+                )
+                return None
+    except MfaStorageError as exc:
+        logger.error("Session revocation check failed for user '%s': %s", user_id, exc)
+        g.auth_error = (
+            "SERVICE_UNAVAILABLE",
+            "Authentication service temporarily unavailable.",
+            503,
+        )
+        return None
+    except Exception as exc:
+        logger.debug("Unexpected error during session revocation check: %s", exc)
+
     # 1. Check PostgreSQL persistence
     try:
         from backend.storage.db import get_db_session
@@ -284,12 +311,54 @@ def auth_required(fn: Callable) -> Callable:
     return wrapper
 
 
+STAFF_ADMIN_ROLES = frozenset({
+    UserRole.CONTRIBUTOR,
+    UserRole.REVIEWER,
+    UserRole.ADMIN,
+    UserRole.CASE_HANDLER,
+    UserRole.JURISDICTION_OFFICER,
+})
+
+
 def role_required(*roles: UserRole) -> Callable:
-    """Decorator requiring the current user to have one of the specified roles."""
+    """Decorator requiring the current user to have one of the specified roles.
+
+    Enforces strict session isolation:
+    Staff administrative APIs (Contributor, Reviewer, Admin, Case Handler, Jurisdiction Officer)
+    strictly require an authentic, signed Flask session cookie. Public learner Bearer JWTs
+    are rejected immediately on staff administrative routes.
+    """
+    target_staff = any(r in STAFF_ADMIN_ROLES for r in roles)
 
     def decorator(fn: Callable) -> Callable:
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
+            if target_staff:
+                auth_header = request.headers.get("Authorization", "").strip() if request else ""
+                if auth_header.startswith("Bearer "):
+                    raw_token = auth_header[len("Bearer "):].strip()
+                    payload = verify_neon_jwt(raw_token)
+                    if not payload:
+                        return jsonify({
+                            "error": {
+                                "code": "UNAUTHORIZED",
+                                "message": "Invalid or expired authentication token.",
+                            }
+                        }), 401
+                    return jsonify({
+                        "error": {
+                            "code": "FORBIDDEN",
+                            "message": "Staff administrative APIs require a valid staff session cookie. Bearer tokens are not permitted.",
+                        }
+                    }), 403
+                if not session or not session.get("user_id"):
+                    return jsonify({
+                        "error": {
+                            "code": "UNAUTHORIZED",
+                            "message": "Staff session required.",
+                        }
+                    }), 401
+
             user = get_current_user()
             if user is None:
                 err = getattr(g, "auth_error", ("UNAUTHORIZED", "Authentication required.", 401))
@@ -313,7 +382,6 @@ def role_required(*roles: UserRole) -> Callable:
     return decorator
 
 
-
 def _issue_csrf_token(response: Response) -> str:
     """Ensure a CSRF token exists in the session and attach the XSRF-TOKEN cookie."""
     token = session.get("csrf_token")
@@ -333,7 +401,11 @@ def _issue_csrf_token(response: Response) -> str:
     return token
 
 
-from backend.platform.rate_limiter import limiter, get_auth_rate_limit
+import time
+from backend.platform.audit_log import SecurityAuditEvent, log_security_event
+from backend.platform.login_throttle import get_login_throttle_manager
+from backend.platform.mfa_service import get_mfa_service
+from backend.platform.rate_limiter import get_auth_rate_limit, get_trusted_client_ip, limiter
 
 
 class LoginHandler(BaseHandler):
@@ -347,6 +419,8 @@ class LoginHandler(BaseHandler):
     ]
 
     def post(self) -> tuple[Response, int]:
+        client_ip = get_trusted_client_ip()
+        throttle_mgr = get_login_throttle_manager()
 
         data = request.get_json(silent=True)
         if not data:
@@ -360,7 +434,23 @@ class LoginHandler(BaseHandler):
                 "BAD_REQUEST", "username and password are required.", 400
             )
 
-        # Authenticate against PostgreSQL first
+        # 1. Progressive throttling & brute-force mitigation
+        is_throttled, retry_after, reason = throttle_mgr.is_throttled(username, client_ip)
+        if is_throttled:
+            log_security_event(
+                event=SecurityAuditEvent.LOGIN_THROTTLED,
+                actor_id=username,
+                client_ip=client_ip,
+                status="THROTTLED",
+                details={"retry_after": retry_after, "reason": reason},
+            )
+            resp, status = self.render_error(
+                "UNAUTHORIZED", "Invalid username or password.", 401
+            )
+            resp.headers["Retry-After"] = str(retry_after)
+            return resp, status
+
+        # 2. Authenticate against PostgreSQL first
         user = None
         pg_user_found = False
         try:
@@ -383,18 +473,72 @@ class LoginHandler(BaseHandler):
             except Exception:
                 user = None
 
-        if user is None:
+        # 3. Failed authentication handling (generic error prevents account enumeration)
+        if user is None or not user.is_active:
+            throttle_mgr.record_failure(username, client_ip)
+            log_security_event(
+                event=SecurityAuditEvent.LOGIN_FAILED,
+                actor_id=username,
+                client_ip=client_ip,
+                status="FAILURE",
+            )
             return self.render_error(
                 "UNAUTHORIZED", "Invalid username or password.", 401
             )
 
-        # Session fixation protection: clear old session before populating
+        # 4. Successful credentials verification
+        throttle_mgr.record_success(username, client_ip)
+
+        # 5. Check if staff user has active Multi-Factor Authentication (MFA)
+        mfa_service = get_mfa_service()
+        try:
+            mfa_enabled = mfa_service.is_mfa_enabled(user.user_id)
+        except Exception as exc:
+            logger.error("Database error checking MFA status for user '%s': %s", user.user_id, exc)
+            return self.render_error(
+                "SERVICE_UNAVAILABLE",
+                "Authentication service temporarily unavailable.",
+                503,
+            )
+
+        if mfa_enabled:
+            session.clear()
+            session["mfa_pending_user_id"] = user.user_id
+            session["mfa_pending_username"] = user.username
+            session["mfa_pending_role"] = user.role.value
+            session["mfa_pending_display_name"] = user.display_name
+            session["mfa_pending_timestamp"] = time.time()
+
+            log_security_event(
+                event=SecurityAuditEvent.MFA_REQUIRED,
+                actor_id=user.user_id,
+                client_ip=client_ip,
+                status="SUCCESS",
+            )
+
+            return self.render_json({
+                "mfa_required": True,
+                "user_id": user.user_id,
+                "message": "Multi-factor authentication required.",
+            })
+
+        # 6. Standard session creation for users without MFA enabled
         session.clear()
+        session.permanent = True
         session["user_id"] = user.user_id
         session["username"] = user.username
         session["role"] = user.role.value
+        session["auth_time"] = time.time()
         csrf_token = secrets.token_hex(32)
         session["csrf_token"] = csrf_token
+
+        log_security_event(
+            event=SecurityAuditEvent.LOGIN_SUCCESS,
+            actor_id=user.user_id,
+            client_ip=client_ip,
+            status="SUCCESS",
+            details={"mfa_used": False},
+        )
 
         resp, status = self.render_json({
             "user_id": user.user_id,
@@ -407,11 +551,286 @@ class LoginHandler(BaseHandler):
         return resp, status
 
 
+class MfaVerifyHandler(BaseHandler):
+    """POST /api/v1/auth/mfa/verify — Complete login via TOTP code or emergency recovery code."""
+
+    def post(self) -> tuple[Response, int]:
+        client_ip = get_trusted_client_ip()
+        mfa_user_id = session.get("mfa_pending_user_id")
+        mfa_timestamp = session.get("mfa_pending_timestamp", 0)
+        username = session.get("mfa_pending_username", "")
+
+        # Pending MFA state must exist and be within 5-minute timeout window
+        if not mfa_user_id or (time.time() - mfa_timestamp) > 300:
+            session.clear()
+            return self.render_error(
+                "UNAUTHORIZED",
+                "MFA session has expired or is invalid. Please log in again.",
+                401,
+            )
+
+        # 1. Enforce login throttling on MFA verification attempts
+        from backend.platform.login_throttle import get_login_throttle_manager
+        throttle_mgr = get_login_throttle_manager()
+        is_locked, retry_after, _ = throttle_mgr.is_throttled(username, client_ip)
+        if is_locked:
+            resp, status = self.render_error(
+                "UNAUTHORIZED",
+                "Account is temporarily locked due to repeated failed verification attempts.",
+                401,
+            )
+            resp.headers["Retry-After"] = str(retry_after)
+            return resp, status
+
+        data = request.get_json(silent=True) or {}
+        code = (
+            data.get("totp_code")
+            or data.get("code")
+            or data.get("recovery_code", "")
+        )
+        if not code or not isinstance(code, str):
+            return self.render_error("BAD_REQUEST", "MFA code or recovery code is required.", 400)
+
+        mfa_service = get_mfa_service()
+        try:
+            success, method_or_err = mfa_service.verify_login_mfa(
+                user_id=mfa_user_id,
+                code_or_recovery=code,
+                client_ip=client_ip,
+            )
+        except Exception as exc:
+            logger.error("MFA verification database error for user '%s': %s", mfa_user_id, exc)
+            return self.render_error(
+                "SERVICE_UNAVAILABLE",
+                "Authentication service temporarily unavailable.",
+                503,
+            )
+
+        if not success:
+            throttle_mgr.record_failure(username, client_ip)
+            failed_attempts = session.get("mfa_failed_attempts", 0) + 1
+            session["mfa_failed_attempts"] = failed_attempts
+
+            if failed_attempts >= 3:
+                session.clear()
+                return self.render_error(
+                    "UNAUTHORIZED",
+                    "Too many failed verification attempts. Please log in again.",
+                    401,
+                )
+
+            if method_or_err == "replay_detected":
+                return self.render_error(
+                    "UNAUTHORIZED",
+                    "This authentication code has already been used. Please wait for the next code.",
+                    401,
+                )
+            return self.render_error(
+                "UNAUTHORIZED",
+                "Invalid authentication code or recovery code.",
+                401,
+            )
+
+        # Clear throttle on successful verification
+        throttle_mgr.record_success(username, client_ip)
+
+        # Complete staff session establishment
+        role = session.get("mfa_pending_role")
+        display_name = session.get("mfa_pending_display_name", username)
+
+        session.clear()
+        session.permanent = True
+        session["user_id"] = mfa_user_id
+        session["username"] = username
+        session["role"] = role
+        session["auth_time"] = time.time()
+        csrf_token = secrets.token_hex(32)
+        session["csrf_token"] = csrf_token
+
+        log_security_event(
+            event=SecurityAuditEvent.LOGIN_SUCCESS,
+            actor_id=mfa_user_id,
+            client_ip=client_ip,
+            status="SUCCESS",
+            details={"mfa_used": True, "method": method_or_err},
+        )
+
+        resp, status = self.render_json({
+            "user_id": mfa_user_id,
+            "username": username,
+            "display_name": display_name,
+            "role": role,
+            "csrf_token": csrf_token,
+            "mfa_verified": True,
+            "mfa_method": method_or_err,
+        })
+        _issue_csrf_token(resp)
+        return resp, status
+
+
+class MfaEnrollHandler(BaseHandler):
+    """POST /api/v1/auth/mfa/enroll — Initiate MFA setup for authenticated staff."""
+
+    @role_required(*STAFF_ADMIN_ROLES)
+    def post(self) -> tuple[Response, int]:
+        user = get_current_user()
+        if user is None:
+            return self.render_error("UNAUTHORIZED", "Staff authentication required.", 401)
+
+        data = request.get_json(silent=True) or {}
+        password = data.get("password", "").strip() if isinstance(data, dict) else ""
+        auth_time = session.get("auth_time", 0)
+        now = time.time()
+
+        # Enforce recent password verification (within 15 minutes) or explicit password re-entry
+        if password:
+            from backend.platform.security import verify_password
+            if not verify_password(password, user.password_hash):
+                return self.render_error("UNAUTHORIZED", "Password verification failed.", 401)
+            session["auth_time"] = now
+        elif not auth_time or (now - auth_time) > 900:
+            return self.render_error(
+                "UNAUTHORIZED",
+                "Recent password verification required to initiate MFA enrollment.",
+                401,
+            )
+
+        mfa_service = get_mfa_service()
+        try:
+            enrollment_data = mfa_service.initiate_enrollment(
+                user_id=user.user_id,
+                username=user.username,
+            )
+        except Exception as exc:
+            logger.error("Failed to initiate MFA enrollment for %s: %s", user.user_id, exc)
+            return self.render_error(
+                "SERVICE_UNAVAILABLE",
+                "Authentication service temporarily unavailable.",
+                503,
+            )
+
+        return self.render_json({
+            "secret": enrollment_data["secret"],
+            "provisioning_uri": enrollment_data["provisioning_uri"],
+            "recovery_codes": enrollment_data["recovery_codes"],
+            "message": "Scan the QR code or enter the secret in your authenticator app, then confirm with a 6-digit code.",
+        })
+
+
+class MfaConfirmEnrollmentHandler(BaseHandler):
+    """POST /api/v1/auth/mfa/confirm-enrollment — Confirm TOTP and activate MFA."""
+
+    @role_required(*STAFF_ADMIN_ROLES)
+    def post(self) -> tuple[Response, int]:
+        user = get_current_user()
+        if user is None:
+            return self.render_error("UNAUTHORIZED", "Staff authentication required.", 401)
+
+        data = request.get_json(silent=True) or {}
+        totp_code = data.get("totp_code", "").strip()
+        if not totp_code:
+            return self.render_error("BAD_REQUEST", "totp_code is required.", 400)
+
+        mfa_service = get_mfa_service()
+        try:
+            success = mfa_service.confirm_enrollment(user.user_id, totp_code)
+        except Exception as exc:
+            logger.error("Failed to confirm MFA enrollment for %s: %s", user.user_id, exc)
+            return self.render_error(
+                "SERVICE_UNAVAILABLE",
+                "Authentication service temporarily unavailable.",
+                503,
+            )
+
+        if not success:
+            return self.render_error(
+                "BAD_REQUEST",
+                "Verification code is invalid or expired. Check your device clock and try again.",
+                400,
+            )
+
+        return self.render_json({
+            "message": "Multi-factor authentication successfully activated.",
+            "mfa_enabled": True,
+        })
+
+
+class MfaStatusHandler(BaseHandler):
+    """GET /api/v1/auth/mfa/status — Check staff user's MFA enrollment status."""
+
+    @role_required(*STAFF_ADMIN_ROLES)
+    def get(self) -> tuple[Response, int]:
+        user = get_current_user()
+        if user is None:
+            return self.render_error("UNAUTHORIZED", "Staff authentication required.", 401)
+
+        mfa_service = get_mfa_service()
+        try:
+            status_data = mfa_service.get_status(user.user_id)
+        except Exception as exc:
+            logger.error("Failed to get MFA status for %s: %s", user.user_id, exc)
+            return self.render_error(
+                "SERVICE_UNAVAILABLE",
+                "Authentication service temporarily unavailable.",
+                503,
+            )
+        return self.render_json(status_data)
+
+
+class MfaDisableHandler(BaseHandler):
+    """POST /api/v1/auth/mfa/disable — Self-service MFA disabling with password re-entry."""
+
+    @role_required(*STAFF_ADMIN_ROLES)
+    def post(self) -> tuple[Response, int]:
+        user = get_current_user()
+        if user is None:
+            return self.render_error("UNAUTHORIZED", "Staff authentication required.", 401)
+
+        data = request.get_json(silent=True) or {}
+        password = data.get("password", "").strip()
+        code = data.get("totp_code") or data.get("recovery_code", "")
+
+        if not password or not code:
+            return self.render_error(
+                "BAD_REQUEST", "password and totp_code (or recovery_code) are required to disable MFA.", 400
+            )
+
+        # Verify password first
+        from backend.platform.security import verify_password
+        if not verify_password(password, user.password_hash):
+            return self.render_error("UNAUTHORIZED", "Password verification failed.", 401)
+
+        # Verify MFA code
+        mfa_service = get_mfa_service()
+        success, _ = mfa_service.verify_login_mfa(user.user_id, code, get_trusted_client_ip())
+        if not success:
+            return self.render_error("UNAUTHORIZED", "MFA verification failed.", 401)
+
+        try:
+            mfa_service.disable_mfa(user.user_id)
+        except Exception as exc:
+            logger.error("Failed to disable MFA for user '%s': %s", user.user_id, exc)
+            return self.render_error("SERVICE_UNAVAILABLE", "Failed to disable MFA.", 503)
+
+        # Refresh auth_time for this current browser session so it remains authenticated,
+        # while other sessions on other browsers/devices are invalidated.
+        session["auth_time"] = time.time()
+        return self.render_json({"message": "MFA has been disabled.", "mfa_enabled": False})
+
+
 class LogoutHandler(BaseHandler):
     """POST /api/v1/auth/logout — Destroy session."""
 
     def post(self) -> tuple[Response, int]:
+        user_id = session.get("user_id")
         session.clear()
+        if user_id:
+            log_security_event(
+                event=SecurityAuditEvent.SESSION_REVOKED,
+                actor_id=user_id,
+                client_ip=get_trusted_client_ip(),
+                status="SUCCESS",
+            )
         resp, status = self.render_json({"message": "Logged out successfully."})
         resp.delete_cookie("XSRF-TOKEN", path="/")
         return resp, status
@@ -431,12 +850,17 @@ class MeHandler(BaseHandler):
             token = secrets.token_hex(32)
             session["csrf_token"] = token
 
+        mfa_service = get_mfa_service()
+        mfa_enabled = mfa_service.is_mfa_enabled(user.user_id)
+
         resp, status = self.render_json({
             "user_id": user.user_id,
             "username": user.username,
             "display_name": user.display_name,
             "role": user.role.value,
             "csrf_token": token,
+            "mfa_enabled": mfa_enabled,
         })
         _issue_csrf_token(resp)
         return resp, status
+

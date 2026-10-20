@@ -34,9 +34,36 @@ STAFF_ROLES = frozenset({
 
 
 def require_staff(fn: Callable) -> Callable:
-    """Ensures request is authenticated and user has an authorized staff role."""
+    """Ensures request is authenticated via staff session and user has an authorized staff role."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "").strip() if request else ""
+        if auth_header.startswith("Bearer "):
+            raw_token = auth_header[len("Bearer "):].strip()
+            from backend.controllers.auth import verify_neon_jwt
+            payload = verify_neon_jwt(raw_token)
+            if not payload:
+                return jsonify({
+                    "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Invalid or expired authentication token.",
+                    }
+                }), 401
+            return jsonify({
+                "error": {
+                    "code": "FORBIDDEN",
+                    "message": "Staff case management requires a valid staff session cookie. Bearer tokens are not permitted.",
+                }
+            }), 403
+
+        if not session or not session.get("user_id"):
+            return jsonify({
+                "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Staff authentication required.",
+                }
+            }), 401
+
         user = get_current_user()
         if user is None:
             return jsonify({
@@ -57,9 +84,36 @@ def require_staff(fn: Callable) -> Callable:
 
 
 def require_admin_staff(fn: Callable) -> Callable:
-    """Ensures user is an administrator."""
+    """Ensures user is an administrator authenticated via staff session."""
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "").strip() if request else ""
+        if auth_header.startswith("Bearer "):
+            raw_token = auth_header[len("Bearer "):].strip()
+            from backend.controllers.auth import verify_neon_jwt
+            payload = verify_neon_jwt(raw_token)
+            if not payload:
+                return jsonify({
+                    "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Invalid or expired authentication token.",
+                    }
+                }), 401
+            return jsonify({
+                "error": {
+                    "code": "FORBIDDEN",
+                    "message": "Administrative APIs require a valid staff session cookie. Bearer tokens are not permitted.",
+                }
+            }), 403
+
+        if not session or not session.get("user_id"):
+            return jsonify({
+                "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Staff authentication required.",
+                }
+            }), 401
+
         user = get_current_user()
         if user is None:
             return jsonify({"error": {"code": "UNAUTHORIZED", "message": "Authentication required."}}), 401

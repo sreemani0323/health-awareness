@@ -15,6 +15,7 @@ import hmac
 import logging
 import os
 import secrets
+from datetime import timedelta
 from typing import Any
 
 from flask import Flask, g, jsonify, request, session
@@ -217,6 +218,13 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
             )
         secret_key = flask_secret
 
+        mfa_key = os.environ.get("MFA_ENCRYPTION_KEY", "").strip()
+        if (not mfa_key or len(mfa_key) < 16) and "PYTEST_CURRENT_TEST" not in os.environ:
+            raise RuntimeError(
+                "Configuration error: Dedicated MFA_ENCRYPTION_KEY must be configured in production. "
+                "Reusing FLASK_SECRET_KEY or fallback defaults is prohibited in production."
+            )
+
     elif app_env == "development" or is_testing:
         secret_key = flask_secret or "dev-insecure-secret-key-change-in-production"
     else:
@@ -234,6 +242,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=session_secure,
+        PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
     )
 
     if test_config:
@@ -349,7 +358,12 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
             return None
 
         # Public / unauthenticated initial endpoints are exempt
-        if request.path in ("/api/v1/auth/login", "/api/v1/health"):
+        if request.path in (
+            "/api/v1/auth/login",
+            "/api/v1/health",
+            "/api/v1/staff/apply",
+            "/api/v1/staff/applications/track",
+        ):
             return None
 
         # For cookie-authenticated requests, verify Double-Submit Anti-CSRF Token

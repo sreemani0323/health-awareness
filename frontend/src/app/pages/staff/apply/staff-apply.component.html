@@ -1,0 +1,290 @@
+<div class="staff-apply-layout">
+  <div class="apply-container">
+    <!-- Header -->
+    <header class="apply-header">
+      <div class="header-badge">Staff & Volunteer Vetting</div>
+      <h1 class="header-title">Apply for HealthAware Staff & Reviewer Roles</h1>
+      <p class="header-subtitle">
+        Join public health specialists, educators, and community triage officers. All applications undergo multi-stage verification before permissions are granted.
+      </p>
+      <div class="notice-banner">
+        <span class="notice-icon">ℹ️</span>
+        <span class="notice-text">
+          <strong>Verification Notice:</strong> Registering or applying does not grant staff privileges. An authorized administrator must verify credentials and approve the application. HealthAware is an independent evidence-based platform and does not issue government appointments.
+        </span>
+      </div>
+    </header>
+
+    <!-- Error Banner -->
+    @if (errorMessage()) {
+      <div class="alert-banner error" role="alert">
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-text">{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Success State: Reference & Tracking Token Display -->
+    @if (submissionResult()) {
+      <div class="success-card">
+        <div class="success-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="success-check-icon">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h2 class="success-title">Application Submitted for Verification</h2>
+        <p class="success-desc">
+          Your application has been registered in the verification queue. Save your tracking credentials below to inspect progress or submit additional information if requested.
+        </p>
+
+        <div class="credentials-box">
+          <div class="cred-row">
+            <span class="cred-label">Reference ID:</span>
+            <span class="cred-value highlight" id="app-reference-id">{{ submissionResult()?.reference_id }}</span>
+          </div>
+          <div class="cred-row">
+            <span class="cred-label">Secure Tracking Token:</span>
+            <span class="cred-value token" id="app-tracking-token">{{ submissionResult()?.tracking_token }}</span>
+          </div>
+          <p class="cred-warning">
+            🔒 <strong>Important:</strong> This token will not be displayed again. Please copy and store it securely.
+          </p>
+
+          <div class="cred-actions">
+            <button type="button" class="btn-copy" (click)="copyCredentials()" id="btn-copy-credentials">
+              @if (copied()) {
+                <span>✓ Copied to Clipboard</span>
+              } @else {
+                <span>📋 Copy Credentials</span>
+              }
+            </button>
+            <button type="button" class="btn-track" (click)="goToStatus()" id="btn-go-to-status">
+              <span>Inspect Application Status →</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <!-- Application Form -->
+      <form class="apply-form" (ngSubmit)="submitApplication()">
+        <!-- Step 1: Personal & Contact Information -->
+        <section class="form-section">
+          <h2 class="section-title">1. Personal & Contact Details</h2>
+          <p class="section-subtitle">We only collect minimum necessary information for identity and communication.</p>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="applicant-name" class="form-label">Full Name <span class="required">*</span></label>
+              <input
+                id="applicant-name"
+                type="text"
+                class="form-input"
+                [ngModel]="applicantName()"
+                (ngModelChange)="applicantName.set($event)"
+                name="applicantName"
+                placeholder="e.g. Dr. Ananya Sharma"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="applicant-email" class="form-label">Email Address <span class="required">*</span></label>
+              <input
+                id="applicant-email"
+                type="email"
+                class="form-input"
+                [ngModel]="applicantEmail()"
+                (ngModelChange)="applicantEmail.set($event)"
+                name="applicantEmail"
+                placeholder="e.g. ananya.sharma@hospital.org"
+                required
+              />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="applicant-phone" class="form-label">Phone Number (Optional)</label>
+              <input
+                id="applicant-phone"
+                type="tel"
+                class="form-input"
+                [ngModel]="applicantPhone()"
+                (ngModelChange)="applicantPhone.set($event)"
+                name="applicantPhone"
+                placeholder="e.g. +91 98765 43210"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Role Selection -->
+        <section class="form-section">
+          <h2 class="section-title">2. Select Desired Staff Role <span class="required">*</span></h2>
+          <p class="section-subtitle">A requested role is not automatically approved. Approvers review qualifications for least privilege.</p>
+
+          <div class="role-grid">
+            @for (role of roles; track role.id) {
+              <div
+                class="role-card"
+                [class.selected]="requestedRole() === role.id"
+                (click)="selectRole(role.id)"
+                role="button"
+                tabindex="0"
+              >
+                <div class="role-card-header">
+                  <span class="role-icon">{{ role.icon }}</span>
+                  <span class="role-badge">{{ role.badge }}</span>
+                </div>
+                <h3 class="role-title">{{ role.title }}</h3>
+                <p class="role-desc">{{ role.description }}</p>
+                <div class="role-select-indicator">
+                  @if (requestedRole() === role.id) {
+                    <span class="indicator-active">✓ Selected</span>
+                  } @else {
+                    <span class="indicator-inactive">Select</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- Step 3: Professional Background & Verification -->
+        <section class="form-section">
+          <h2 class="section-title">3. Professional Affiliation & Verification</h2>
+          <p class="section-subtitle">Helps reviewers verify clinical, academic, or municipal experience. No national ID documents required.</p>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="organization" class="form-label">Organization or Institution</label>
+              <input
+                id="organization"
+                type="text"
+                class="form-input"
+                [ngModel]="organization()"
+                (ngModelChange)="organization.set($event)"
+                name="organization"
+                placeholder="e.g. Apollo Hospitals / Guntur Health Center"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="professional-title" class="form-label">Professional Title / Designation</label>
+              <input
+                id="professional-title"
+                type="text"
+                class="form-input"
+                [ngModel]="professionalTitle()"
+                (ngModelChange)="professionalTitle.set($event)"
+                name="professionalTitle"
+                placeholder="e.g. Senior Pediatrician / Sanitary Inspector"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="credential-reference" class="form-label">Registration / Council Reference (If applicable)</label>
+              <input
+                id="credential-reference"
+                type="text"
+                class="form-input"
+                [ngModel]="credentialReference()"
+                (ngModelChange)="credentialReference.set($event)"
+                name="credentialReference"
+                placeholder="e.g. State Medical Council ID, Staff ID, or Faculty Page"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="portfolio-url" class="form-label">Profile or Institutional Directory Link (Optional)</label>
+              <input
+                id="portfolio-url"
+                type="url"
+                class="form-input"
+                [ngModel]="portfolioUrl()"
+                (ngModelChange)="portfolioUrl.set($event)"
+                name="portfolioUrl"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 4: Statement of Purpose -->
+        <section class="form-section">
+          <h2 class="section-title">4. Statement of Purpose & Motivation <span class="required">*</span></h2>
+          <p class="section-subtitle">Explain your background, why you wish to contribute to HealthAware, and your subject expertise.</p>
+
+          <div class="form-group">
+            <textarea
+              id="statement-of-purpose"
+              class="form-textarea"
+              rows="5"
+              [ngModel]="statementOfPurpose()"
+              (ngModelChange)="statementOfPurpose.set($event)"
+              name="statementOfPurpose"
+              placeholder="Provide at least 30 characters explaining your relevant experience and motivation..."
+              required
+            ></textarea>
+            <span class="char-count" [class.valid]="statementOfPurpose().trim().length >= 30">
+              {{ statementOfPurpose().trim().length }} / 30 minimum characters
+            </span>
+          </div>
+        </section>
+
+        <!-- Step 5: Standards Acknowledgement -->
+        <section class="form-section">
+          <h2 class="section-title">5. Evidence-Based Standards & Declarations <span class="required">*</span></h2>
+          <p class="section-subtitle">HealthAware strictly adheres to verified medical guidelines and youth learner protection.</p>
+
+          <div class="declarations-box">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [ngModel]="evidenceStandardsAcknowledged()"
+                (ngModelChange)="evidenceStandardsAcknowledged.set($event)"
+                name="evidenceStandardsAcknowledged"
+                id="chk-evidence-standards"
+                required
+              />
+              <span class="checkbox-text">
+                I agree to adhere strictly to <strong>HealthAware’s evidence-based standards</strong>. All educational statements must cite WHO, ICMR, MoHFW, or reputable peer-reviewed health literature, and I will not promote unverified commercial health treatments.
+              </span>
+            </label>
+
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [ngModel]="childSafetyAcknowledged()"
+                (ngModelChange)="childSafetyAcknowledged.set($event)"
+                name="childSafetyAcknowledged"
+                id="chk-child-safety"
+                required
+              />
+              <span class="checkbox-text">
+                I agree to adhere to <strong>learner safety and non-commercial guidelines</strong>. I understand that public applicants receive no privileges until reviewed and approved by authorized administration.
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <a routerLink="/staff/application-status" class="btn-check-existing">
+            Already applied? Check Status →
+          </a>
+
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="submitting() || statementOfPurpose().trim().length < 30 || !evidenceStandardsAcknowledged() || !childSafetyAcknowledged()"
+            id="btn-submit-application"
+          >
+            @if (submitting()) {
+              <span>Submitting for Verification...</span>
+            } @else {
+              <span>Submit Staff Application</span>
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

@@ -349,6 +349,9 @@ class UserModel(Base):
     role = Column(String(64), nullable=False, index=True)
     password_hash = Column(String(255), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
+    must_change_password = Column(Boolean, nullable=False, default=False)
+    setup_token_hash = Column(String(64), nullable=True, index=True)
+    setup_token_expires_at = Column(DateTime(timezone=True), nullable=True)
     neon_auth_user_id = Column(
         Uuid(as_uuid=True).with_variant(PG_UUID(as_uuid=True), "postgresql"),
         nullable=True,
@@ -384,6 +387,7 @@ class UserModel(Base):
             password_hash=self.password_hash,
             is_active=self.is_active,
             neon_auth_user_id=str(self.neon_auth_user_id) if self.neon_auth_user_id else None,
+            must_change_password=bool(self.must_change_password),
         )
 
     @classmethod
@@ -401,6 +405,7 @@ class UserModel(Base):
             password_hash=obj.password_hash,
             is_active=obj.is_active,
             neon_auth_user_id=neon_uuid,
+            must_change_password=obj.must_change_password,
         )
 
 
@@ -554,3 +559,114 @@ class StaffJurisdictionModel(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "state", "district", "municipality", name="uq_staff_jurisdiction"),
     )
+
+
+class StaffMfaModel(Base):
+    """PostgreSQL table for staff Multi-Factor Authentication credentials."""
+
+    __tablename__ = "staff_mfa_credentials"
+
+    user_id = Column(
+        String(64),
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    totp_secret_encrypted = Column(Text, nullable=False)
+    totp_enabled = Column(Boolean, nullable=False, default=False)
+    recovery_codes_hash_json = Column(Text, nullable=False, default="[]")
+    last_used_step = Column(Integer, nullable=False, default=0)
+    session_revoked_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Staff Application & Multi-Stage Vetting Models
+# ---------------------------------------------------------------------------
+
+
+class StaffApplicationModel(Base):
+    """PostgreSQL table for public staff applications and multi-stage vetting."""
+
+    __tablename__ = "staff_applications"
+
+    application_id = Column(String(64), primary_key=True)
+    reference_id = Column(String(32), nullable=False, unique=True, index=True)
+    tracking_token_hash = Column(String(64), nullable=False, index=True)
+    tracking_token_expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    applicant_name = Column(String(255), nullable=False)
+    applicant_email = Column(String(255), nullable=False, index=True)
+    applicant_phone = Column(String(64), nullable=True)
+    requested_role = Column(String(64), nullable=False, index=True)
+    organization = Column(String(255), nullable=True)
+    professional_title = Column(String(255), nullable=True)
+    credential_reference = Column(Text, nullable=True)
+    portfolio_url = Column(String(500), nullable=True)
+    statement_of_purpose = Column(Text, nullable=False)
+    evidence_standards_acknowledged = Column(Boolean, nullable=False, default=False)
+    child_safety_acknowledged = Column(Boolean, nullable=False, default=False)
+    status = Column(String(32), nullable=False, default="pending_review", index=True)
+    assigned_reviewer_id = Column(
+        String(64),
+        ForeignKey("users.user_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    assigned_reviewer_name = Column(String(255), nullable=True)
+    approved_role = Column(String(64), nullable=True)
+    assigned_jurisdiction = Column(String(128), nullable=True)
+    provisioned_user_id = Column(
+        String(64),
+        ForeignKey("users.user_id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    rejection_reason = Column(Text, nullable=True)
+    info_request_details = Column(Text, nullable=True)
+    applicant_notes = Column(Text, nullable=True)
+    internal_notes = Column(Text, nullable=True)
+    verification_checklist = Column(JsonType, nullable=False, default=dict)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    history = relationship(
+        "StaffApplicationHistoryModel",
+        back_populates="application",
+        order_by="StaffApplicationHistoryModel.created_at.asc()",
+        cascade="all, delete-orphan",
+    )
+
+
+class StaffApplicationHistoryModel(Base):
+    """PostgreSQL table recording state transitions and decision rationale for staff applications."""
+
+    __tablename__ = "staff_application_history"
+
+    history_id = Column(String(64), primary_key=True)
+    application_id = Column(
+        String(64),
+        ForeignKey("staff_applications.application_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    from_status = Column(String(32), nullable=False)
+    to_status = Column(String(32), nullable=False)
+    actor_id = Column(String(64), nullable=False)
+    actor_name = Column(String(255), nullable=False)
+    actor_role = Column(String(64), nullable=False)
+    action = Column(String(64), nullable=False)
+    decision_rationale = Column(Text, nullable=True)
+    metadata_json = Column(JsonType, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+    application = relationship("StaffApplicationModel", back_populates="history")
+
+

@@ -6,10 +6,13 @@ and administrative health overview. All endpoints strictly require UserRole.ADMI
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any
 
 from flask import Response, request
+
+logger = logging.getLogger(__name__)
 
 from backend.controllers.auth import get_current_user, role_required
 from backend.controllers.base import BaseHandler
@@ -200,3 +203,88 @@ class AdminOverviewHandler(BaseHandler):
             "pending_reviews": len(submitted_versions),
         }
         return self.render_json(overview)
+
+
+class AdminMfaResetHandler(BaseHandler):
+    """POST /api/v1/admin/users/<user_id>/mfa/reset — Reset MFA for locked-out staff."""
+
+    @role_required(UserRole.ADMIN)
+    def post(self, user_id: str) -> tuple[Response, int]:
+        current_user = get_current_user()
+        admin_id = current_user.user_id if current_user else "admin"
+
+        # Verify target user exists
+        target_user = domain_services.get_user(user_id)
+        if target_user is None:
+            try:
+                from backend.storage.db import get_db_session
+                from backend.storage.postgres_models import UserModel as PgUserModel
+                with get_db_session() as db_sess:
+                    pg_u = db_sess.query(PgUserModel).filter_by(user_id=user_id).first()
+                    if not pg_u:
+                        return self.render_error("NOT_FOUND", f"User '{user_id}' does not exist.", 404)
+            except Exception:
+                return self.render_error("NOT_FOUND", f"User '{user_id}' does not exist.", 404)
+
+        from backend.platform.mfa_service import get_mfa_service, MfaStorageError
+        mfa_service = get_mfa_service()
+
+        try:
+            success = mfa_service.admin_reset_mfa(target_user_id=user_id, admin_user_id=admin_id)
+        except MfaStorageError as exc:
+            logger.error("Database error during admin MFA reset for user '%s': %s", user_id, exc)
+            return self.render_error(
+                "SERVICE_UNAVAILABLE", "Authentication service temporarily unavailable.", 503
+            )
+        except Exception as exc:
+            logger.error("Failed to reset MFA for user '%s': %s", user_id, exc)
+            return self.render_error("INTERNAL_SERVER_ERROR", "Failed to reset MFA.", 500)
+
+        if success:
+            return self.render_json({
+                "message": f"MFA has been successfully reset for user '{user_id}'.",
+                "user_id": user_id,
+                "mfa_enabled": False,
+            })
+        return self.render_error("INTERNAL_SERVER_ERROR", "Failed to reset MFA.", 500)
+
+
+class AdminThrottleResetHandler(BaseHandler):
+    """POST /api/v1/admin/users/<username>/throttle/reset — Clear failed login lockout."""
+
+    @role_required(UserRole.ADMIN)
+    def post(self, username: str) -> tuple[Response, int]:
+        current_user = get_current_user()
+        admin_id = current_user.user_id if current_user else "admin"
+
+        # Verify target user exists
+        target_user = domain_services.get_user_by_username(username)
+        if target_user is None:
+            try:
+                from backend.storage.db import get_db_session
+                from backend.storage.postgres_models import UserModel as PgUserModel
+                with get_db_session() as db_sess:
+                    pg_u = db_sess.query(PgUserModel).filter_by(username=username).first()
+                    if not pg_u:
+                        return self.render_error("NOT_FOUND", f"User '{username}' does not exist.", 404)
+            except Exception:
+                return self.render_error("NOT_FOUND", f"User '{username}' does not exist.", 404)
+
+        from backend.platform.login_throttle import get_login_throttle_manager
+        from backend.platform.audit_log import SecurityAuditEvent, log_security_event
+
+        throttle_mgr = get_login_throttle_manager()
+        throttle_mgr.admin_reset_throttle(username)
+
+        log_security_event(
+            SecurityAuditEvent.THROTTLE_ADMIN_RESET,
+            actor_id=admin_id,
+            target_id=username,
+            status="SUCCESS",
+        )
+
+        return self.render_json({
+            "message": f"Login throttling and lockouts cleared for user '{username}'.",
+            "username": username,
+        })
+

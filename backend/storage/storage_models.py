@@ -303,6 +303,7 @@ class UserModel(ndb.Model):
     )
     password_hash = ndb.StringProperty(required=True)
     is_active = ndb.BooleanProperty(required=True, default=True)
+    must_change_password = ndb.BooleanProperty(default=False)
     created_at = ndb.DateTimeProperty(auto_now_add=True)
     updated_at = ndb.DateTimeProperty(auto_now=True)
 
@@ -314,6 +315,7 @@ class UserModel(ndb.Model):
             role=UserRole(self.role),
             password_hash=self.password_hash,
             is_active=self.is_active,
+            must_change_password=bool(self.must_change_password),
         )
 
     @classmethod
@@ -326,5 +328,6 @@ class UserModel(ndb.Model):
             role=obj.role.value,
             password_hash=obj.password_hash,
             is_active=obj.is_active,
+            must_change_password=obj.must_change_password,
         )
 

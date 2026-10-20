@@ -1,0 +1,278 @@
+<div class="staff-status-layout">
+  <div class="status-container">
+    <!-- Header -->
+    <header class="status-header">
+      <div class="header-badge">Application Tracking</div>
+      <h1 class="header-title">Staff Application Status</h1>
+      <p class="header-subtitle">
+        Enter your Reference ID and Tracking Token to inspect verification progress.
+      </p>
+    </header>
+
+    <!-- Lookup Form -->
+    <div class="lookup-card">
+      <form class="lookup-form" (ngSubmit)="trackApplication()">
+        <div class="lookup-grid">
+          <div class="form-group">
+            <label for="track-ref-id" class="form-label">Reference ID</label>
+            <input
+              id="track-ref-id"
+              type="text"
+              class="form-input"
+              [ngModel]="referenceId()"
+              (ngModelChange)="referenceId.set($event)"
+              name="referenceId"
+              placeholder="e.g. APP-2026-XXXXXX"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="track-token" class="form-label">Secure Tracking Token</label>
+            <input
+              id="track-token"
+              type="password"
+              class="form-input"
+              [ngModel]="trackingToken()"
+              (ngModelChange)="trackingToken.set($event)"
+              name="trackingToken"
+              placeholder="sec_app_..."
+              required
+            />
+          </div>
+        </div>
+
+        <div class="lookup-actions">
+          <button
+            type="submit"
+            class="btn-track-submit"
+            [disabled]="isLoading() || !referenceId().trim() || !trackingToken().trim()"
+            id="btn-inspect-status"
+          >
+            @if (isLoading()) {
+              <span>Inspecting Status...</span>
+            } @else {
+              <span>Check Application Status</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Alert Banners -->
+    @if (errorMessage()) {
+      <div class="alert-banner error" role="alert">
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-text">{{ errorMessage() }}</span>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div class="alert-banner success" role="alert">
+        <span class="alert-icon">✓</span>
+        <span class="alert-text">{{ successMessage() }}</span>
+      </div>
+    }
+
+    <!-- Loaded Application Details -->
+    @if (application(); as app) {
+      <div class="app-detail-card">
+        <!-- Status Banner -->
+        <div class="status-banner" [ngClass]="getStatusClass(app.status)">
+          <div class="status-info">
+            <span class="status-eyebrow">Current Verification Status</span>
+            <h2 class="status-heading" id="app-status-badge">{{ getStatusLabel(app.status) }}</h2>
+          </div>
+          <span class="status-pill">{{ app.status }}</span>
+        </div>
+
+        <!-- Follow-up Information Requested Section -->
+        @if (app.status === 'more_info_requested') {
+          <div class="info-request-card">
+            <div class="info-header">
+              <span class="info-icon">💬</span>
+              <div>
+                <h3 class="info-title">Reviewer Follow-up Request</h3>
+                <p class="info-subtitle">The verification team has requested additional details before finalizing review:</p>
+              </div>
+            </div>
+
+            <div class="info-details-box">
+              <p class="info-details-text">{{ app.info_request_details }}</p>
+            </div>
+
+            <form class="response-form" (ngSubmit)="submitResponse()">
+              <div class="form-group">
+                <label for="response-notes" class="form-label">Your Response / Clarification</label>
+                <textarea
+                  id="response-notes"
+                  class="form-textarea"
+                  rows="4"
+                  [ngModel]="responseNotes()"
+                  (ngModelChange)="responseNotes.set($event)"
+                  name="responseNotes"
+                  placeholder="Provide the requested details or clarifications..."
+                  required
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                class="btn-submit-response"
+                [disabled]="submittingResponse() || !responseNotes().trim()"
+                id="btn-submit-followup"
+              >
+                @if (submittingResponse()) {
+                  <span>Submitting Follow-up...</span>
+                } @else {
+                  <span>Submit Follow-up Information →</span>
+                }
+              </button>
+            </form>
+          </div>
+        }
+
+        <!-- Approved Notice -->
+        @if (app.status === 'approved') {
+          <div class="decision-card approved">
+            <div class="decision-icon">🎉</div>
+            <div class="decision-body">
+              <h3 class="decision-title">Application Approved</h3>
+              <p class="decision-text">
+                Your application has been verified and approved for role: <strong>{{ app.approved_role }}</strong>.
+                Your staff account has been provisioned. Please check your contact email for your initial temporary credential setup instructions, or contact your administrator.
+              </p>
+            </div>
+          </div>
+        }
+
+        <!-- Rejected Notice -->
+        @if (app.status === 'rejected') {
+          <div class="decision-card rejected">
+            <div class="decision-icon">ℹ️</div>
+            <div class="decision-body">
+              <h3 class="decision-title">Application Decision: Declined</h3>
+              <p class="decision-text">
+                Thank you for your interest in contributing to HealthAware. At this time, the review team has declined this application.
+              </p>
+              @if (app.rejection_reason) {
+                <div class="rejection-reason-box">
+                  <strong>Recorded Rationale:</strong> {{ app.rejection_reason }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Overview Details Table -->
+        <div class="overview-section">
+          <h3 class="overview-title">Application Information</h3>
+          <dl class="meta-grid">
+            <div class="meta-item">
+              <dt class="meta-term">Reference ID</dt>
+              <dd class="meta-def font-mono">{{ app.reference_id }}</dd>
+            </div>
+            <div class="meta-item">
+              <dt class="meta-term">Applicant Name</dt>
+              <dd class="meta-def">{{ app.applicant_name }}</dd>
+            </div>
+            <div class="meta-item">
+              <dt class="meta-term">Contact Email</dt>
+              <dd class="meta-def">{{ app.applicant_email }}</dd>
+            </div>
+            <div class="meta-item">
+              <dt class="meta-term">Requested Role</dt>
+              <dd class="meta-def capitalize">{{ app.requested_role }}</dd>
+            </div>
+            @if (app.organization) {
+              <div class="meta-item">
+                <dt class="meta-term">Organization</dt>
+                <dd class="meta-def">{{ app.organization }}</dd>
+              </div>
+            }
+            @if (app.professional_title) {
+              <div class="meta-item">
+                <dt class="meta-term">Professional Title</dt>
+                <dd class="meta-def">{{ app.professional_title }}</dd>
+              </div>
+            }
+            <div class="meta-item full-width">
+              <dt class="meta-term">Statement of Purpose</dt>
+              <dd class="meta-def statement-block">{{ app.statement_of_purpose }}</dd>
+            </div>
+            @if (app.applicant_notes) {
+              <div class="meta-item full-width">
+                <dt class="meta-term">Applicant Updates / Follow-up History</dt>
+                <dd class="meta-def notes-block">{{ app.applicant_notes }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+
+        <!-- Footer Actions (Withdraw Option) -->
+        <div class="card-footer">
+          <a routerLink="/staff/apply" class="btn-back-apply">← Submit New Application</a>
+
+          @if (canWithdraw(app.status)) {
+            <button
+              type="button"
+              class="btn-withdraw-trigger"
+              (click)="showWithdrawModal.set(true)"
+              id="btn-withdraw-trigger"
+            >
+              Withdraw Application
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Withdraw Confirmation Modal -->
+    @if (showWithdrawModal()) {
+      <div class="modal-backdrop" (click)="showWithdrawModal.set(false)">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <h3 class="modal-title">Withdraw Application?</h3>
+          <p class="modal-desc">
+            Are you sure you want to withdraw this application? This action is permanent and will remove it from the verification queue.
+          </p>
+
+          <div class="form-group">
+            <label for="withdraw-rationale" class="form-label">Optional Rationale</label>
+            <textarea
+              id="withdraw-rationale"
+              class="form-textarea"
+              rows="3"
+              [ngModel]="withdrawRationale()"
+              (ngModelChange)="withdrawRationale.set($event)"
+              placeholder="e.g. Accepted another position / circumstances changed..."
+            ></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              (click)="showWithdrawModal.set(false)"
+              [disabled]="submittingWithdraw()"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn-confirm-withdraw"
+              (click)="confirmWithdraw()"
+              [disabled]="submittingWithdraw()"
+              id="btn-confirm-withdraw"
+            >
+              @if (submittingWithdraw()) {
+                <span>Withdrawing...</span>
+              } @else {
+                <span>Confirm Withdrawal</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

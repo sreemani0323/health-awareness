@@ -14,6 +14,8 @@ import { AdminWorkspaceComponent } from './pages/creator/admin/admin';
 import { ReportConcernComponent } from './pages/report/report.component';
 import { TrackConcernComponent } from './pages/track/track.component';
 import { StaffDashboardComponent } from './pages/staff/staff.component';
+import { StaffApplyComponent } from './pages/staff/apply/staff-apply.component';
+import { StaffStatusComponent } from './pages/staff/status/staff-status.component';
 
 export const routes: Routes = [
   {
@@ -62,6 +64,17 @@ export const routes: Routes = [
     path: 'staff',
     component: StaffDashboardComponent,
     title: 'Staff Case Management — HealthAware',
+  },
+  // --- Public Staff Application & Vetting Routes (Phase 1B) ---
+  {
+    path: 'staff/apply',
+    component: StaffApplyComponent,
+    title: 'Apply for Staff & Reviewer Roles — HealthAware',
+  },
+  {
+    path: 'staff/application-status',
+    component: StaffStatusComponent,
+    title: 'Track Staff Application — HealthAware',
   },
   // --- Creator Studio Routes ---
   {

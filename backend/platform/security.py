@@ -102,3 +102,83 @@ def needs_rehash(stored_hash: str, target_iterations: int | None = None) -> bool
             return True
 
     return True
+
+
+# ---------------------------------------------------------------------------
+# TOTP Secret Encryption at Rest & Recovery Code Utilities
+# ---------------------------------------------------------------------------
+
+import base64
+from cryptography.fernet import Fernet
+
+
+def _get_mfa_fernet() -> Fernet:
+    """Derives a deterministic 32-byte Fernet key from environment secrets.
+
+    Production requirement:
+    In production (APP_ENV=production), a dedicated MFA_ENCRYPTION_KEY is strictly required.
+    Fallback to general application secrets or defaults is explicitly prohibited.
+    """
+    app_env = os.environ.get("APP_ENV", "").strip().lower()
+    mfa_key = os.environ.get("MFA_ENCRYPTION_KEY", "").strip()
+
+    if app_env == "production":
+        if not mfa_key:
+            raise ValueError(
+                "Production configuration error: Dedicated MFA_ENCRYPTION_KEY is required in production environment."
+            )
+        raw_key = mfa_key
+    else:
+        # Non-production environments can use MFA_ENCRYPTION_KEY, FLASK_SECRET_KEY, SECRET_KEY, or local test default
+        raw_key = (
+            mfa_key
+            or os.environ.get("FLASK_SECRET_KEY", "").strip()
+            or os.environ.get("SECRET_KEY", "").strip()
+            or "healthaware-default-mfa-encryption-key-32b"
+        )
+    key_32 = hashlib.sha256(raw_key.encode("utf-8")).digest()
+    return Fernet(base64.urlsafe_b64encode(key_32))
+
+
+def encrypt_totp_secret(secret: str) -> str:
+    """Encrypts a plaintext base32 TOTP secret for storage at rest."""
+    if not secret or not isinstance(secret, str):
+        raise ValueError("Secret must be a non-empty string.")
+    fernet = _get_mfa_fernet()
+    return fernet.encrypt(secret.encode("utf-8")).decode("utf-8")
+
+
+def decrypt_totp_secret(ciphertext: str) -> str:
+    """Decrypts an encrypted TOTP secret from storage."""
+    if not ciphertext or not isinstance(ciphertext, str):
+        raise ValueError("Ciphertext must be a non-empty string.")
+    fernet = _get_mfa_fernet()
+    return fernet.decrypt(ciphertext.encode("utf-8")).decode("utf-8")
+
+
+def generate_recovery_codes(count: int = 8) -> list[str]:
+    """Generates human-readable, high-entropy emergency recovery codes.
+    
+    Format: XXXX-XXXX using an unambiguous uppercase alphanumeric character set.
+    """
+    charset = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Excludes 0, O, 1, I
+    codes = []
+    for _ in range(count):
+        part1 = "".join(secrets.choice(charset) for _ in range(4))
+        part2 = "".join(secrets.choice(charset) for _ in range(4))
+        codes.append(f"{part1}-{part2}")
+    return codes
+
+
+def hash_recovery_code(code: str) -> str:
+    """Normalizes and hashes an emergency recovery code with SHA-256."""
+    clean = code.strip().upper().replace(" ", "").replace("-", "")
+    return hashlib.sha256(clean.encode("utf-8")).hexdigest()
+
+
+def verify_recovery_code(candidate: str, hashed_code: str) -> bool:
+    """Constant-time verification of a recovery code candidate against its stored hash."""
+    clean = candidate.strip().upper().replace(" ", "").replace("-", "")
+    computed = hashlib.sha256(clean.encode("utf-8")).hexdigest()
+    return hmac.compare_digest(computed, hashed_code)
+

@@ -443,6 +443,7 @@ class User:
     password_hash: Optional[str] = None
     is_active: bool = True
     neon_auth_user_id: Optional[str] = None
+    must_change_password: bool = False
 
     def validate(self) -> None:
         _validate_id(self.user_id, "user_id")
@@ -458,3 +459,5 @@ class User:
                 raise ValueError("password_hash must be a non-empty string or None.")
         if not isinstance(self.is_active, bool):
             raise ValueError(f"is_active must be a boolean.  Got: {self.is_active!r}")
+        if not isinstance(self.must_change_password, bool):
+            raise ValueError(f"must_change_password must be a boolean.  Got: {self.must_change_password!r}")

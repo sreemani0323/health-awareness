@@ -84,6 +84,28 @@
         <button
           type="button"
           class="admin-tab-btn"
+          [class.active]="activeTab === 'applications'"
+          (click)="setTab('applications')"
+          role="tab"
+          [attr.aria-selected]="activeTab === 'applications'"
+          id="tab-btn-applications"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span>Staff Applications</span>
+          @if (staffApplications.length > 0) {
+            <span class="tab-badge">{{ staffApplications.length }}</span>
+          }
+        </button>
+
+        <button
+          type="button"
+          class="admin-tab-btn"
           [class.active]="activeTab === 'content'"
           (click)="setTab('content')"
           role="tab"
@@ -357,6 +379,142 @@
         }
 
         <!-- ========================================================
+             TAB: STAFF APPLICATIONS & VETTING (Phase 1B)
+             ======================================================== -->
+        @if (activeTab === 'applications') {
+          <div class="admin-tab-pane">
+            <div class="user-management-toolbar">
+              <div class="search-input-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                  type="search"
+                  class="admin-search-input"
+                  placeholder="Filter by applicant name, email, or reference ID…"
+                  [(ngModel)]="appSearchQuery"
+                  (ngModelChange)="filterStaffApplications()"
+                  id="input-search-applications"
+                />
+              </div>
+
+              <div class="toolbar-filters">
+                <div class="role-filter-group">
+                  <label for="status-filter" class="filter-label">Status:</label>
+                  <select
+                    id="status-filter"
+                    class="filter-select"
+                    [(ngModel)]="appStatusFilter"
+                    (change)="filterStaffApplications()"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="pending_review">Pending Review</option>
+                    <option value="under_review">Under Review</option>
+                    <option value="more_info_requested">More Info Requested</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="withdrawn">Withdrawn</option>
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-refresh-queue"
+                  (click)="loadStaffApplications()"
+                  [disabled]="isLoadingApplications"
+                  id="btn-refresh-applications"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  </svg>
+                  <span>{{ isLoadingApplications ? 'Refreshing…' : 'Refresh Queue' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Queue Table -->
+            <div class="admin-table-card">
+              <div class="table-responsive">
+                <table class="admin-data-table" aria-label="Staff Applications Queue">
+                  <thead>
+                    <tr>
+                      <th scope="col">Reference ID</th>
+                      <th scope="col">Applicant</th>
+                      <th scope="col">Requested Role</th>
+                      <th scope="col">Organization / Affiliation</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Reviewer</th>
+                      <th scope="col" class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (app of staffApplications; track app.application_id) {
+                      <tr>
+                        <td class="font-mono text-teal">{{ app.reference_id }}</td>
+                        <td>
+                          <div class="user-identity-cell">
+                            <span class="user-fullname">{{ app.applicant_name }}</span>
+                            <span class="user-meta-sub">{{ app.applicant_email }}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="role-chip" [ngClass]="'role-' + app.requested_role">
+                            {{ app.requested_role }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="text-muted">{{ app.organization || app.professional_title || '—' }}</span>
+                        </td>
+                        <td>
+                          <span class="app-status-badge" [ngClass]="'status-' + app.status">
+                            {{ app.status }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="text-muted">{{ app.assigned_reviewer_name || 'Unassigned' }}</span>
+                        </td>
+                        <td class="text-right">
+                          <div class="table-action-group">
+                            @if (!app.assigned_reviewer_id && (app.status === 'pending_review' || app.status === 'under_review')) {
+                              <button
+                                type="button"
+                                class="btn-table-action btn-claim"
+                                (click)="claimApplication(app.application_id)"
+                                [disabled]="isClaimingApp"
+                                id="btn-claim-{{ app.reference_id }}"
+                              >
+                                Claim
+                              </button>
+                            }
+                            <button
+                              type="button"
+                              class="btn-table-action btn-inspect"
+                              (click)="openApplicationDetail(app.application_id)"
+                              id="btn-inspect-{{ app.reference_id }}"
+                            >
+                              Review & Audit
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                    @empty {
+                      <tr>
+                        <td colspan="7" class="empty-table-cell">
+                          No staff applications found matching your criteria.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ========================================================
              TAB 3: CONTENT & PUBLICATION OVERVIEW
              ======================================================== -->
         @if (activeTab === 'content') {
@@ -618,6 +776,390 @@
               } @else {
                 Reactivate Account
               }
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================
+       STAFF APPLICATION DETAIL MODAL (Phase 1B)
+       ======================================================== -->
+  @if (selectedAppDetail; as app) {
+    <div class="modal-backdrop" (click)="closeApplicationDetail()">
+      <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <div>
+            <div class="modal-eyebrow">Staff Application Review & Audit</div>
+            <h2 class="modal-title">{{ app.applicant_name }} ({{ app.reference_id }})</h2>
+          </div>
+          <button class="modal-close-btn" (click)="closeApplicationDetail()">×</button>
+        </header>
+
+        <div class="modal-body scrollable">
+          <!-- Overview Cards -->
+          <div class="app-modal-grid">
+            <div class="info-card">
+              <span class="card-label">Requested Role</span>
+              <span class="role-chip" [ngClass]="'role-' + app.requested_role">{{ app.requested_role }}</span>
+            </div>
+            <div class="info-card">
+              <span class="card-label">Verification Status</span>
+              <span class="app-status-badge" [ngClass]="'status-' + app.status">{{ app.status }}</span>
+            </div>
+            <div class="info-card">
+              <span class="card-label">Assigned Reviewer</span>
+              <span class="card-val">{{ app.assigned_reviewer_name || 'Unassigned' }}</span>
+            </div>
+            <div class="info-card">
+              <span class="card-label">Contact Email</span>
+              <span class="card-val">{{ app.applicant_email }}</span>
+            </div>
+          </div>
+
+          <!-- Claim Notice -->
+          @if (!app.assigned_reviewer_id && (app.status === 'pending_review' || app.status === 'under_review')) {
+            <div class="claim-banner">
+              <span>This application is not claimed by any reviewer.</span>
+              <button class="btn-claim-now" (click)="claimApplication(app.application_id)" [disabled]="isClaimingApp">
+                Claim Application for Review
+              </button>
+            </div>
+          }
+
+          <!-- Statement of Purpose & Professional Credentials -->
+          <div class="detail-section">
+            <h3 class="section-heading">Statement of Purpose & Background</h3>
+            <div class="statement-box">{{ app.statement_of_purpose }}</div>
+          </div>
+
+          @if (app.organization || app.professional_title || app.credential_reference || app.portfolio_url) {
+            <div class="detail-section">
+              <h3 class="section-heading">Professional Credentials & References</h3>
+              <div class="cred-grid">
+                @if (app.organization) {
+                  <div><strong>Organization:</strong> {{ app.organization }}</div>
+                }
+                @if (app.professional_title) {
+                  <div><strong>Title:</strong> {{ app.professional_title }}</div>
+                }
+                @if (app.credential_reference) {
+                  <div><strong>Credential Ref:</strong> {{ app.credential_reference }}</div>
+                }
+                @if (app.portfolio_url) {
+                  <div><strong>Directory/Profile:</strong> <a [href]="app.portfolio_url" target="_blank">{{ app.portfolio_url }}</a></div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Applicant Notes / Follow-up Responses -->
+          @if (app.applicant_notes) {
+            <div class="detail-section">
+              <h3 class="section-heading">Applicant Follow-up Notes</h3>
+              <div class="notes-box">{{ app.applicant_notes }}</div>
+            </div>
+          }
+
+          <!-- Verification Checklist (Editable by Admin) -->
+          <div class="detail-section checklist-section">
+            <div class="section-header-row">
+              <h3 class="section-heading">Administrative Verification Checklist</h3>
+              <button
+                type="button"
+                class="btn-save-checklist"
+                (click)="saveVerificationChecklist()"
+                [disabled]="isSavingChecklist"
+                id="btn-save-checklist"
+              >
+                {{ isSavingChecklist ? 'Saving…' : 'Save Checklist & Notes' }}
+              </button>
+            </div>
+
+            <div class="checklist-items">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="app.verification_checklist.contact_verified"
+                  id="chk-contact-verified"
+                />
+                <span><strong>Contact Verified:</strong> Verified email responsiveness and legitimate professional identity.</span>
+              </label>
+
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="app.verification_checklist.affiliation_verified"
+                  id="chk-affiliation-verified"
+                />
+                <span><strong>Affiliation Verified:</strong> Institutional or clinical affiliation confirmed on public directory.</span>
+              </label>
+
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="app.verification_checklist.role_criteria_met"
+                  id="chk-role-criteria"
+                />
+                <span><strong>Role Criteria Met:</strong> Experience matches qualifications required for designated role.</span>
+              </label>
+            </div>
+
+            <div class="form-group mt-3">
+              <label for="checklist-notes" class="form-label">Checklist Notes</label>
+              <input
+                id="checklist-notes"
+                type="text"
+                class="form-input"
+                placeholder="e.g. Verified registration on State Medical Council portal."
+                [(ngModel)]="app.verification_checklist.verification_notes"
+              />
+            </div>
+
+            <div class="form-group mt-3">
+              <label for="internal-reviewer-notes" class="form-label">Internal Reviewer Notes (Private — Never shown to applicant)</label>
+              <textarea
+                id="internal-reviewer-notes"
+                class="form-textarea"
+                rows="3"
+                placeholder="Private evaluation notes for vetting team…"
+                [(ngModel)]="app.internal_notes"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Provisioned Credentials Result Banner -->
+          @if (provisionedCredentialsResult) {
+            <div class="provisioned-credentials-card">
+              <div class="prov-header">
+                <span class="prov-icon">🎉</span>
+                <div>
+                  <h4 class="prov-title">Staff Account Successfully Provisioned</h4>
+                  <p class="prov-sub">Temporary credentials created. Provide these to the approved staff member:</p>
+                </div>
+              </div>
+              <div class="prov-box">
+                <div><strong>Username:</strong> <code class="font-mono">{{ provisionedCredentialsResult.username }}</code></div>
+                <div><strong>Temporary Password:</strong> <code class="font-mono text-teal">{{ provisionedCredentialsResult.temp_setup_password }}</code></div>
+                <div><strong>Assigned Role:</strong> <span class="capitalize">{{ provisionedCredentialsResult.approved_role }}</span></div>
+              </div>
+              <button type="button" class="btn-copy-prov" (click)="copyProvisionedCredentials()" id="btn-copy-prov">
+                {{ credentialsCopied ? '✓ Copied' : '📋 Copy Account Credentials' }}
+              </button>
+            </div>
+          }
+
+          <!-- Decision Action Toolbar -->
+          <div class="decision-toolbar">
+            @if (app.status === 'pending_review' || app.status === 'under_review' || app.status === 'more_info_requested') {
+              @if (app.applicant_email === currentUser?.username) {
+                <div class="self-approval-warning">
+                  🔒 <strong>Self-Approval Guard:</strong> You cannot approve or review your own staff application. Another administrator must review this application.
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  class="btn-decision btn-request-info"
+                  (click)="openRequestInfoModal()"
+                  id="btn-trigger-request-info"
+                >
+                  💬 Request More Info
+                </button>
+                <button
+                  type="button"
+                  class="btn-decision btn-reject"
+                  (click)="openRejectModal()"
+                  id="btn-trigger-reject"
+                >
+                  ✕ Decline Application
+                </button>
+                <button
+                  type="button"
+                  class="btn-decision btn-approve"
+                  (click)="openApproveModal()"
+                  id="btn-trigger-approve"
+                >
+                  ✓ Approve & Provision Account
+                </button>
+              }
+            } @else {
+              <div class="terminal-state-notice">
+                This application is in terminal state: <strong>{{ app.status }}</strong>. Decisions cannot be altered.
+              </div>
+            }
+          </div>
+
+          <!-- Audit History Timeline -->
+          <div class="detail-section">
+            <h3 class="section-heading">Audit & Review History Trail</h3>
+            <div class="history-timeline">
+              @for (h of app.history; track h.history_id) {
+                <div class="timeline-entry">
+                  <div class="timeline-badge"></div>
+                  <div class="timeline-body">
+                    <div class="timeline-header">
+                      <strong>{{ h.actor_name }}</strong> ({{ h.actor_role }}) — <span class="action-name">{{ h.action }}</span>
+                      <span class="timeline-time">{{ h.created_at }}</span>
+                    </div>
+                    <div class="timeline-transition">
+                      <span class="from-pill">{{ h.from_status }}</span> → <span class="to-pill">{{ h.to_status }}</span>
+                    </div>
+                    @if (h.decision_rationale) {
+                      <div class="timeline-rationale">{{ h.decision_rationale }}</div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Approve Modal -->
+  @if (showApproveModal && selectedAppDetail) {
+    <div class="modal-backdrop sub-modal" (click)="showApproveModal = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3 class="modal-title">Approve Staff Application</h3>
+          <button class="modal-close-btn" (click)="showApproveModal = false">×</button>
+        </header>
+        <div class="modal-body">
+          <p class="modal-subtext">
+            Approving <strong>{{ selectedAppDetail.applicant_name }}</strong> will provision a PostgreSQL user account with temporary credentials and record an immutable audit event.
+          </p>
+
+          <div class="form-group">
+            <label for="select-approve-role" class="form-label">Approved Role (Explicit Grant)</label>
+            <select id="select-approve-role" class="form-select" [(ngModel)]="approveRole">
+              <option value="contributor">Contributor (Content & Curriculum)</option>
+              <option value="reviewer">Reviewer (Medical & Editorial Review)</option>
+              <option value="case_handler">Case Handler (Citizen Concern Triage)</option>
+              <option value="jurisdiction_officer">Jurisdiction Officer (Municipal Field Coordination)</option>
+            </select>
+            <span class="field-hint">Requested role was: <em>{{ selectedAppDetail.requested_role }}</em></span>
+          </div>
+
+          @if (approveRole === 'jurisdiction_officer') {
+            <div class="form-group mt-3">
+              <label for="input-approve-jurisdiction" class="form-label">Assigned District / Jurisdiction</label>
+              <input
+                id="input-approve-jurisdiction"
+                type="text"
+                class="form-input"
+                placeholder="e.g. Guntur / Vijayawada"
+                [(ngModel)]="approveJurisdiction"
+              />
+            </div>
+          }
+
+          <div class="form-group mt-3">
+            <label for="input-approve-rationale" class="form-label">Approval Rationale / Notes (Recorded in audit log)</label>
+            <textarea
+              id="input-approve-rationale"
+              class="form-textarea"
+              rows="3"
+              placeholder="e.g. Credentials verified against medical council registry."
+              [(ngModel)]="approveRationale"
+            ></textarea>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showApproveModal = false">Cancel</button>
+            <button
+              type="button"
+              class="btn-create-submit"
+              (click)="confirmApprove()"
+              [disabled]="isApproving"
+              id="btn-confirm-approve"
+            >
+              {{ isApproving ? 'Provisioning…' : 'Confirm & Provision Account' }}
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Reject Modal -->
+  @if (showRejectModal && selectedAppDetail) {
+    <div class="modal-backdrop sub-modal" (click)="showRejectModal = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3 class="modal-title">Decline Staff Application</h3>
+          <button class="modal-close-btn" (click)="showRejectModal = false">×</button>
+        </header>
+        <div class="modal-body">
+          <p class="modal-subtext">
+            Please record the rationale for declining <strong>{{ selectedAppDetail.applicant_name }}</strong>'s application.
+          </p>
+
+          <div class="form-group">
+            <label for="input-reject-reason" class="form-label">Rejection Reason <span class="required">*</span></label>
+            <textarea
+              id="input-reject-reason"
+              class="form-textarea"
+              rows="3"
+              placeholder="e.g. Ineligible commercial promotion / credentials could not be verified."
+              [(ngModel)]="rejectReason"
+              required
+            ></textarea>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showRejectModal = false">Cancel</button>
+            <button
+              type="button"
+              class="btn-delete-confirm"
+              (click)="confirmReject()"
+              [disabled]="isRejecting || !rejectReason.trim()"
+              id="btn-confirm-reject"
+            >
+              {{ isRejecting ? 'Declining…' : 'Decline Application' }}
+            </button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Request Info Modal -->
+  @if (showRequestInfoModal && selectedAppDetail) {
+    <div class="modal-backdrop sub-modal" (click)="showRequestInfoModal = false">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3 class="modal-title">Request Information from Applicant</h3>
+          <button class="modal-close-btn" (click)="showRequestInfoModal = false">×</button>
+        </header>
+        <div class="modal-body">
+          <p class="modal-subtext">
+            Specify the information or clarifications needed from <strong>{{ selectedAppDetail.applicant_name }}</strong>.
+          </p>
+
+          <div class="form-group">
+            <label for="input-request-info-details" class="form-label">Information Required <span class="required">*</span></label>
+            <textarea
+              id="input-request-info-details"
+              class="form-textarea"
+              rows="3"
+              placeholder="e.g. Please provide your council registration number or institutional faculty page link."
+              [(ngModel)]="requestInfoDetails"
+              required
+            ></textarea>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="showRequestInfoModal = false">Cancel</button>
+            <button
+              type="button"
+              class="btn-create-submit"
+              (click)="confirmRequestInfo()"
+              [disabled]="isRequestingInfo || !requestInfoDetails.trim()"
+              id="btn-confirm-request-info"
+            >
+              {{ isRequestingInfo ? 'Sending…' : 'Send Follow-up Request' }}
             </button>
           </footer>
         </div>

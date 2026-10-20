@@ -64,6 +64,7 @@ def test_db():
         assert engine.url.database == "healthaware_test", (
             f"CRITICAL SAFETY VIOLATION: Test database must be 'healthaware_test', got {engine.url.database}"
         )
+        init_db(engine)
     else:
         engine = create_app_engine("sqlite:///:memory:")
         init_db(engine)
@@ -134,7 +135,8 @@ def test_attachment_magic_byte_detection():
     assert detect_image_format(fake_exe) is None
 
 
-def test_attachment_metadata_stripping(tmp_path):
+def test_attachment_metadata_stripping(tmp_path, monkeypatch):
+    monkeypatch.setenv("ATTACHMENT_STORAGE_BACKEND", "local")
     storage = AttachmentStorageService(storage_dir=str(tmp_path))
     raw_jpeg = create_test_image("JPEG")
     
@@ -150,7 +152,8 @@ def test_attachment_metadata_stripping(tmp_path):
     assert tmp_path.as_posix() in stored_path.replace("\\", "/")
 
 
-def test_attachment_rejects_unsupported_format(tmp_path):
+def test_attachment_rejects_unsupported_format(tmp_path, monkeypatch):
+    monkeypatch.setenv("ATTACHMENT_STORAGE_BACKEND", "local")
     storage = AttachmentStorageService(storage_dir=str(tmp_path))
     script_bytes = b"#!/bin/bash\necho dangerous"
     with pytest.raises(ValueError, match="Unsupported file format"):

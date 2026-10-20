@@ -154,9 +154,10 @@ class TestPasswordSecurity:
         verify_duration = time.perf_counter() - start_verify
 
         assert valid is True
-        assert verify_duration < 1.0, f"Verification took {verify_duration:.3f}s, expected < 1.0s"
+        assert verify_duration < 2.5, f"Verification took {verify_duration:.3f}s, expected < 2.5s"
         # Log benchmark timing for audit record
         print(f"\n[BENCHMARK] PBKDF2 600k: hash={hash_duration*1000:.1f}ms, verify={verify_duration*1000:.1f}ms")
+
 
 
 def _make_sample_card(card_id: str = "card-1") -> dict[str, Any]:

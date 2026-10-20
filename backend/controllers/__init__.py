@@ -8,12 +8,23 @@ from __future__ import annotations
 from flask import Blueprint
 
 from backend.controllers.admin import (
+    AdminMfaResetHandler,
     AdminOverviewHandler,
+    AdminThrottleResetHandler,
     AdminUserListHandler,
     AdminUserRoleHandler,
     AdminUserStatusHandler,
 )
-from backend.controllers.auth import LoginHandler, LogoutHandler, MeHandler
+from backend.controllers.auth import (
+    LoginHandler,
+    LogoutHandler,
+    MeHandler,
+    MfaConfirmEnrollmentHandler,
+    MfaDisableHandler,
+    MfaEnrollHandler,
+    MfaStatusHandler,
+    MfaVerifyHandler,
+)
 from backend.controllers.creator import (
     CreatorApproveHandler,
     CreatorLessonDetailHandler,
@@ -81,6 +92,31 @@ def create_api_blueprint() -> Blueprint:
         "/auth/me",
         view_func=MeHandler.as_view("auth_me"),
         methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/auth/mfa/verify",
+        view_func=MfaVerifyHandler.as_view("auth_mfa_verify"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/mfa/enroll",
+        view_func=MfaEnrollHandler.as_view("auth_mfa_enroll"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/mfa/confirm-enrollment",
+        view_func=MfaConfirmEnrollmentHandler.as_view("auth_mfa_confirm_enrollment"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/mfa/status",
+        view_func=MfaStatusHandler.as_view("auth_mfa_status"),
+        methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/auth/mfa/disable",
+        view_func=MfaDisableHandler.as_view("auth_mfa_disable"),
+        methods=["POST"],
     )
 
     # --- Creator Studio endpoints ---
@@ -159,10 +195,21 @@ def create_api_blueprint() -> Blueprint:
         methods=["PUT"],
     )
     bp.add_url_rule(
+        "/admin/users/<user_id>/mfa/reset",
+        view_func=AdminMfaResetHandler.as_view("admin_user_mfa_reset"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/admin/users/<username>/throttle/reset",
+        view_func=AdminThrottleResetHandler.as_view("admin_user_throttle_reset"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
         "/admin/overview",
         view_func=AdminOverviewHandler.as_view("admin_overview"),
         methods=["GET"],
     )
+
 
     # --- Report a Concern (Citizen Intake & Tracking) ---
 
@@ -246,6 +293,92 @@ def create_api_blueprint() -> Blueprint:
         "/staff/handlers",
         view_func=StaffHandlersListHandler.as_view("staff_handlers_list"),
         methods=["GET"],
+    )
+
+    # --- Staff Applications & Vetting (Phase 1B) ---
+
+    from backend.controllers.staff_applications import (
+        AdminStaffAccountReissueSetupTokenHandler,
+        AdminStaffApplicationApproveHandler,
+        AdminStaffApplicationChecklistHandler,
+        AdminStaffApplicationClaimHandler,
+        AdminStaffApplicationDetailHandler,
+        AdminStaffApplicationListHandler,
+        AdminStaffApplicationRejectHandler,
+        AdminStaffApplicationRequestInfoHandler,
+        StaffAccountCompleteSetupHandler,
+        StaffApplicationRespondHandler,
+        StaffApplicationSubmitHandler,
+        StaffApplicationTrackHandler,
+        StaffApplicationWithdrawHandler,
+    )
+
+    bp.add_url_rule(
+        "/staff/apply",
+        view_func=StaffApplicationSubmitHandler.as_view("staff_apply"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/staff/applications/track",
+        view_func=StaffApplicationTrackHandler.as_view("staff_applications_track"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/staff/applications/<reference_id>/respond",
+        view_func=StaffApplicationRespondHandler.as_view("staff_applications_respond"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/staff/applications/<reference_id>/withdraw",
+        view_func=StaffApplicationWithdrawHandler.as_view("staff_applications_withdraw"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/staff/account/complete-setup",
+        view_func=StaffAccountCompleteSetupHandler.as_view("staff_account_complete_setup"),
+        methods=["POST"],
+    )
+
+    # Admin Staff Application Queue & Decisions
+    bp.add_url_rule(
+        "/admin/staff-applications",
+        view_func=AdminStaffApplicationListHandler.as_view("admin_staff_applications_list"),
+        methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/admin/staff-applications/<application_id>",
+        view_func=AdminStaffApplicationDetailHandler.as_view("admin_staff_applications_detail"),
+        methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/admin/staff-applications/<application_id>/claim",
+        view_func=AdminStaffApplicationClaimHandler.as_view("admin_staff_applications_claim"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/admin/staff-applications/<application_id>/checklist",
+        view_func=AdminStaffApplicationChecklistHandler.as_view("admin_staff_applications_checklist"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/admin/staff-applications/<application_id>/request-info",
+        view_func=AdminStaffApplicationRequestInfoHandler.as_view("admin_staff_applications_request_info"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/admin/staff-applications/<application_id>/approve",
+        view_func=AdminStaffApplicationApproveHandler.as_view("admin_staff_applications_approve"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/admin/staff-applications/<application_id>/reject",
+        view_func=AdminStaffApplicationRejectHandler.as_view("admin_staff_applications_reject"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/admin/staff-users/<user_id>/reissue-setup-token",
+        view_func=AdminStaffAccountReissueSetupTokenHandler.as_view("admin_staff_account_reissue_setup_token"),
+        methods=["POST"],
     )
 
     return bp
