@@ -1,23 +1,36 @@
 #!/usr/bin/env python3
 """Utility to generate a Gmail OAuth 2.0 Refresh Token for HealthAware.
 
-This script assists the project owner in obtaining a long-lived refresh token
+This script assists the project owner in obtaining a permanent, long-lived refresh token
 with the `https://www.googleapis.com/auth/gmail.send` scope.
 
+CRITICAL NOTE ON 7-DAY REFRESH TOKEN EXPIRATION:
+Under Google's OAuth 2.0 policy, apps with Publishing Status set to 'Testing' have refresh
+tokens that expire automatically after 7 days for sensitive scopes like gmail.send.
+To obtain a permanent refresh token that DOES NOT expire after 7 days:
+1. In Google Cloud Console, navigate to 'APIs & Services' -> 'OAuth consent screen'.
+2. Click 'PUBLISH APP' to switch Publishing Status from 'Testing' to 'In Production'.
+3. Confirm the 'Push to production' prompt. (Google will warn that the app is unverified;
+   this is expected and completely fine for a personal sender under the 100-user limit).
+4. Run this script. In your browser, Google will show 'Google hasn't verified this app'.
+   Click 'Advanced' -> 'Go to HealthAware (unsafe)' to grant permission once.
+
 Prerequisites in Google Cloud Console (https://console.cloud.google.com/):
-1. Create a Project (e.g. "HealthAware Production").
-2. Enable the "Gmail API" (APIs & Services -> Enable APIs & Services -> search "Gmail API").
+1. Create a Project (e.g. 'HealthAware Production').
+2. Enable 'Gmail API' (APIs & Services -> Enable APIs & Services -> search 'Gmail API').
 3. Configure OAuth Consent Screen:
-   - User Type: External
+   - User Type: External -> Click Create
    - App Name: HealthAware Email Relay
-   - User Support Email: your email
-   - Test Users: add your sending Gmail address (e.g. sreemani0323@gmail.com)
+   - User Support Email: your email (e.g. sreemani0323@gmail.com)
+   - Developer Contact Email: your email
+   - Click Save and Continue through Scopes
+   - Under Publishing Status: Click 'PUBLISH APP' (Status becomes 'In production')
 4. Create Credentials -> OAuth client ID:
-   - Application type: Web application (or Desktop app)
+   - Application type: Web application
+   - Name: HealthAware Token Generator
    - Authorized redirect URIs:
      * http://localhost:8085/oauth2callback
-     * https://developers.google.com/oauthplayground
-   - Download or copy the Client ID and Client Secret.
+   - Copy Client ID and Client Secret.
 
 Usage:
   python scripts/generate_gmail_oauth_token.py
@@ -36,6 +49,10 @@ import sys
 PORT = 8085
 REDIRECT_URI = f"http://localhost:{PORT}/oauth2callback"
 SCOPE = "https://www.googleapis.com/auth/gmail.send"
+
+
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
 
 
 class OAuthCallbackHandler(http.server.SimpleHTTPRequestHandler):
@@ -66,9 +83,18 @@ class OAuthCallbackHandler(http.server.SimpleHTTPRequestHandler):
 
 
 def main():
-    print("=" * 70)
-    print("  HealthAware — Gmail API OAuth 2.0 Token Generator")
-    print("=" * 70)
+    print("=" * 75)
+    print("  HealthAware — Gmail API OAuth 2.0 Permanent Token Generator")
+    print("=" * 75)
+    print("IMPORTANT NOTE ON 7-DAY EXPIRATION:")
+    print("  If your Google Cloud OAuth Consent Screen is in 'Testing' status, Google")
+    print("  will expire your refresh token after 7 days.")
+    print("  To make this token PERMANENT:")
+    print("  1. In Google Cloud Console -> APIs & Services -> OAuth consent screen")
+    print("  2. Click 'PUBLISH APP' (switches status to 'In production').")
+    print("  3. An unverified production app works permanently for your sender account.")
+    print("=" * 75)
+    print()
 
     client_id = input("Enter your Google OAuth Client ID: ").strip()
     if not client_id:
@@ -96,19 +122,23 @@ def main():
     print("\n1. Starting local authorization listener on port", PORT, "...")
     print("2. Opening your browser for Google consent:")
     print(f"   {auth_url}\n")
+    print("   NOTE: When Google displays 'Google hasn't verified this app':")
+    print("   -> Click 'Advanced'")
+    print("   -> Click 'Go to HealthAware (unsafe)'")
+    print("   -> Click 'Continue' to authorize sending emails.\n")
 
     try:
         webbrowser.open(auth_url)
     except Exception:
         print("Please copy the URL above and open it in your web browser.")
 
-    with socketserver.TCPServer(("", PORT), OAuthCallbackHandler) as httpd:
+    with ReusableTCPServer(("", PORT), OAuthCallbackHandler) as httpd:
         print("Waiting for OAuth authorization callback from Google...")
         while OAuthCallbackHandler.auth_code is None:
             httpd.handle_request()
 
     code = OAuthCallbackHandler.auth_code
-    print("\nAuthorization code received! Exchanging code for refresh token...")
+    print("\nAuthorization code received! Exchanging code for permanent refresh token...")
 
     # Exchange code for refresh token
     token_url = "https://oauth2.googleapis.com/token"

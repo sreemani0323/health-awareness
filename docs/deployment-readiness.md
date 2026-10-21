@@ -790,11 +790,19 @@ All sensitive credentials and connection strings must be configured exclusively 
 * `AWS_SECRET_ACCESS_KEY`: S3 secret key.
 * `AWS_REGION`: `us-east-2` (matching Neon region).
 * `PYTHON_VERSION`: `3.12.9`
-* `SMTP_HOST`: Canonical hostname of transactional SMTP relay (e.g. `smtp.sendgrid.net`, `smtp.resend.com`). Alias fallback: `SMTP_SERVER`.
-* `SMTP_PORT`: Canonical port number (`587` for STARTTLS, `465` for SSL, `25` for unauthenticated relay; default: `587`).
-* `SMTP_USERNAME`: Canonical SMTP username / API key user (e.g. `apikey`, `resend`). Alias fallback: `SMTP_USER`.
-* `SMTP_PASSWORD`: Canonical SMTP password / API secret key. Alias fallback: `SMTP_PASS`.
-* `SMTP_FROM_EMAIL`: Canonical outbound sender email (e.g. `no-reply@healthaware.org`). Alias fallbacks: `SMTP_FROM`, `EMAIL_FROM`. Defaults to `noreply@healthaware.org`.
+* **Transactional Email Dispatch — Primary (Google Gmail REST API over HTTPS port 443):**
+  * Recommended for Render Free tier (bypasses Render outbound SMTP port 465/587 blocks; requires no custom domain, DNS verification, or paid add-on).
+  * `GMAIL_CLIENT_ID`: OAuth 2.0 Web Application Client ID from Google Cloud Console.
+  * `GMAIL_CLIENT_SECRET`: OAuth 2.0 Client Secret.
+  * `GMAIL_REFRESH_TOKEN`: Permanent OAuth 2.0 Refresh Token. To prevent Google's 7-day token expiration policy, the OAuth consent screen publishing status must be set to **In Production** (Publish App). For a single authorized sender under 100 users, verification and domain purchase are not required.
+  * `GMAIL_SENDER_EMAIL`: Authorized sender Gmail address (e.g. `sreemani0323@gmail.com`).
+* **Transactional Email Dispatch — Fallback (SMTP Relay):**
+  * For environments allowing outbound SMTP connections (Render Paid, AWS, Self-Hosted):
+  * `SMTP_HOST`: Canonical hostname of transactional SMTP relay (e.g. `smtp.sendgrid.net`, `smtp.resend.com`). Alias fallback: `SMTP_SERVER`.
+  * `SMTP_PORT`: Canonical port number (`587` for STARTTLS, `465` for SSL, `25` for unauthenticated relay; default: `587`).
+  * `SMTP_USERNAME`: Canonical SMTP username / API key user (e.g. `apikey`, `resend`). Alias fallback: `SMTP_USER`.
+  * `SMTP_PASSWORD`: Canonical SMTP password / API secret key. Alias fallback: `SMTP_PASS`.
+  * `SMTP_FROM_EMAIL`: Canonical outbound sender email (e.g. `no-reply@healthaware.org`). Alias fallbacks: `SMTP_FROM`, `EMAIL_FROM`. Defaults to `noreply@healthaware.org`.
 
 ---
 
