@@ -55,20 +55,27 @@ class SystemEmailStatusHandler(BaseHandler):
         ):
             host_repr = "[CONFIGURED_CUSTOM_HOST]"
 
-        connectivity: dict[str, Any] = {"reachable": False, "checked_port": svc._smtp_port, "error": None}
+        ports_to_test = [587, 465]
+        if svc._smtp_port not in ports_to_test:
+            ports_to_test.append(svc._smtp_port)
+
+        connectivity: dict[str, Any] = {}
         if has_host:
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(3.0)
-                sock.connect((svc._smtp_host, svc._smtp_port))
-                sock.close()
-                connectivity["reachable"] = True
-            except socket.timeout:
-                connectivity["error"] = "TIMEOUT_FIREWALL_BLOCKED (outbound SMTP port dropped by firewall)"
-            except ConnectionRefusedError:
-                connectivity["error"] = "CONNECTION_REFUSED"
-            except Exception as exc:
-                connectivity["error"] = f"SOCKET_ERROR: {str(exc)}"
+            for p in ports_to_test:
+                port_result = {"reachable": False, "error": None}
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(2.5)
+                    sock.connect((svc._smtp_host, p))
+                    sock.close()
+                    port_result["reachable"] = True
+                except socket.timeout:
+                    port_result["error"] = "TIMEOUT_FIREWALL_BLOCKED (outbound port dropped by Render Free tier firewall)"
+                except ConnectionRefusedError:
+                    port_result["error"] = "CONNECTION_REFUSED"
+                except Exception as exc:
+                    port_result["error"] = f"SOCKET_ERROR: {str(exc)}"
+                connectivity[f"port_{p}"] = port_result
 
         return self.render_json({
             "is_configured": svc.is_configured,
@@ -127,4 +134,4 @@ class SystemEmailTestHandler(BaseHandler):
             "message_id": res.message_id,
             "error": res.error,
             "recipient_masked": _mask_email(recipient),
-        }, status_code=200 if res.success else (502 if res.provider == "smtp" else 400))
+        }, status_code=200)

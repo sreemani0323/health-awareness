@@ -375,7 +375,7 @@ def test_system_email_test_endpoint_failure_handled_truthfully():
     set_email_service(mock_svc)
 
     resp = client.post("/api/v1/system/email-test", json={"recipient": "test@example.com"})
-    assert resp.status_code == 502
+    assert resp.status_code == 200
     data = resp.get_json()["data"]
     assert data["success"] is False
     assert data["provider"] == "smtp"
