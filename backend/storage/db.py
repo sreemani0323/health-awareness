@@ -88,7 +88,7 @@ def create_app_engine(database_url: Optional[str] = None) -> Engine:
             "pool_pre_ping": True,
             "pool_size": 10,
             "max_overflow": 20,
-            "pool_recycle": 1800,  # recycle connections after 30 minutes
+            "pool_recycle": 300,  # recycle connections after 5 minutes (Neon idle timeout)
         })
     elif target_url.startswith("sqlite"):
         from sqlalchemy.pool import StaticPool
