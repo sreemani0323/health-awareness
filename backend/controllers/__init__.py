@@ -409,9 +409,17 @@ def create_api_blueprint() -> Blueprint:
         view_func=AdminStaffApplicationRejectHandler.as_view("admin_staff_applications_reject"),
         methods=["POST"],
     )
+    # --- System Operational & Diagnostic Endpoints ---
+    from backend.controllers.system import SystemEmailStatusHandler, SystemEmailTestHandler
+
     bp.add_url_rule(
-        "/admin/staff-users/<user_id>/reissue-setup-token",
-        view_func=AdminStaffAccountReissueSetupTokenHandler.as_view("admin_staff_account_reissue_setup_token"),
+        "/system/email-status",
+        view_func=SystemEmailStatusHandler.as_view("system_email_status"),
+        methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/system/email-test",
+        view_func=SystemEmailTestHandler.as_view("system_email_test"),
         methods=["POST"],
     )
 

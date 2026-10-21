@@ -301,3 +301,84 @@ def test_email_service_templates_do_not_leak_secrets():
         assert args[0] == "citizen@test.org"
         assert "REP-2026-888888" in args[1]
         assert "sec_con_token456" in args[2]
+
+
+def test_system_email_status_endpoint():
+    """GET /api/v1/system/email-status returns safe configuration presence metrics."""
+    from backend.app import create_app
+    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
+    client = app.test_client()
+
+    with patch.dict(os.environ, {
+        "SMTP_HOST": "smtp.gmail.com",
+        "SMTP_PORT": "587",
+        "SMTP_USERNAME": "test_operator@gmail.com",
+        "SMTP_PASSWORD": "secret_app_password",
+        "SMTP_FROM_EMAIL": "test_operator@gmail.com",
+    }):
+        from backend.platform.email_service import set_email_service, EmailService
+        set_email_service(EmailService())
+
+        with patch("socket.socket") as mock_sock:
+            mock_instance = MagicMock()
+            mock_sock.return_value = mock_instance
+            resp = client.get("/api/v1/system/email-status")
+
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert data["is_configured"] is True
+        assert data["smtp_host_configured"] is True
+        assert data["smtp_host"] == "smtp.gmail.com"
+        assert data["smtp_port"] == 587
+        assert data["smtp_username_configured"] is True
+        assert data["smtp_password_configured"] is True
+        assert data["smtp_from_email_configured"] is True
+        assert "secret_app_password" not in str(data)
+        assert data["from_address_masked"].endswith("@gmail.com")
+        set_email_service(None)
+
+
+def test_system_email_test_endpoint_success():
+    """POST /api/v1/system/email-test dispatches a test email successfully."""
+    from backend.app import create_app
+    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
+    client = app.test_client()
+
+    from backend.platform.email_service import set_email_service, EmailService
+    mock_svc = MagicMock(spec=EmailService)
+    mock_svc._from_email = "noreply@healthaware.org"
+    mock_svc._smtp_host = "smtp.test.org"
+    mock_svc._smtp_port = 587
+    mock_svc.send_email.return_value = EmailDeliveryResult(success=True, provider="smtp", message_id="msg-123")
+    set_email_service(mock_svc)
+
+    resp = client.post("/api/v1/system/email-test", json={"recipient": "test@example.com"})
+    assert resp.status_code == 200
+    data = resp.get_json()["data"]
+    assert data["success"] is True
+    assert data["provider"] == "smtp"
+    set_email_service(None)
+
+
+def test_system_email_test_endpoint_failure_handled_truthfully():
+    """POST /api/v1/system/email-test returns truthful failure without false success."""
+    from backend.app import create_app
+    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
+    client = app.test_client()
+
+    from backend.platform.email_service import set_email_service, EmailService
+    mock_svc = MagicMock(spec=EmailService)
+    mock_svc._from_email = "noreply@healthaware.org"
+    mock_svc._smtp_host = "smtp.test.org"
+    mock_svc._smtp_port = 587
+    mock_svc.send_email.return_value = EmailDeliveryResult(success=False, provider="smtp", error="Delivery failed: timed out")
+    set_email_service(mock_svc)
+
+    resp = client.post("/api/v1/system/email-test", json={"recipient": "test@example.com"})
+    assert resp.status_code == 502
+    data = resp.get_json()["data"]
+    assert data["success"] is False
+    assert data["provider"] == "smtp"
+    assert "timed out" in data["error"]
+    set_email_service(None)
+
