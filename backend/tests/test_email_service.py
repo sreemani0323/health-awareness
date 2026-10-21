@@ -303,82 +303,299 @@ def test_email_service_templates_do_not_leak_secrets():
         assert "sec_con_token456" in args[2]
 
 
-def test_system_email_status_endpoint():
-    """GET /api/v1/system/email-status returns safe configuration presence metrics."""
-    from backend.app import create_app
-    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
-    client = app.test_client()
+def test_gmail_api_configuration_detection():
+    """EmailService detects Gmail API OAuth 2.0 configuration accurately."""
+    env = {
+        "GMAIL_CLIENT_ID": "client-id-1234.apps.googleusercontent.com",
+        "GMAIL_CLIENT_SECRET": "secret-xyz-token",
+        "GMAIL_REFRESH_TOKEN": "1//04refreshtoken-abc",
+        "GMAIL_SENDER_EMAIL": "authorized_sender@gmail.com",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        assert svc.is_gmail_api_configured is True
+        assert svc.is_smtp_configured is False
+        assert svc.is_configured is True
+        assert svc._from_email == "authorized_sender@gmail.com"
 
-    with patch.dict(os.environ, {
+
+def test_gmail_api_token_refresh_and_caching():
+    """EmailService refreshes and safely caches OAuth access token."""
+    env = {
+        "GMAIL_CLIENT_ID": "cid",
+        "GMAIL_CLIENT_SECRET": "csec",
+        "GMAIL_REFRESH_TOKEN": "reftok",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"access_token": "ya29.test_token_123", "expires_in": 3600}
+
+        with patch("requests.post", return_value=mock_resp) as mock_post:
+            token, err = svc._get_gmail_access_token()
+            assert token == "ya29.test_token_123"
+            assert err is None
+            assert mock_post.call_count == 1
+
+            # Second call within expiry should use cache
+            token2, err2 = svc._get_gmail_access_token()
+            assert token2 == "ya29.test_token_123"
+            assert mock_post.call_count == 1
+
+
+def test_gmail_api_token_refresh_revoked_grant():
+    """EmailService handles revoked/expired refresh tokens gracefully."""
+    env = {
+        "GMAIL_CLIENT_ID": "cid",
+        "GMAIL_CLIENT_SECRET": "csec",
+        "GMAIL_REFRESH_TOKEN": "expired_token",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        mock_resp = MagicMock()
+        mock_resp.status_code = 400
+        mock_resp.headers = {"content-type": "application/json"}
+        mock_resp.json.return_value = {
+            "error": "invalid_grant",
+            "error_description": "Token has been expired or revoked.",
+        }
+
+        with patch("requests.post", return_value=mock_resp):
+            token, err = svc._get_gmail_access_token()
+            assert token is None
+            assert "GMAIL_OAUTH_REVOKED" in err
+
+
+def test_gmail_api_send_email_success():
+    """EmailService successfully delivers email via Gmail REST API over HTTPS."""
+    env = {
+        "GMAIL_CLIENT_ID": "cid",
+        "GMAIL_CLIENT_SECRET": "csec",
+        "GMAIL_REFRESH_TOKEN": "reftok",
+        "GMAIL_SENDER_EMAIL": "healthaware@gmail.com",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        with patch.object(svc, "_get_gmail_access_token", return_value=("ya29.valid_token", None)):
+            mock_send_resp = MagicMock()
+            mock_send_resp.status_code = 200
+            mock_send_resp.json.return_value = {"id": "gmail_msg_id_9999"}
+
+            with patch("requests.post", return_value=mock_send_resp) as mock_post:
+                res = svc.send_email(
+                    to_email="recipient@example.com",
+                    subject="HealthAware Notification",
+                    text_content="This is a test notification.",
+                )
+
+                assert res.success is True
+                assert res.provider == "gmail_api"
+                assert res.message_id == "gmail_msg_id_9999"
+                assert mock_post.call_count == 1
+                args, kwargs = mock_post.call_args
+                assert kwargs["headers"]["Authorization"] == "Bearer ya29.valid_token"
+                assert "raw" in kwargs["json"]
+
+
+def test_gmail_api_quota_exceeded():
+    """EmailService handles Gmail API quota exceeded gracefully."""
+    env = {
+        "GMAIL_CLIENT_ID": "cid",
+        "GMAIL_CLIENT_SECRET": "csec",
+        "GMAIL_REFRESH_TOKEN": "reftok",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        with patch.object(svc, "_get_gmail_access_token", return_value=("ya29.valid_token", None)):
+            mock_send_resp = MagicMock()
+            mock_send_resp.status_code = 429
+            mock_send_resp.text = "Quota exceeded for quota metric 'Queries' and limit 'Queries per day'"
+
+            with patch("requests.post", return_value=mock_send_resp):
+                res = svc.send_email(
+                    to_email="recipient@example.com",
+                    subject="Notice",
+                    text_content="Text",
+                )
+                assert res.success is False
+                assert res.provider == "gmail_api"
+                assert "GMAIL_API_QUOTA_EXCEEDED" in res.error
+
+
+def test_gmail_api_precedence_over_smtp():
+    """Gmail API HTTPS delivery takes precedence over SMTP relay."""
+    env = {
+        "GMAIL_CLIENT_ID": "cid",
+        "GMAIL_CLIENT_SECRET": "csec",
+        "GMAIL_REFRESH_TOKEN": "reftok",
         "SMTP_HOST": "smtp.gmail.com",
         "SMTP_PORT": "587",
-        "SMTP_USERNAME": "test_operator@gmail.com",
-        "SMTP_PASSWORD": "secret_app_password",
-        "SMTP_FROM_EMAIL": "test_operator@gmail.com",
-    }):
-        from backend.platform.email_service import set_email_service, EmailService
-        set_email_service(EmailService())
+        "SMTP_USERNAME": "smtp_user",
+        "SMTP_PASSWORD": "smtp_pass",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        assert svc.is_gmail_api_configured is True
+        assert svc.is_smtp_configured is True
+        assert svc.is_configured is True
 
-        with patch("socket.socket") as mock_sock:
-            mock_instance = MagicMock()
-            mock_sock.return_value = mock_instance
-            resp = client.get("/api/v1/system/email-status")
+        with patch.object(svc, "_send_via_gmail_api", return_value=EmailDeliveryResult(success=True, provider="gmail_api")) as mock_gmail:
+            with patch.object(svc, "_send_via_smtp") as mock_smtp:
+                res = svc.send_email(to_email="test@org.com", subject="Subj", text_content="Txt")
+                assert res.provider == "gmail_api"
+                mock_gmail.assert_called_once()
+                mock_smtp.assert_not_called()
 
+
+def test_gmail_api_credential_sanitization():
+    """Client secrets and refresh tokens are scrubbed from error messages."""
+    env = {
+        "GMAIL_CLIENT_ID": "test_client_id_123",
+        "GMAIL_CLIENT_SECRET": "super_secret_client_token_999",
+        "GMAIL_REFRESH_TOKEN": "sensitive_refresh_token_777",
+    }
+    with patch.dict(os.environ, env, clear=True):
+        svc = EmailService()
+        raw_error = "Failed with super_secret_client_token_999 and sensitive_refresh_token_777 at endpoint"
+        sanitized = svc._sanitize_error(raw_error)
+        assert "super_secret_client_token_999" not in sanitized
+        assert "sensitive_refresh_token_777" not in sanitized
+        assert "[REDACTED_SECRET]" in sanitized
+
+
+# --- System Diagnostic Endpoints Security Tests ---
+
+
+def test_system_email_status_requires_admin():
+    """GET /api/v1/system/email-status requires UserRole.ADMIN."""
+    from backend.app import create_app
+    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
+    client = app.test_client()
+
+    # 1. Anonymous request -> 401 Unauthorized
+    resp = client.get("/api/v1/system/email-status")
+    assert resp.status_code == 401
+
+    # 2. Learner session -> 403 Forbidden
+    with client.session_transaction() as sess:
+        sess["user_id"] = "learner-user-1"
+        sess["role"] = "learner"
+        sess["auth_time"] = 9999999999
+
+    with patch("backend.controllers.auth.get_current_user") as mock_get_user:
+        from backend.domain.domain_objects import User, UserRole
+        mock_get_user.return_value = User(
+            user_id="learner-user-1",
+            username="learner1",
+            display_name="Learner",
+            role=UserRole.LEARNER,
+            password_hash="pwd",
+        )
+        resp = client.get("/api/v1/system/email-status")
+        assert resp.status_code == 403
+
+    # 3. Contributor session -> 403 Forbidden
+    with client.session_transaction() as sess:
+        sess["user_id"] = "contrib-user-1"
+        sess["role"] = "contributor"
+        sess["auth_time"] = 9999999999
+
+    with patch("backend.controllers.auth.get_current_user") as mock_get_user:
+        mock_get_user.return_value = User(
+            user_id="contrib-user-1",
+            username="contrib1",
+            display_name="Contributor",
+            role=UserRole.CONTRIBUTOR,
+            password_hash="pwd",
+        )
+        resp = client.get("/api/v1/system/email-status")
+        assert resp.status_code == 403
+
+    # 4. Admin session -> 200 OK
+    with client.session_transaction() as sess:
+        sess["user_id"] = "admin-user-1"
+        sess["role"] = "admin"
+        sess["auth_time"] = 9999999999
+
+    with patch("backend.controllers.auth.get_current_user") as mock_get_user:
+        from backend.domain.domain_objects import User, UserRole
+        mock_get_user.return_value = User(
+            user_id="admin-user-1",
+            username="admin@healthaware.org",
+            display_name="Admin",
+            role=UserRole.ADMIN,
+            password_hash="pwd",
+        )
+        resp = client.get("/api/v1/system/email-status")
         assert resp.status_code == 200
         data = resp.get_json()["data"]
-        assert data["is_configured"] is True
-        assert data["smtp_host_configured"] is True
-        assert data["smtp_host"] == "smtp.gmail.com"
-        assert data["smtp_port"] == 587
-        assert data["smtp_username_configured"] is True
-        assert data["smtp_password_configured"] is True
-        assert data["smtp_from_email_configured"] is True
-        assert "secret_app_password" not in str(data)
-        assert data["from_address_masked"].endswith("@gmail.com")
+        assert "is_configured" in data
+        assert "active_provider" in data
+        assert "delivery_channel" in data
+        assert "client_secret" not in str(data)
+
+
+def test_system_email_test_requires_admin_and_authorized_recipient():
+    """POST /api/v1/system/email-test enforces admin authorization and recipient restriction."""
+    from backend.app import create_app
+    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
+    client = app.test_client()
+
+    # 1. Anonymous request -> 401 Unauthorized
+    resp = client.post("/api/v1/system/email-test", json={"recipient": "anyone@victim.com"})
+    assert resp.status_code == 401
+
+    # 2. Learner session -> 403 Forbidden
+    with client.session_transaction() as sess:
+        sess["user_id"] = "learner-user-1"
+        sess["role"] = "learner"
+        sess["auth_time"] = 9999999999
+
+    with patch("backend.controllers.auth.get_current_user") as mock_get_user:
+        from backend.domain.domain_objects import User, UserRole
+        mock_get_user.return_value = User(
+            user_id="learner-user-1",
+            username="learner1",
+            display_name="Learner",
+            role=UserRole.LEARNER,
+            password_hash="pwd",
+        )
+        resp = client.post("/api/v1/system/email-test", json={"recipient": "anyone@victim.com"})
+        assert resp.status_code == 403
+
+    # 3. Admin session with unauthorized external recipient -> 403 Forbidden
+    with client.session_transaction() as sess:
+        sess["user_id"] = "admin-user-1"
+        sess["role"] = "admin"
+        sess["auth_time"] = 9999999999
+
+    with patch("backend.controllers.auth.get_current_user") as mock_get_user:
+        from backend.domain.domain_objects import User, UserRole
+        mock_get_user.return_value = User(
+            user_id="admin-user-1",
+            username="admin@healthaware.org",
+            display_name="Admin",
+            role=UserRole.ADMIN,
+            password_hash="pwd",
+        )
+        resp = client.post("/api/v1/system/email-test", json={"recipient": "unauthorized_stranger@target.com"})
+        assert resp.status_code == 403
+        assert "restricted" in resp.get_json()["error"]["message"]
+
+        # 4. Admin session with authorized recipient -> 200 OK
+        from backend.platform.email_service import set_email_service, EmailService
+        mock_svc = MagicMock(spec=EmailService)
+        mock_svc._from_email = "admin@healthaware.org"
+        mock_svc.is_gmail_api_configured = True
+        mock_svc.send_email.return_value = EmailDeliveryResult(success=True, provider="gmail_api", message_id="gmail-101")
+        set_email_service(mock_svc)
+
+        resp = client.post("/api/v1/system/email-test", json={"recipient": "admin@healthaware.org"})
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert data["success"] is True
+        assert data["provider"] == "gmail_api"
         set_email_service(None)
 
-
-def test_system_email_test_endpoint_success():
-    """POST /api/v1/system/email-test dispatches a test email successfully."""
-    from backend.app import create_app
-    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
-    client = app.test_client()
-
-    from backend.platform.email_service import set_email_service, EmailService
-    mock_svc = MagicMock(spec=EmailService)
-    mock_svc._from_email = "noreply@healthaware.org"
-    mock_svc._smtp_host = "smtp.test.org"
-    mock_svc._smtp_port = 587
-    mock_svc.send_email.return_value = EmailDeliveryResult(success=True, provider="smtp", message_id="msg-123")
-    set_email_service(mock_svc)
-
-    resp = client.post("/api/v1/system/email-test", json={"recipient": "test@example.com"})
-    assert resp.status_code == 200
-    data = resp.get_json()["data"]
-    assert data["success"] is True
-    assert data["provider"] == "smtp"
-    set_email_service(None)
-
-
-def test_system_email_test_endpoint_failure_handled_truthfully():
-    """POST /api/v1/system/email-test returns truthful failure without false success."""
-    from backend.app import create_app
-    app = create_app({"TESTING": True, "SKIP_NDB_CONTEXT": True})
-    client = app.test_client()
-
-    from backend.platform.email_service import set_email_service, EmailService
-    mock_svc = MagicMock(spec=EmailService)
-    mock_svc._from_email = "noreply@healthaware.org"
-    mock_svc._smtp_host = "smtp.test.org"
-    mock_svc._smtp_port = 587
-    mock_svc.send_email.return_value = EmailDeliveryResult(success=False, provider="smtp", error="Delivery failed: timed out")
-    set_email_service(mock_svc)
-
-    resp = client.post("/api/v1/system/email-test", json={"recipient": "test@example.com"})
-    assert resp.status_code == 200
-    data = resp.get_json()["data"]
-    assert data["success"] is False
-    assert data["provider"] == "smtp"
-    assert "timed out" in data["error"]
-    set_email_service(None)
 

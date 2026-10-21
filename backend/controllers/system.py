@@ -1,20 +1,23 @@
 """System diagnostic and operational verification endpoints.
 
-Allows safe inspection of transactional email provider readiness and
-controlled end-to-end verification without leaking credentials or secrets.
+Provides administrative health inspection and controlled operational verification
+of transactional email delivery. All endpoints strictly require an active,
+authenticated administrator session (UserRole.ADMIN) and CSRF protection.
 """
 
 from __future__ import annotations
 
 import logging
 import os
-import socket
 from typing import Any
 
 from flask import Response, request
 
+from backend.controllers.auth import get_current_user, role_required
 from backend.controllers.base import BaseHandler
+from backend.domain.domain_objects import UserRole
 from backend.platform.email_service import get_email_service
+from backend.platform.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -30,108 +33,111 @@ def _mask_email(email: str) -> str:
 
 
 class SystemEmailStatusHandler(BaseHandler):
-    """GET /api/v1/system/email-status — Safe operational inspection of SMTP configuration.
+    """GET /api/v1/system/email-status — Secure administrative inspection of email service.
 
-    Never discloses passwords, auth tokens, or sensitive API keys.
-    Reports presence of required environment variables and tests outbound socket connectivity.
+    Requires UserRole.ADMIN. Anonymous users receive 401; ordinary learners receive 403.
+    Never discloses client secrets, refresh tokens, passwords, or raw configuration values.
     """
 
+    decorators = [limiter.limit("30 per minute")]
+
+    @role_required(UserRole.ADMIN)
     def get(self) -> tuple[Response, int]:
         svc = get_email_service()
 
-        has_host = bool(svc._smtp_host)
-        has_port = bool(os.environ.get("SMTP_PORT", "").strip())
-        has_username = bool(svc._smtp_user)
-        has_password = bool(svc._smtp_password)
-        has_from = bool(
-            os.environ.get("SMTP_FROM_EMAIL", "").strip()
-            or os.environ.get("SMTP_FROM", "").strip()
-            or os.environ.get("EMAIL_FROM", "").strip()
+        active_provider = (
+            "gmail_api"
+            if svc.is_gmail_api_configured
+            else ("smtp" if svc.is_smtp_configured else "unconfigured")
         )
 
-        host_repr = svc._smtp_host
-        if host_repr and not any(
-            h in host_repr.lower() for h in ("gmail.com", "sendgrid.net", "resend.com", "mailgun.org", "postmarkapp.com")
-        ):
-            host_repr = "[CONFIGURED_CUSTOM_HOST]"
-
-        ports_to_test = [587, 465]
-        if svc._smtp_port not in ports_to_test:
-            ports_to_test.append(svc._smtp_port)
-
-        connectivity: dict[str, Any] = {}
-        if has_host:
-            for p in ports_to_test:
-                port_result = {"reachable": False, "error": None}
-                try:
-                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sock.settimeout(2.5)
-                    sock.connect((svc._smtp_host, p))
-                    sock.close()
-                    port_result["reachable"] = True
-                except socket.timeout:
-                    port_result["error"] = "TIMEOUT_FIREWALL_BLOCKED (outbound port dropped by Render Free tier firewall)"
-                except ConnectionRefusedError:
-                    port_result["error"] = "CONNECTION_REFUSED"
-                except Exception as exc:
-                    port_result["error"] = f"SOCKET_ERROR: {str(exc)}"
-                connectivity[f"port_{p}"] = port_result
+        delivery_channel = (
+            "https_api"
+            if active_provider == "gmail_api"
+            else ("smtp" if active_provider == "smtp" else "none")
+        )
 
         return self.render_json({
             "is_configured": svc.is_configured,
-            "smtp_host_configured": has_host,
-            "smtp_host": host_repr or None,
-            "smtp_port": svc._smtp_port,
-            "smtp_username_configured": has_username,
-            "smtp_password_configured": has_password,
-            "smtp_from_email_configured": has_from,
-            "from_address_masked": _mask_email(svc._from_email),
-            "connectivity": connectivity,
+            "active_provider": active_provider,
+            "delivery_channel": delivery_channel,
+            "gmail_api_configured": svc.is_gmail_api_configured,
+            "smtp_configured": svc.is_smtp_configured,
+            "sender_address_masked": _mask_email(svc._from_email),
         })
 
 
 class SystemEmailTestHandler(BaseHandler):
-    """POST /api/v1/system/email-test — Standalone test email dispatch.
+    """POST /api/v1/system/email-test — Secure administrator transactional test dispatch.
 
-    Dispatches a single diagnostic message through the actual EmailService
-    instance to verify end-to-end SMTP delivery to a verified recipient.
+    Requires UserRole.ADMIN, CSRF protection, and rate limiting (5 per hour).
+    Restricts test recipients strictly to authorized operator/administrator addresses.
+    Never discloses raw SMTP errors or OAuth access/refresh tokens.
     """
 
+    decorators = [limiter.limit("5 per hour")]
+
+    @role_required(UserRole.ADMIN)
     def post(self) -> tuple[Response, int]:
         svc = get_email_service()
         data = request.get_json(silent=True) or {}
 
-        recipient = (
+        from flask import g
+        current_user = getattr(g, "current_user", None) or get_current_user()
+        admin_email = current_user.username if (current_user and "@" in getattr(current_user, "username", "")) else ""
+        configured_sender = svc._from_email if (svc._from_email and "@" in svc._from_email) else ""
+        explicit_admin_test_email = os.environ.get("ADMIN_TEST_EMAIL", "").strip().lower()
+
+        authorized_recipients = {
+            r.lower()
+            for r in [admin_email, configured_sender, explicit_admin_test_email]
+            if r and "@" in r
+        }
+
+        requested_recipient = (
             data.get("recipient")
             or data.get("to_email")
-            or svc._from_email
+            or configured_sender
+            or admin_email
             or ""
         ).strip().lower()
 
-        if not recipient or "@" not in recipient:
+        if not requested_recipient or "@" not in requested_recipient:
             return self.render_error("BAD_REQUEST", "Valid recipient email address is required.", 400)
 
-        subject = data.get("subject") or "HealthAware Production SMTP Test"
+        # Enforce authorized recipient restriction
+        if authorized_recipients and requested_recipient not in authorized_recipients:
+            return self.render_error(
+                "FORBIDDEN",
+                "Test email dispatch is restricted to authorized administrator addresses.",
+                403,
+            )
+
+        subject = "HealthAware Production Transactional Email Verification"
+        channel_desc = "Gmail REST API (HTTPS port 443)" if svc.is_gmail_api_configured else "SMTP Relay"
         content = (
             "HealthAware Production Transactional Email Verification\n\n"
-            "This standalone test email was dispatched through the deployed application's\n"
-            "actual EmailService instance to verify SMTP relay connectivity and inbox delivery.\n\n"
-            f"Configured Host: {svc._smtp_host or 'none'}\n"
-            f"Configured Port: {svc._smtp_port}\n"
-            f"Recipient: {recipient}\n\n"
+            "This diagnostic verification email was dispatched through the deployed application's\n"
+            "active EmailService instance by an authorized administrator.\n\n"
+            f"Delivery Channel: {channel_desc}\n"
+            f"Recipient: {requested_recipient}\n\n"
             "— HealthAware Production Infrastructure"
         )
 
         res = svc.send_email(
-            to_email=recipient,
+            to_email=requested_recipient,
             subject=subject,
             text_content=content,
         )
 
+        if res.success:
+            message = f"Transactional test email successfully dispatched via {res.provider}."
+        else:
+            message = "Transactional test email failed to dispatch. Provider reported delivery error."
+
         return self.render_json({
             "success": res.success,
             "provider": res.provider,
-            "message_id": res.message_id,
-            "error": res.error,
-            "recipient_masked": _mask_email(recipient),
+            "message": message,
+            "recipient_masked": _mask_email(requested_recipient),
         }, status_code=200)

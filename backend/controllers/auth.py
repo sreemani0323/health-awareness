@@ -389,6 +389,7 @@ def role_required(*roles: UserRole) -> Callable:
                         "message": f"Requires one of: {[r.value for r in roles]}",
                     }
                 }), 403
+            g.current_user = user
             return fn(*args, **kwargs)
 
         return wrapper
