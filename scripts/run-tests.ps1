@@ -45,6 +45,7 @@ if (-not (Test-Path $pythonExe)) {
 # 2. Configure environment variables for safety
 $env:DATASTORE_EMULATOR_HOST = $HostPort
 $env:DATASTORE_PROJECT_ID = $ProjectId
+$env:PYTHONPATH = "."
 
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "Health Awareness - Backend Test Suite Runner" -ForegroundColor Cyan
