@@ -114,15 +114,23 @@ def _parse_cards_from_json(cards_data: list[dict]) -> list[LessonCard]:
     """Parse card data from JSON request body into domain objects."""
     cards = []
     for cd in cards_data:
-        blocks = [ContentBlock(block_type=b["block_type"], body=b["body"])
-                  for b in cd.get("content_blocks", [])]
+        blocks = [
+            ContentBlock(
+                block_type=b["block_type"],
+                body=b["body"],
+                speaker=b.get("speaker"),
+                avatar=b.get("avatar"),
+                side=b.get("side"),
+            )
+            for b in cd.get("content_blocks", [])
+        ]
 
         interaction = None
         if cd.get("interaction"):
             idata = cd["interaction"]
             options = [
                 AnswerOption(
-                    option_id=o["id"],
+                    option_id=o.get("option_id", o.get("id", "")),
                     label=o["label"],
                     is_correct=o["is_correct"],
                     feedback=o["feedback"],
@@ -134,10 +142,13 @@ def _parse_cards_from_json(cards_data: list[dict]) -> list[LessonCard]:
                 question_prompt=idata["question_prompt"],
                 options=options,
                 incorrect_behaviour=IncorrectBehaviour(idata.get("incorrect_behaviour", "retry")),
+                correct_order=idata.get("correct_order"),
+                hint=idata.get("hint"),
+                scene_description=idata.get("scene_description"),
             )
 
         cards.append(LessonCard(
-            card_id=cd["id"],
+            card_id=cd.get("card_id", cd.get("id", "")),
             position=cd["position"],
             card_type=CardType(cd["card_type"]),
             content_blocks=blocks,

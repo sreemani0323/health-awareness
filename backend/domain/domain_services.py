@@ -1318,3 +1318,27 @@ def update_lesson(lesson: Lesson) -> Lesson:
     model.put()
     return model.to_domain()
 
+
+_CURRICULUM_CACHE = None
+
+
+def get_topic_mastery_challenge(topic_id: str) -> Optional[dict[str, Any]]:
+    """Retrieve the topic mastery challenge configuration for a topic."""
+    global _CURRICULUM_CACHE
+    if _CURRICULUM_CACHE is None:
+        import json, os
+        curriculum_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "canonical_curriculum.json"
+        )
+        if os.path.exists(curriculum_path):
+            with open(curriculum_path, "r", encoding="utf-8") as f:
+                _CURRICULUM_CACHE = json.load(f)
+        else:
+            _CURRICULUM_CACHE = {}
+
+    challenges = _CURRICULUM_CACHE.get("mastery_challenges", [])
+    for mc in challenges:
+        if mc.get("topic_id") == topic_id:
+            return mc
+    return None
+

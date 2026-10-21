@@ -42,12 +42,14 @@ describe('TopicLessonsComponent', () => {
   let mockApiService: {
     getTopics: ReturnType<typeof vi.fn>;
     getTopicLessons: ReturnType<typeof vi.fn>;
+    getTopicMastery: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
     mockApiService = {
       getTopics: vi.fn().mockReturnValue(of([mockTopic])),
       getTopicLessons: vi.fn().mockReturnValue(of(mockLessons)),
+      getTopicMastery: vi.fn().mockReturnValue(of(null)),
     };
 
     await TestBed.configureTestingModule({

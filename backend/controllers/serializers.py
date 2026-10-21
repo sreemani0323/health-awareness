@@ -46,8 +46,8 @@ def serialize_lesson_summary(lesson: Lesson, version: LessonVersion) -> dict[str
 
 
 def serialize_interaction(interaction: SingleChoiceInteraction) -> dict[str, Any]:
-    """Serialize a single-choice educational interaction for lesson playback."""
-    return {
+    """Serialize an educational interaction for lesson playback."""
+    res = {
         "interaction_type": interaction.interaction_type.value,
         "question_prompt": interaction.question_prompt,
         "incorrect_behaviour": interaction.incorrect_behaviour.value,
@@ -61,18 +61,33 @@ def serialize_interaction(interaction: SingleChoiceInteraction) -> dict[str, Any
             for opt in interaction.options
         ],
     }
+    if interaction.correct_order is not None:
+        res["correct_order"] = list(interaction.correct_order)
+    if interaction.hint is not None:
+        res["hint"] = interaction.hint
+    if interaction.scene_description is not None:
+        res["scene_description"] = interaction.scene_description
+    return res
 
 
 def serialize_card(card: LessonCard) -> dict[str, Any]:
     """Serialize an individual lesson card."""
+    blocks = []
+    for block in card.content_blocks:
+        b: dict[str, Any] = {"block_type": block.block_type, "body": block.body}
+        if block.speaker:
+            b["speaker"] = block.speaker
+        if block.avatar:
+            b["avatar"] = block.avatar
+        if block.side:
+            b["side"] = block.side
+        blocks.append(b)
+
     return {
         "id": card.card_id,
         "position": card.position,
         "card_type": card.card_type.value,
-        "content_blocks": [
-            {"block_type": block.block_type, "body": block.body}
-            for block in card.content_blocks
-        ],
+        "content_blocks": blocks,
         "source_ids": list(card.source_ids),
         "interaction": (
             serialize_interaction(card.interaction)

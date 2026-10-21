@@ -41,3 +41,20 @@ class TopicLessonsHandler(BaseHandler):
             )
         data = [serialize_lesson_summary(lesson, version) for lesson, version in results]
         return self.render_json(data)
+
+
+class TopicMasteryHandler(BaseHandler):
+    """Endpoint: Retrieve topic mastery challenge for a topic.
+
+    GET /api/v1/topics/<topic_id>/mastery
+    """
+
+    def get(self, topic_id: str) -> tuple[Response, int]:
+        challenge = domain_services.get_topic_mastery_challenge(topic_id)
+        if challenge is None:
+            return self.render_error(
+                code="NOT_FOUND",
+                message=f"Topic mastery challenge for '{topic_id}' was not found.",
+                status_code=404,
+            )
+        return self.render_json(challenge)

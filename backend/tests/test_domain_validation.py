@@ -308,6 +308,45 @@ class TestInteractionValidation:
         with pytest.raises(ValueError, match="Unknown option_id"):
             valid_interaction.evaluate("nonexistent")
 
+    def test_multi_select_interaction(self):
+        opts = [
+            AnswerOption("opt-1", "Step 1", True, "Great 1"),
+            AnswerOption("opt-2", "Step 2", True, "Great 2"),
+            AnswerOption("opt-3", "Step 3", False, "Incorrect 3"),
+        ]
+        inter = SingleChoiceInteraction(
+            interaction_type=InteractionType.MULTI_SELECT,
+            question_prompt="Select all valid",
+            options=opts,
+            incorrect_behaviour=IncorrectBehaviour.RETRY,
+        )
+        inter.validate()
+        # Evaluate correct multi select
+        is_corr, fb = inter.evaluate(["opt-1", "opt-2"])
+        assert is_corr is True
+        # Evaluate partial or incorrect
+        is_corr2, fb2 = inter.evaluate(["opt-1", "opt-3"])
+        assert is_corr2 is False
+
+    def test_arrange_steps_interaction(self):
+        opts = [
+            AnswerOption("step-1", "Wet", False, "Complete sequence"),
+            AnswerOption("step-2", "Lather", False, "Complete sequence"),
+            AnswerOption("step-3", "Rinse", False, "Complete sequence"),
+        ]
+        inter = SingleChoiceInteraction(
+            interaction_type=InteractionType.ARRANGE_STEPS,
+            question_prompt="Arrange in correct sequence",
+            options=opts,
+            incorrect_behaviour=IncorrectBehaviour.RETRY,
+            correct_order=["step-1", "step-2", "step-3"],
+        )
+        inter.validate()
+        is_corr, _ = inter.evaluate(["step-1", "step-2", "step-3"])
+        assert is_corr is True
+        is_corr_bad, _ = inter.evaluate(["step-3", "step-2", "step-1"])
+        assert is_corr_bad is False
+
 
 # ====================================================================
 # ContentBlock validation tests
@@ -325,6 +364,22 @@ class TestContentBlockValidation:
     def test_valid_image_ref_block(self):
         block = ContentBlock(block_type="image_ref", body="images/diagram.png")
         block.validate()
+
+    def test_valid_dialogue_block(self):
+        block = ContentBlock(
+            block_type="dialogue",
+            body="Why are you still at the sink?",
+            speaker="Meera",
+            avatar="👩🏽",
+            side="left",
+        )
+        block.validate()
+
+    def test_valid_callout_and_takeaway_blocks(self):
+        b1 = ContentBlock(block_type="callout", body="Remember this key fact")
+        b1.validate()
+        b2 = ContentBlock(block_type="key_takeaway", body="Action item today")
+        b2.validate()
 
     def test_invalid_block_type_fails(self):
         block = ContentBlock(block_type="video", body="content")

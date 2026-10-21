@@ -62,15 +62,21 @@ export interface CreatorCard {
 }
 
 export interface CreatorContentBlock {
-  block_type: 'text' | 'heading' | 'image_ref';
+  block_type: 'text' | 'heading' | 'image_ref' | 'dialogue' | 'callout' | 'key_takeaway';
   body: string;
+  speaker?: string;
+  avatar?: string;
+  side?: 'left' | 'right';
 }
 
 export interface CreatorInteraction {
-  interaction_type: 'single_choice';
+  interaction_type: 'single_choice' | 'multi_select' | 'arrange_steps' | 'identify_risk' | 'myth_fact';
   question_prompt: string;
   incorrect_behaviour: 'retry' | 'continue';
   options: CreatorAnswerOption[];
+  correct_order?: string[];
+  hint?: string;
+  scene_description?: string;
 }
 
 export interface CreatorAnswerOption {

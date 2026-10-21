@@ -176,6 +176,93 @@ export class LearningProgressService {
   }
 
   /**
+   * Record completion of a topic mastery challenge and award milestone badge.
+   */
+  recordTopicMastery(topicId: string, score: number, total: number): void {
+    if (total <= 0) return;
+    const passed = (score / total) >= 0.7;
+    if (!passed) return;
+
+    const current = [...this.achievedMilestones()];
+    const hasMilestone = (id: string) => current.some((m) => m.id === id);
+    const now = new Date().toISOString();
+
+    const topicMilestoneMap: Record<string, { id: string; title: string; desc: string; icon: string }> = {
+      'topic-hygiene': {
+        id: 'hygiene-topic-mastery',
+        title: 'Personal Hygiene Scholar',
+        desc: 'Mastered hygiene principles across personal, oral, and shared community environments.',
+        icon: '🧼',
+      },
+      'topic-water': {
+        id: 'water-topic-mastery',
+        title: 'Safe Water Ambassador',
+        desc: 'Mastered water safety, treatment, covered storage, and community vigilance.',
+        icon: '🚰',
+      },
+      'topic-mosquito': {
+        id: 'mosquito-topic-mastery',
+        title: 'Vector Control Specialist',
+        desc: 'Mastered breeding elimination, bite barriers, disease care, and community campaigns.',
+        icon: '🦟',
+      },
+      'topic-vaccine': {
+        id: 'vaccine-topic-mastery',
+        title: 'Community Immunity Advocate',
+        desc: 'Mastered vaccine mechanisms, schedules, reaction management, and respectful myth-busting.',
+        icon: '🛡️',
+      },
+    };
+
+    const target = topicMilestoneMap[topicId];
+    if (target && !hasMilestone(target.id)) {
+      current.push({
+        id: target.id,
+        title: target.title,
+        description: target.desc,
+        icon: target.icon,
+        achievedAt: now,
+      });
+      this.achievedMilestones.set(current);
+      this.persist();
+    }
+  }
+
+  /**
+   * Record a missed question for optional learner revision.
+   */
+  recordMissedQuestion(lessonId: string, questionPrompt: string): void {
+    const key = `healthaware_revision_${lessonId}`;
+    try {
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      if (!existing.includes(questionPrompt)) {
+        existing.push(questionPrompt);
+        localStorage.setItem(key, JSON.stringify(existing.slice(-20)));
+      }
+    } catch {
+      // non-fatal localStorage error
+    }
+  }
+
+  getMissedQuestions(lessonId: string): string[] {
+    try {
+      const key = `healthaware_revision_${lessonId}`;
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  clearMissedQuestions(lessonId: string): void {
+    try {
+      const key = `healthaware_revision_${lessonId}`;
+      localStorage.removeItem(key);
+    } catch {
+      // non-fatal
+    }
+  }
+
+  /**
    * Clear all locally saved learning progress.
    * Crucial for privacy on shared family and community devices.
    */

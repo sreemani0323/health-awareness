@@ -23,6 +23,17 @@
         @if (topicDescription()) {
           <p class="topic-header__desc">{{ topicDescription() }}</p>
         }
+        @if (lessons().length > 0) {
+          <div class="topic-progress-overview" id="topic-progress-bar-container">
+            <div class="topic-progress-overview__label-row">
+              <span>{{ completedCount() }} of {{ lessons().length }} chapters completed</span>
+              <span>{{ progressPercentage() }}%</span>
+            </div>
+            <div class="topic-progress-overview__track">
+              <div class="topic-progress-overview__fill" [style.width.%]="progressPercentage()"></div>
+            </div>
+          </div>
+        }
       </div>
     </header>
 
@@ -150,6 +161,134 @@
             </div>
           </div>
         }
+      </div>
+
+      <!-- Topic Mastery Challenge Card -->
+      @if (masteryChallenge(); as mc) {
+        <section class="topic-mastery-banner" id="topic-mastery-challenge-card">
+          <div class="mastery-banner__badge-icon">
+            <span>{{ mc.badge_icon || '🏆' }}</span>
+          </div>
+          <div class="mastery-banner__content">
+            <div class="mastery-banner__tag">CAPSTONE CHALLENGE</div>
+            <h2 class="mastery-banner__title">{{ mc.title }}</h2>
+            <p class="mastery-banner__desc">{{ mc.description }} ({{ mc.questions.length }} real-world scenario questions)</p>
+            @if (hasMasteryBadge()) {
+              <div class="mastery-awarded-pill">
+                <span>✓ Topic Mastery Badge Earned!</span>
+              </div>
+            }
+          </div>
+          <div class="mastery-banner__action">
+            <button
+              type="button"
+              class="btn-take-mastery"
+              (click)="openMasteryModal()"
+              id="take-mastery-btn"
+            >
+              <span>{{ hasMasteryBadge() ? 'Retake Challenge' : 'Take Mastery Challenge' }}</span>
+              <span aria-hidden="true">🎯</span>
+            </button>
+          </div>
+        </section>
+      }
+    }
+
+    <!-- Topic Mastery Challenge Modal -->
+    @if (showMasteryModal() && masteryChallenge(); as mc) {
+      <div class="mastery-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mastery-modal-title">
+        <div class="mastery-modal-content">
+          <div class="mastery-modal-header">
+            <div>
+              <span class="mastery-modal-step">QUESTION {{ masteryCurrentQuestionIdx() + 1 }} OF {{ mc.questions.length }}</span>
+              <h3 class="mastery-modal-title" id="mastery-modal-title">{{ mc.title }}</h3>
+            </div>
+            <button type="button" class="btn-close-modal" (click)="closeMasteryModal()" aria-label="Close mastery modal">✕</button>
+          </div>
+
+          @if (!masteryFinished()) {
+            @if (mc.questions[masteryCurrentQuestionIdx()]; as q) {
+              <div class="mastery-modal-body">
+                <div class="mastery-scenario-box">
+                  <span class="scenario-icon" aria-hidden="true">📋</span>
+                  <div class="scenario-text">
+                    <strong>Real-World Scenario:</strong> {{ q.scenario }}
+                  </div>
+                </div>
+
+                <h4 class="mastery-prompt">{{ q.question_prompt }}</h4>
+
+                <div class="mastery-options-list" role="radiogroup">
+                  @for (option of q.options; track option.id) {
+                    <button
+                      type="button"
+                      class="mastery-option-item"
+                      [class.selected]="masterySelectedOptionId() === option.id"
+                      [class.correct]="masteryAnswerSubmitted() && option.is_correct"
+                      [class.incorrect]="masteryAnswerSubmitted() && masterySelectedOptionId() === option.id && !option.is_correct"
+                      (click)="selectMasteryOption(option.id)"
+                      [disabled]="masteryAnswerSubmitted()"
+                    >
+                      <span class="option-marker">{{ masterySelectedOptionId() === option.id ? '●' : '○' }}</span>
+                      <span class="option-text">{{ option.label }}</span>
+                    </button>
+                  }
+                </div>
+
+                @if (masteryAnswerSubmitted()) {
+                  <div class="mastery-feedback-bubble" [class.mastery-feedback--correct]="q.options.find(o => o.id === masterySelectedOptionId())?.is_correct">
+                    <p class="mastery-feedback-text">
+                      {{ q.options.find(o => o.id === masterySelectedOptionId())?.feedback }}
+                    </p>
+                  </div>
+                }
+              </div>
+
+              <div class="mastery-modal-footer">
+                @if (!masteryAnswerSubmitted()) {
+                  <button
+                    type="button"
+                    class="btn-mastery-action"
+                    [disabled]="!masterySelectedOptionId()"
+                    (click)="submitMasteryAnswer()"
+                    id="submit-mastery-answer-btn"
+                  >
+                    Check Answer
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn-mastery-action"
+                    (click)="nextMasteryQuestion()"
+                    id="next-mastery-question-btn"
+                  >
+                    {{ masteryCurrentQuestionIdx() === mc.questions.length - 1 ? 'View Final Results' : 'Next Scenario →' }}
+                  </button>
+                }
+              </div>
+            }
+          } @else {
+            <!-- Finished State -->
+            <div class="mastery-modal-body mastery-results-body">
+              <div class="results-trophy" aria-hidden="true">{{ mc.badge_icon || '🏆' }}</div>
+              <h4 class="results-score-title">
+                You scored {{ masteryScore() }} out of {{ mc.questions.length }}!
+              </h4>
+              <p class="results-desc">
+                @if ((masteryScore() / mc.questions.length) >= 0.7) {
+                  🎉 Outstanding! You demonstrated comprehensive mastery across all public health scenarios and earned the <strong>{{ mc.badge_title }}</strong> milestone badge!
+                } @else {
+                  Good effort! Review the chapters in this topic to strengthen your understanding, then retake the challenge anytime.
+                }
+              </p>
+              <div style="margin-top: 20px;">
+                <button type="button" class="btn-mastery-action" (click)="closeMasteryModal()" id="finish-mastery-modal-btn">
+                  Back to Topic Chapters
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     }
   </div>

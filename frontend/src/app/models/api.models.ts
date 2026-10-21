@@ -54,8 +54,11 @@ export interface LessonSummary {
 // --- Lesson Detail ---
 
 export interface ContentBlock {
-  block_type: 'text' | 'heading' | 'image_ref';
+  block_type: 'text' | 'heading' | 'image_ref' | 'dialogue' | 'callout' | 'key_takeaway';
   body: string;
+  speaker?: string;
+  avatar?: string;
+  side?: 'left' | 'right';
 }
 
 export interface AnswerOption {
@@ -66,10 +69,13 @@ export interface AnswerOption {
 }
 
 export interface Interaction {
-  interaction_type: 'single_choice';
+  interaction_type: 'single_choice' | 'multi_select' | 'arrange_steps' | 'identify_risk' | 'myth_fact';
   question_prompt: string;
   incorrect_behaviour: 'retry' | 'continue';
   options: AnswerOption[];
+  correct_order?: string[];
+  hint?: string;
+  scene_description?: string;
 }
 
 export interface LessonCard {
@@ -109,4 +115,25 @@ export interface LessonDetail {
 
 export interface HealthCheck {
   status: string;
+}
+
+// --- Topic Mastery Challenge ---
+
+export interface MasteryQuestion {
+  id: string;
+  scenario: string;
+  question_prompt: string;
+  options: AnswerOption[];
+  hint?: string;
+  explanation?: string;
+}
+
+export interface TopicMasteryChallenge {
+  topic_id: string;
+  title: string;
+  description: string;
+  passing_score: number;
+  badge_title: string;
+  badge_icon: string;
+  questions: MasteryQuestion[];
 }

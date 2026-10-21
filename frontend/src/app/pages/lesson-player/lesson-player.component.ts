@@ -26,6 +26,8 @@ export class LessonPlayerComponent implements OnInit {
 
   /** Interaction state for the current card. */
   readonly selectedOptionId = signal<string | null>(null);
+  readonly selectedOptionIds = signal<string[]>([]);
+  readonly arrangedStepIds = signal<string[]>([]);
   readonly answerSubmitted = signal(false);
   readonly answerCorrect = signal(false);
   readonly feedbackText = signal('');
@@ -57,6 +59,19 @@ export class LessonPlayerComponent implements OnInit {
     return this.answerSubmitted();
   });
 
+  readonly hasAnswerSelected = computed(() => {
+    const card = this.currentCard();
+    if (!card?.interaction) return false;
+    const type = card.interaction.interaction_type;
+    if (type === 'multi_select' || type === 'identify_risk') {
+      return this.selectedOptionIds().length > 0;
+    }
+    if (type === 'arrange_steps') {
+      return this.arrangedStepIds().length > 0;
+    }
+    return this.selectedOptionId() !== null;
+  });
+
   /** Associated practical activity for takeaway. */
   readonly associatedActivity = computed<PracticalActivity | null>(() => {
     const l = this.lesson();
@@ -72,6 +87,11 @@ export class LessonPlayerComponent implements OnInit {
   readonly isCompletedOnDevice = computed(() => {
     const l = this.lesson();
     return l ? this.progressService.isLessonCompleted(l.id) : false;
+  });
+
+  readonly missedQuestionsCount = computed(() => {
+    const l = this.lesson();
+    return l ? this.progressService.getMissedQuestions(l.id).length : 0;
   });
 
   ngOnInit(): void {
@@ -100,7 +120,7 @@ export class LessonPlayerComponent implements OnInit {
           this.showSources.set(true);
         }
 
-        // Save initial resume position
+        this.initCurrentCardState();
         this.saveCurrentProgress();
       },
       error: () => {
@@ -135,18 +155,130 @@ export class LessonPlayerComponent implements OnInit {
     this.selectedOptionId.set(optionId);
   }
 
+  toggleOptionSelection(optionId: string): void {
+    if (this.answerSubmitted()) return;
+    this.selectedOptionIds.update((current) =>
+      current.includes(optionId)
+        ? current.filter((id) => id !== optionId)
+        : [...current, optionId],
+    );
+  }
+
+  moveStep(index: number, direction: 'up' | 'down'): void {
+    if (this.answerSubmitted()) return;
+    const current = [...this.arrangedStepIds()];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= current.length) return;
+    const temp = current[index];
+    current[index] = current[targetIdx];
+    current[targetIdx] = temp;
+    this.arrangedStepIds.set(current);
+  }
+
   submitAnswer(): void {
     const card = this.currentCard();
-    if (!card?.interaction || !this.selectedOptionId()) return;
+    if (!card?.interaction) return;
 
-    const selected = card.interaction.options.find(
-      (o) => o.id === this.selectedOptionId(),
-    );
-    if (!selected) return;
+    const interactionType = card.interaction.interaction_type;
+    const l = this.lesson();
 
-    this.answerSubmitted.set(true);
-    this.answerCorrect.set(selected.is_correct);
-    this.feedbackText.set(selected.feedback);
+    if (interactionType === 'multi_select' || interactionType === 'identify_risk') {
+      const selected = this.selectedOptionIds();
+      const correctIds = card.interaction.options
+        .filter((o) => o.is_correct)
+        .map((o) => o.id);
+
+      const isCorrect =
+        selected.length === correctIds.length &&
+        selected.every((id) => correctIds.includes(id));
+
+      this.answerSubmitted.set(true);
+      this.answerCorrect.set(isCorrect);
+
+      if (isCorrect) {
+        const correctFeedback = card.interaction.options
+          .filter((o) => o.is_correct)
+          .map((o) => o.feedback)
+          .join(' ');
+        this.feedbackText.set(correctFeedback || 'Excellent! All selections are accurate.');
+      } else {
+        const wrongSelected = selected.filter((id) => !correctIds.includes(id));
+        const missed = correctIds.filter((id) => !selected.includes(id));
+
+        if (wrongSelected.length > 0) {
+          const wrongOpt = card.interaction.options.find(
+            (o) => o.id === wrongSelected[0],
+          );
+          this.feedbackText.set(
+            wrongOpt?.feedback || 'One or more selected items are not risks or factors in this scenario.',
+          );
+        } else if (missed.length > 0) {
+          const missedOpt = card.interaction.options.find(
+            (o) => o.id === missed[0],
+          );
+          this.feedbackText.set(
+            `Good start! Make sure to also check: ${missedOpt?.label}.`,
+          );
+        } else {
+          this.feedbackText.set('Review your choices and try again.');
+        }
+
+        if (l) {
+          this.progressService.recordMissedQuestion(
+            l.id,
+            card.interaction.question_prompt,
+          );
+        }
+      }
+    } else if (interactionType === 'arrange_steps') {
+      const currentOrder = this.arrangedStepIds();
+      const expected =
+        card.interaction.correct_order ||
+        card.interaction.options.map((o) => o.id);
+
+      const isCorrect =
+        JSON.stringify(currentOrder) === JSON.stringify(expected);
+
+      this.answerSubmitted.set(true);
+      this.answerCorrect.set(isCorrect);
+
+      if (isCorrect) {
+        this.feedbackText.set(
+          card.interaction.options[0]?.feedback ||
+            'Superb! You correctly arranged all steps in the verified public health sequence.',
+        );
+      } else {
+        this.feedbackText.set(
+          'The order is not quite right yet. Re-read the steps carefully and adjust the sequence.',
+        );
+        if (l) {
+          this.progressService.recordMissedQuestion(
+            l.id,
+            card.interaction.question_prompt,
+          );
+        }
+      }
+    } else {
+      // single_choice or myth_fact
+      const selectedId = this.selectedOptionId();
+      if (!selectedId) return;
+
+      const selected = card.interaction.options.find(
+        (o) => o.id === selectedId,
+      );
+      if (!selected) return;
+
+      this.answerSubmitted.set(true);
+      this.answerCorrect.set(selected.is_correct);
+      this.feedbackText.set(selected.feedback);
+
+      if (!selected.is_correct && l) {
+        this.progressService.recordMissedQuestion(
+          l.id,
+          card.interaction.question_prompt,
+        );
+      }
+    }
   }
 
   retryQuestion(): void {
@@ -195,7 +327,9 @@ export class LessonPlayerComponent implements OnInit {
     try {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(publicUrl);
-        this.shareToastMessage.set('Lesson link copied to clipboard! Share it with family members.');
+        this.shareToastMessage.set(
+          'Lesson link copied to clipboard! Share it with family members.',
+        );
       } else {
         this.shareToastMessage.set(`Share link: ${publicUrl}`);
       }
@@ -210,7 +344,15 @@ export class LessonPlayerComponent implements OnInit {
 
   getOptionClass(option: AnswerOption): string {
     const base = 'quiz__option';
-    const selected = this.selectedOptionId() === option.id;
+    const card = this.currentCard();
+    const isMulti =
+      card?.interaction?.interaction_type === 'multi_select' ||
+      card?.interaction?.interaction_type === 'identify_risk';
+
+    const selected = isMulti
+      ? this.selectedOptionIds().includes(option.id)
+      : this.selectedOptionId() === option.id;
+
     const submitted = this.answerSubmitted();
 
     if (!submitted) {
@@ -222,16 +364,30 @@ export class LessonPlayerComponent implements OnInit {
     return `${base} ${base}--disabled`;
   }
 
+  getArrangedStep(stepId: string): AnswerOption | undefined {
+    const card = this.currentCard();
+    return card?.interaction?.options.find((o) => o.id === stepId);
+  }
+
   getCardTypeLabel(type: string): string {
     switch (type) {
       case 'explanation':
-        return '📖 Explanation';
+        return '📖 Story & Concept';
       case 'interaction':
-        return '🧠 Quiz';
+        return '🧠 Interactive Practice';
       case 'recap':
-        return '🔄 Recap';
+        return '🔄 Real-World Action';
       default:
         return type;
+    }
+  }
+
+  private initCurrentCardState(): void {
+    const card = this.currentCard();
+    if (card?.interaction?.interaction_type === 'arrange_steps') {
+      const opts = card.interaction.options.map((o) => o.id);
+      // Reverse or rotate so learner starts with a scrambled sequence to arrange
+      this.arrangedStepIds.set([...opts].reverse());
     }
   }
 
@@ -250,9 +406,11 @@ export class LessonPlayerComponent implements OnInit {
 
   private resetInteraction(): void {
     this.selectedOptionId.set(null);
+    this.selectedOptionIds.set([]);
     this.answerSubmitted.set(false);
     this.answerCorrect.set(false);
     this.feedbackText.set('');
     this.showSources.set(false);
+    this.initCurrentCardState();
   }
 }

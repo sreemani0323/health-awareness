@@ -1,8 +1,8 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { UpperCasePipe, CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { LessonSummary, Topic } from '../../models/api.models';
+import { LessonSummary, Topic, TopicMasteryChallenge } from '../../models/api.models';
 import { LearningProgressService, PracticalActivity } from '../../services/learning-progress.service';
 
 @Component({
@@ -24,6 +24,38 @@ export class TopicLessonsComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
+  /** Topic Mastery Challenge state */
+  readonly masteryChallenge = signal<TopicMasteryChallenge | null>(null);
+  readonly showMasteryModal = signal(false);
+  readonly masteryCurrentQuestionIdx = signal(0);
+  readonly masterySelectedOptionId = signal<string | null>(null);
+  readonly masteryAnswerSubmitted = signal(false);
+  readonly masteryScore = signal(0);
+  readonly masteryFinished = signal(false);
+
+  readonly completedCount = computed(() =>
+    this.lessons().filter((l) => this.isLessonCompleted(l.id)).length,
+  );
+
+  readonly progressPercentage = computed(() => {
+    const total = this.lessons().length;
+    return total > 0 ? Math.round((this.completedCount() / total) * 100) : 0;
+  });
+
+  readonly hasMasteryBadge = computed(() => {
+    const id = this.topicId();
+    const map: Record<string, string> = {
+      'topic-hygiene': 'hygiene-topic-mastery',
+      'topic-water': 'water-topic-mastery',
+      'topic-mosquito': 'mosquito-topic-mastery',
+      'topic-vaccine': 'vaccine-topic-mastery',
+    };
+    const badgeId = map[id];
+    return this.progressService
+      .achievedMilestones()
+      .some((m) => m.id === badgeId);
+  });
+
   isLessonCompleted(lessonId: string): boolean {
     return this.progressService.isLessonCompleted(lessonId);
   }
@@ -39,6 +71,55 @@ export class TopicLessonsComponent implements OnInit {
 
   isActivityCompleted(activityId: string): boolean {
     return this.progressService.isActivityCompleted(activityId);
+  }
+
+  openMasteryModal(): void {
+    this.masteryCurrentQuestionIdx.set(0);
+    this.masterySelectedOptionId.set(null);
+    this.masteryAnswerSubmitted.set(false);
+    this.masteryScore.set(0);
+    this.masteryFinished.set(false);
+    this.showMasteryModal.set(true);
+  }
+
+  closeMasteryModal(): void {
+    this.showMasteryModal.set(false);
+  }
+
+  selectMasteryOption(id: string): void {
+    if (this.masteryAnswerSubmitted()) return;
+    this.masterySelectedOptionId.set(id);
+  }
+
+  submitMasteryAnswer(): void {
+    const mc = this.masteryChallenge();
+    if (!mc) return;
+    const q = mc.questions[this.masteryCurrentQuestionIdx()];
+    const opt = q.options.find((o) => o.id === this.masterySelectedOptionId());
+    if (!opt) return;
+
+    this.masteryAnswerSubmitted.set(true);
+    if (opt.is_correct) {
+      this.masteryScore.update((s) => s + 1);
+    }
+  }
+
+  nextMasteryQuestion(): void {
+    const mc = this.masteryChallenge();
+    if (!mc) return;
+
+    if (this.masteryCurrentQuestionIdx() < mc.questions.length - 1) {
+      this.masteryCurrentQuestionIdx.update((i) => i + 1);
+      this.masterySelectedOptionId.set(null);
+      this.masteryAnswerSubmitted.set(false);
+    } else {
+      this.masteryFinished.set(true);
+      this.progressService.recordTopicMastery(
+        this.topicId(),
+        this.masteryScore(),
+        mc.questions.length,
+      );
+    }
   }
 
   ngOnInit(): void {
@@ -67,6 +148,18 @@ export class TopicLessonsComponent implements OnInit {
         this.loading.set(false);
       },
     });
+
+    // Fetch topic mastery challenge
+    if (typeof this.api.getTopicMastery === 'function') {
+      this.api.getTopicMastery(id).subscribe({
+        next: (challenge) => {
+          this.masteryChallenge.set(challenge);
+        },
+        error: () => {
+          // Non-fatal if mastery challenge not yet loaded
+        },
+      });
+    }
   }
 
   formatDuration(minutes: number): string {

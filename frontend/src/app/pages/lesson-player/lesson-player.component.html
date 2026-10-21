@@ -112,6 +112,28 @@
                   <h2 class="card-heading oppia-content-heading">{{ block.body }}</h2>
                 } @else if (block.block_type === 'text') {
                   <p class="card-text oppia-content-paragraph">{{ block.body }}</p>
+                } @else if (block.block_type === 'dialogue') {
+                  <div class="dialogue-block" [class.dialogue-block--right]="block.side === 'right'" [class.dialogue-block--left]="block.side !== 'right'">
+                    <div class="dialogue-avatar" aria-hidden="true">
+                      <span>{{ block.avatar || (block.side === 'right' ? '👦🏽' : '👩🏽') }}</span>
+                    </div>
+                    <div class="dialogue-bubble">
+                      @if (block.speaker) {
+                        <div class="dialogue-speaker">{{ block.speaker }}</div>
+                      }
+                      <p class="dialogue-text">{{ block.body }}</p>
+                    </div>
+                  </div>
+                } @else if (block.block_type === 'callout') {
+                  <div class="callout-block">
+                    <span class="callout-icon" aria-hidden="true">💡</span>
+                    <div class="callout-content">{{ block.body }}</div>
+                  </div>
+                } @else if (block.block_type === 'key_takeaway') {
+                  <div class="takeaway-block">
+                    <span class="takeaway-icon" aria-hidden="true">📌</span>
+                    <div class="takeaway-content">{{ block.body }}</div>
+                  </div>
                 } @else if (block.block_type === 'image_ref') {
                   <figure class="card-image oppia-content-image">
                     <div class="card-image__placeholder">
@@ -123,57 +145,153 @@
               }
             </div>
 
-            <!-- Oppia MultipleChoiceInput Interaction -->
+            <!-- Oppia Interactive Question Area -->
             @if (card.interaction) {
               <div class="conversation-skin-inline-interaction quiz" id="quiz-area">
                 <h3 class="multiple-choice-prompt quiz__prompt">
                   {{ card.interaction.question_prompt }}
                 </h3>
 
-                <div class="multiple-choice-list quiz__options"
-                     role="radiogroup"
-                     [attr.aria-label]="'Answer options for: ' + card.interaction.question_prompt">
-                  @for (option of card.interaction.options; track option.id; let idx = $index) {
-                    <div class="multiple-choice-option-container">
-                      <button
-                        type="button"
-                        class="multiple-choice-option {{ getOptionClass(option) }}"
-                        [class.selected]="selectedOptionId() === option.id"
-                        [id]="'option-' + option.id"
-                        (click)="selectOption(option.id)"
-                        [disabled]="answerSubmitted()"
-                        role="radio"
-                        [attr.aria-checked]="selectedOptionId() === option.id"
-                      >
-                        <!-- Oppia custom radio circle -->
-                        <div class="multiple-choice-radio-button-container">
-                          <span class="multiple-choice-outer-radio-button">
-                            <span class="multiple-choice-inner-radio-button"></span>
-                          </span>
-                        </div>
+                @if (card.interaction.scene_description) {
+                  <div class="scene-context-card">
+                    <span class="scene-icon" aria-hidden="true">🔍</span>
+                    <span><strong>Scenario:</strong> {{ card.interaction.scene_description }}</span>
+                  </div>
+                }
 
-                        <!-- Option Text -->
-                        <div class="multiple-choice-content-container">
+                @if (card.interaction.interaction_type === 'multi_select' || card.interaction.interaction_type === 'identify_risk') {
+                  <div class="interaction-hint-badge">Select all options that apply</div>
+                  <div class="multiple-choice-list quiz__options"
+                       role="group"
+                       [attr.aria-label]="'Checklist options for: ' + card.interaction.question_prompt">
+                    @for (option of card.interaction.options; track option.id; let idx = $index) {
+                      <div class="multiple-choice-option-container">
+                        <button
+                          type="button"
+                          class="multiple-choice-option {{ getOptionClass(option) }}"
+                          [class.selected]="selectedOptionIds().includes(option.id)"
+                          [id]="'option-' + option.id"
+                          (click)="toggleOptionSelection(option.id)"
+                          [disabled]="answerSubmitted()"
+                          role="checkbox"
+                          [attr.aria-checked]="selectedOptionIds().includes(option.id)"
+                        >
+                          <div class="checkbox-indicator">
+                            <span>{{ selectedOptionIds().includes(option.id) ? '☑' : '☐' }}</span>
+                          </div>
+                          <div class="multiple-choice-content-container">
+                            <span class="quiz__option-label">{{ option.label }}</span>
+                          </div>
+                          @if (answerSubmitted()) {
+                            <span class="quiz__option-indicator">
+                              @if (option.is_correct) {
+                                <span class="indicator-icon indicator-correct" title="Correct">✓</span>
+                              } @else if (selectedOptionIds().includes(option.id) && !option.is_correct) {
+                                <span class="indicator-icon indicator-incorrect" title="Incorrect">✗</span>
+                              }
+                            </span>
+                          }
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else if (card.interaction.interaction_type === 'arrange_steps') {
+                  <div class="interaction-hint-badge">Use arrows to arrange steps in verified sequence</div>
+                  <div class="arrange-steps-list" role="list">
+                    @for (stepId of arrangedStepIds(); track stepId; let idx = $index) {
+                      @if (getArrangedStep(stepId); as step) {
+                        <div class="arrange-step-item" role="listitem">
+                          <span class="arrange-step-number">{{ idx + 1 }}</span>
+                          <span class="arrange-step-label">{{ step.label }}</span>
+                          @if (!answerSubmitted()) {
+                            <div class="arrange-step-actions">
+                              <button
+                                type="button"
+                                class="btn-step-order"
+                                (click)="moveStep(idx, 'up')"
+                                [disabled]="idx === 0"
+                                [attr.aria-label]="'Move step ' + (idx + 1) + ' up'"
+                              >
+                                ▲
+                              </button>
+                              <button
+                                type="button"
+                                class="btn-step-order"
+                                (click)="moveStep(idx, 'down')"
+                                [disabled]="idx === arrangedStepIds().length - 1"
+                                [attr.aria-label]="'Move step ' + (idx + 1) + ' down'"
+                              >
+                                ▼
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                } @else if (card.interaction.interaction_type === 'myth_fact') {
+                  <div class="multiple-choice-list quiz__options quiz__options--myth-fact"
+                       role="radiogroup"
+                       [attr.aria-label]="card.interaction.question_prompt">
+                    @for (option of card.interaction.options; track option.id) {
+                      <div class="multiple-choice-option-container">
+                        <button
+                          type="button"
+                          class="multiple-choice-option myth-fact-btn {{ getOptionClass(option) }}"
+                          [class.selected]="selectedOptionId() === option.id"
+                          [id]="'option-' + option.id"
+                          (click)="selectOption(option.id)"
+                          [disabled]="answerSubmitted()"
+                          role="radio"
+                          [attr.aria-checked]="selectedOptionId() === option.id"
+                        >
                           <span class="quiz__option-label">{{ option.label }}</span>
-                        </div>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <!-- Standard Single Choice -->
+                  <div class="multiple-choice-list quiz__options"
+                       role="radiogroup"
+                       [attr.aria-label]="'Answer options for: ' + card.interaction.question_prompt">
+                    @for (option of card.interaction.options; track option.id; let idx = $index) {
+                      <div class="multiple-choice-option-container">
+                        <button
+                          type="button"
+                          class="multiple-choice-option {{ getOptionClass(option) }}"
+                          [class.selected]="selectedOptionId() === option.id"
+                          [id]="'option-' + option.id"
+                          (click)="selectOption(option.id)"
+                          [disabled]="answerSubmitted()"
+                          role="radio"
+                          [attr.aria-checked]="selectedOptionId() === option.id"
+                        >
+                          <div class="multiple-choice-radio-button-container">
+                            <span class="multiple-choice-outer-radio-button">
+                              <span class="multiple-choice-inner-radio-button"></span>
+                            </span>
+                          </div>
+                          <div class="multiple-choice-content-container">
+                            <span class="quiz__option-label">{{ option.label }}</span>
+                          </div>
+                          @if (answerSubmitted()) {
+                            <span class="quiz__option-indicator">
+                              @if (option.is_correct) {
+                                <span class="indicator-icon indicator-correct" title="Correct">✓</span>
+                              } @else if (selectedOptionId() === option.id && !option.is_correct) {
+                                <span class="indicator-icon indicator-incorrect" title="Incorrect">✗</span>
+                              }
+                            </span>
+                          }
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
 
-                        <!-- Feedback validation indicator -->
-                        @if (answerSubmitted()) {
-                          <span class="quiz__option-indicator">
-                            @if (option.is_correct) {
-                              <span class="indicator-icon indicator-correct" title="Correct">✓</span>
-                            } @else if (selectedOptionId() === option.id && !option.is_correct) {
-                              <span class="indicator-icon indicator-incorrect" title="Incorrect">✗</span>
-                            }
-                          </span>
-                        }
-                      </button>
-                    </div>
-                  }
-                </div>
-
-                <!-- Oppia Check Answer Action -->
-                @if (!answerSubmitted() && selectedOptionId()) {
+                <!-- Check Answer Action Button -->
+                @if (!answerSubmitted() && hasAnswerSelected()) {
                   <div class="interaction-action-row">
                     <button class="oppia-learner-confirm-button btn--submit"
                             (click)="submitAnswer()"
@@ -312,6 +430,18 @@
                         <span aria-hidden="true">🛡️</span>
                         <span>{{ act.safetyNote }}</span>
                       </div>
+                    </div>
+                  }
+
+                  <!-- Revision note if missed questions -->
+                  @if (missedQuestionsCount() > 0) {
+                    <div class="completion-revision-card" style="margin-top: 14px; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 12px 16px;">
+                      <div style="font-weight: 600; font-size: 13px; color: #0d9488; margin-bottom: 4px;">
+                        💡 {{ missedQuestionsCount() }} concept{{ missedQuestionsCount() > 1 ? 's' : '' }} flagged for friendly review
+                      </div>
+                      <p style="margin: 0; font-size: 13px; color: #134e4a;">
+                        You can revisit earlier question steps using the navigation dots above anytime to reinforce your understanding.
+                      </p>
                     </div>
                   }
                 </div>

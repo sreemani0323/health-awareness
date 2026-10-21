@@ -8,6 +8,7 @@ import {
   LessonSummary,
   LessonDetail,
   HealthCheck,
+  TopicMasteryChallenge,
 } from '../models/api.models';
 
 /**
@@ -37,6 +38,18 @@ export class ApiService {
     return this.http
       .get<ApiResponse<LessonSummary[]>>(
         `${this.baseUrl}/topics/${topicId}/lessons`,
+      )
+      .pipe(
+        map((res) => res.data),
+        catchError(this.handleError),
+      );
+  }
+
+  /** GET /api/v1/topics/:topicId/mastery — get topic mastery challenge. */
+  getTopicMastery(topicId: string): Observable<TopicMasteryChallenge> {
+    return this.http
+      .get<ApiResponse<TopicMasteryChallenge>>(
+        `${this.baseUrl}/topics/${topicId}/mastery`,
       )
       .pipe(
         map((res) => res.data),

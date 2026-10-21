@@ -41,7 +41,11 @@ from backend.controllers.creator import (
 from backend.controllers.health import HealthCheckHandler
 from backend.controllers.learner import LearnerProgressHandler
 from backend.controllers.lessons import LessonDetailHandler
-from backend.controllers.topics import TopicLessonsHandler, TopicListHandler
+from backend.controllers.topics import (
+    TopicLessonsHandler,
+    TopicListHandler,
+    TopicMasteryHandler,
+)
 
 
 def create_api_blueprint() -> Blueprint:
@@ -58,6 +62,11 @@ def create_api_blueprint() -> Blueprint:
     bp.add_url_rule(
         "/topics/<topic_id>/lessons",
         view_func=TopicLessonsHandler.as_view("topic_lessons"),
+        methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/topics/<topic_id>/mastery",
+        view_func=TopicMasteryHandler.as_view("topic_mastery"),
         methods=["GET"],
     )
     bp.add_url_rule(

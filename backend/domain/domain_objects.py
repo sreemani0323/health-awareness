@@ -99,6 +99,10 @@ class CardType(str, enum.Enum):
 
 class InteractionType(str, enum.Enum):
     SINGLE_CHOICE = "single_choice"
+    MULTI_SELECT = "multi_select"
+    ARRANGE_STEPS = "arrange_steps"
+    IDENTIFY_RISK = "identify_risk"
+    MYTH_FACT = "myth_fact"
 
 
 class IncorrectBehaviour(str, enum.Enum):
@@ -163,11 +167,14 @@ class SingleChoiceInteraction:
     question_prompt: str
     options: list[AnswerOption]
     incorrect_behaviour: IncorrectBehaviour
+    correct_order: Optional[list[str]] = None
+    hint: Optional[str] = None
+    scene_description: Optional[str] = None
 
     def validate(self) -> None:
-        if self.interaction_type is not InteractionType.SINGLE_CHOICE:
+        if not isinstance(self.interaction_type, InteractionType):
             raise ValueError(
-                f"interaction_type must be SINGLE_CHOICE.  Got: {self.interaction_type!r}"
+                f"interaction_type must be an InteractionType.  Got: {self.interaction_type!r}"
             )
         _validate_nonempty_str(self.question_prompt, "question_prompt", MAX_SUMMARY_LEN)
 
@@ -186,10 +193,18 @@ class SingleChoiceInteraction:
             if opt.is_correct:
                 correct_count += 1
 
-        if correct_count != 1:
-            raise ValueError(
-                f"Exactly one option must be correct.  Found {correct_count} correct options."
-            )
+        if self.interaction_type in (InteractionType.SINGLE_CHOICE, InteractionType.MYTH_FACT):
+            if correct_count != 1:
+                raise ValueError(
+                    f"Exactly one option must be correct for {self.interaction_type.value}.  Found {correct_count} correct options."
+                )
+        elif self.interaction_type in (InteractionType.MULTI_SELECT, InteractionType.IDENTIFY_RISK):
+            if correct_count < 1:
+                raise ValueError(
+                    f"At least one option must be correct for {self.interaction_type.value}."
+                )
+        elif self.interaction_type == InteractionType.ARRANGE_STEPS:
+            pass
 
         if not isinstance(self.incorrect_behaviour, IncorrectBehaviour):
             raise ValueError(
@@ -197,23 +212,66 @@ class SingleChoiceInteraction:
                 f"Got: {self.incorrect_behaviour!r}"
             )
 
-    def evaluate(self, selected_option_id: str) -> tuple[bool, str]:
+    def evaluate(self, selected_option_id: str | list[str]) -> tuple[bool, str]:
         """Evaluate a learner's answer.  Returns (is_correct, feedback_text)."""
+        if self.interaction_type == InteractionType.MULTI_SELECT:
+            selected_ids = set(selected_option_id if isinstance(selected_option_id, list) else [selected_option_id])
+            correct_ids = {opt.option_id for opt in self.options if opt.is_correct}
+            is_correct = (selected_ids == correct_ids)
+            if is_correct:
+                feedbacks = [opt.feedback for opt in self.options if opt.is_correct]
+                return True, " ".join(feedbacks)
+            else:
+                wrong_selected = selected_ids - correct_ids
+                missed = correct_ids - selected_ids
+                if wrong_selected:
+                    for opt in self.options:
+                        if opt.option_id in wrong_selected:
+                            return False, opt.feedback
+                for opt in self.options:
+                    if opt.option_id in missed:
+                        return False, f"Notice: {opt.label} is also a key factor."
+                return False, "Review the selected options and try again."
+        elif self.interaction_type == InteractionType.ARRANGE_STEPS:
+            if isinstance(selected_option_id, list):
+                expected = self.correct_order or [opt.option_id for opt in self.options]
+                is_correct = (selected_option_id == expected)
+                feedback = self.options[0].feedback if is_correct else "The sequence is not quite right. Review the logical order of steps."
+                return is_correct, feedback
+        target_id = selected_option_id[0] if isinstance(selected_option_id, list) else selected_option_id
         for opt in self.options:
-            if opt.option_id == selected_option_id:
+            if opt.option_id == target_id:
                 return opt.is_correct, opt.feedback
-        raise ValueError(f"Unknown option_id: {selected_option_id!r}")
+        raise ValueError(f"Unknown option_id: {target_id!r}")
+
+
+# Alias EducationalInteraction for clarity while preserving SingleChoiceInteraction compatibility
+EducationalInteraction = SingleChoiceInteraction
 
 
 @dataclasses.dataclass
 class ContentBlock:
-    block_type: str  # "text", "heading", "image_ref"
+    block_type: str  # "text", "heading", "image_ref", "dialogue", "callout", "key_takeaway"
     body: str
+    speaker: Optional[str] = None
+    avatar: Optional[str] = None
+    side: Optional[str] = None  # "left" | "right"
 
     def validate(self) -> None:
-        if self.block_type not in ("text", "heading", "image_ref"):
+        if self.block_type not in (
+            "text",
+            "heading",
+            "image_ref",
+            "dialogue",
+            "callout",
+            "key_takeaway",
+        ):
             raise ValueError(f"Unknown content block_type: {self.block_type!r}")
         _validate_nonempty_str(self.body, "body", 5000)
+        if self.speaker is not None:
+            _validate_nonempty_str(self.speaker, "speaker", 100)
+        if self.side is not None and self.side not in ("left", "right"):
+            raise ValueError(f"side must be 'left' or 'right'. Got: {self.side!r}")
 
 
 @dataclasses.dataclass
@@ -323,7 +381,7 @@ class LessonVersion:
             raise ValueError(f"status must be a VersionStatus.  Got: {self.status!r}")
 
     def cards_as_dicts(self) -> list[dict[str, Any]]:
-        """Serialise the cards list to JSON-safe dicts for NDB storage."""
+        """Serialise the cards list to JSON-safe dicts for storage."""
         return [dataclasses.asdict(c) for c in self.cards]
 
     @staticmethod
@@ -334,21 +392,41 @@ class LessonVersion:
             interaction = None
             if d.get("interaction"):
                 idata = d["interaction"]
-                opts = [AnswerOption(**o) for o in idata["options"]]
+                opts = [
+                    AnswerOption(
+                        option_id=o["option_id"] if "option_id" in o else o["id"],
+                        label=o["label"],
+                        is_correct=o["is_correct"],
+                        feedback=o["feedback"],
+                    )
+                    for o in idata["options"]
+                ]
                 interaction = SingleChoiceInteraction(
                     interaction_type=InteractionType(idata["interaction_type"]),
                     question_prompt=idata["question_prompt"],
                     options=opts,
-                    incorrect_behaviour=IncorrectBehaviour(idata["incorrect_behaviour"]),
+                    incorrect_behaviour=IncorrectBehaviour(idata.get("incorrect_behaviour", "retry")),
+                    correct_order=idata.get("correct_order"),
+                    hint=idata.get("hint"),
+                    scene_description=idata.get("scene_description"),
                 )
-            blocks = [ContentBlock(**b) for b in d["content_blocks"]]
+            blocks = [
+                ContentBlock(
+                    block_type=b["block_type"],
+                    body=b["body"],
+                    speaker=b.get("speaker"),
+                    avatar=b.get("avatar"),
+                    side=b.get("side"),
+                )
+                for b in d["content_blocks"]
+            ]
             cards.append(
                 LessonCard(
-                    card_id=d["card_id"],
+                    card_id=d["card_id"] if "card_id" in d else d["id"],
                     position=d["position"],
                     card_type=CardType(d["card_type"]),
                     content_blocks=blocks,
-                    source_ids=d["source_ids"],
+                    source_ids=d.get("source_ids", []),
                     interaction=interaction,
                 )
             )
