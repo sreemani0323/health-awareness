@@ -32,7 +32,7 @@ def get_vaccine_lessons() -> list[dict]:
             "lesson_id": "lesson-vaccine-reactions-advice",
             "topic_id": "topic-vaccine",
             "display_order": 3,
-            "published_version_id": "ver-vaccine-reactions-advice-1",
+            "published_version_id": "ver-vaccine-reactions-advice-2",
             "draft_version_id": None,
         },
         {
@@ -665,9 +665,9 @@ def get_vaccine_lessons() -> list[dict]:
 
         # Chapter 3: Understanding Common Reactions and When to Seek Medical Advice
         {
-            "version_id": "ver-vaccine-reactions-advice-1",
+            "version_id": "ver-vaccine-reactions-advice-2",
             "lesson_id": "lesson-vaccine-reactions-advice",
-            "version_number": 1,
+            "version_number": 2,
             "title": "Understanding Common Reactions and When to Seek Medical Advice",
             "summary": "Distinguish normal mild reactogenicity (low-grade fever, site soreness) from rare adverse events (AEFI), learn safe comforting measures, and master the 30-minute clinic observation rule.",
             "language": "en",
