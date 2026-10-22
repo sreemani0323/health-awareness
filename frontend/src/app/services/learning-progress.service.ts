@@ -263,6 +263,15 @@ export class LearningProgressService {
   }
 
   /**
+   * Clear only the active lesson resume position / bookmark.
+   * Preserves completed lesson IDs, family activity completions, and achieved milestones.
+   */
+  clearResumeProgress(): void {
+    this.resumeState.set(null);
+    this.persist();
+  }
+
+  /**
    * Clear all locally saved learning progress.
    * Crucial for privacy on shared family and community devices.
    */

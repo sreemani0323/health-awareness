@@ -77,102 +77,213 @@
 }
 
 .btn.oppia-splash-button:hover,
-.btn.oppia-splash-button:focus {
-  background-color: #00796b;
-  color: #fff;
-  transform: translateY(-1px);
+.btn.oppia-splash-button:focus-visible {
+  outline: 2px solid #004d40;
+  outline-offset: 2px;
 }
 
 .btn.oppia-splash-button-activity {
-  background-color: #00609c;
+  background-color: transparent;
+  border: 1.5px solid #015c53;
+  color: #015c53;
 }
 
 .btn.oppia-splash-button-activity:hover,
-.btn.oppia-splash-button-activity:focus {
-  background-color: #004c7c;
+.btn.oppia-splash-button-activity:focus-visible {
+  background-color: rgba(1, 92, 83, 0.08);
+  border-color: #004d40;
+  color: #004d40;
+  transform: translateY(-1px);
 }
 
 .btn.oppia-splash-button-report {
-  background-color: #059669;
+  background-color: #00645c;
 }
 
 .btn.oppia-splash-button-report:hover,
-.btn.oppia-splash-button-report:focus {
-  background-color: #047857;
+.btn.oppia-splash-button-report:focus-visible {
+  background-color: #004d40;
+  transform: translateY(-1px);
 }
 
 /* Resume Card in Hero */
 .oppia-splash-resume-card {
   background-color: #ffffff;
-  border: 2px solid #005c5e;
+  border: 1.5px solid #00645c;
   border-radius: 8px;
-  padding: 16px 20px;
+  padding: 18px 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 92, 94, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 100, 92, 0.1);
   animation: fadeIn 0.3s ease-in;
+}
+
+.resume-card--empty,
+.resume-card--welcome {
+  border-color: #b2dfdb;
+  background-color: #fcfdfd;
 }
 
 .resume-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .resume-badge {
-  background-color: #e0f2f1;
-  color: #004d40;
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 3px 10px;
+  border-radius: 12px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
+.resume-badge--in-progress {
+  background-color: #e0f2f1;
+  color: #004d40;
+}
+
+.resume-badge--completed {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+}
+
+.resume-badge--new {
+  background-color: #ede7f6;
+  color: #4527a0;
+}
+
 .resume-step {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #555;
   font-weight: 500;
 }
 
+/* Progress bar inside resume card */
+.resume-progress-track {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  height: 6px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.resume-progress-fill {
+  background-color: #00897b;
+  border-radius: 4px;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.resume-progress-fill--completed {
+  background-color: #2e7d32;
+}
+
 .resume-title {
   font-family: 'Capriola', 'Roboto', Arial, sans-serif;
-  font-size: 16px;
+  font-size: 16.5px;
   font-weight: 600;
-  color: #005c5e;
-  margin-bottom: 12px;
+  color: #004d40;
+  margin-bottom: 14px;
+  line-height: 1.35;
+}
+
+.resume-empty-desc {
+  font-size: 14px;
+  color: #424242;
+  margin-bottom: 14px;
+  line-height: 1.5;
 }
 
 .resume-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
 }
 
-.btn.oppia-splash-button.resume-btn {
-  background-color: #005c5e;
-  min-width: 180px;
-  padding: 10px 18px;
+.resume-btn {
+  min-height: 40px;
+  padding: 8px 18px;
   font-size: 14px;
 }
 
-.btn.oppia-splash-button.resume-btn:hover {
-  background-color: #00796b;
-}
-
-.resume-clear-link {
-  background: none;
-  border: none;
-  color: #757575;
+.resume-clear-btn {
+  min-height: 40px;
+  padding: 8px 14px;
   font-size: 13px;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.resume-clear-link:hover {
-  color: #d32f2f;
+/* Clear Confirmation Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1050;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.clear-confirm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  max-width: 480px;
+  width: calc(100% - 32px);
+  padding: 24px;
+  z-index: 1060;
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.confirm-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.confirm-modal-icon {
+  font-size: 24px;
+}
+
+.confirm-modal-title {
+  color: #212121;
+  font-family: 'Capriola', 'Roboto', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.confirm-modal-body p {
+  color: #555;
+  font-size: 14.5px;
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.newsletter-error-notice {
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .app-link-container {
@@ -180,19 +291,10 @@
 }
 
 .oppia-splash-app-link {
-  background: none;
-  border: none;
   color: #005c5e;
-  cursor: pointer;
-  font-family: 'Roboto', Arial, sans-serif;
   font-size: 14px;
-  font-weight: 500;
-  text-decoration: underline;
-  padding: 6px 0;
-}
-
-.oppia-splash-app-link:hover {
-  color: #00796b;
+  padding: 8px 16px;
+  min-height: 40px;
 }
 
 .progress-cleared-banner {
@@ -208,24 +310,31 @@
 .oppia-splash-section-one-right {
   flex: 1;
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
+  justify-content: center;
+  align-items: center;
   height: 100%;
-  overflow: hidden;
+  padding: 30px 20px;
 }
 
 .oppia-splash-main-image {
   display: flex;
-  align-items: flex-end;
-  max-height: 580px;
+  align-items: center;
+  justify-content: center;
+  width: 440px;
+  height: 440px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 92, 94, 0.18);
+  border: 4px solid #ffffff;
+  background-color: #ffffff;
 }
 
 .splash-main-img-desktop {
-  max-height: 560px;
-  width: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  mix-blend-mode: multiply;
 }
 
 .oppia-splash-main-image-mobile {
@@ -722,8 +831,10 @@
 }
 
 .splash-matthew-image {
-  max-width: 100%;
+  max-width: 460px;
+  width: 100%;
   height: auto;
+  border-radius: 8px;
 }
 
 .oppia-splash-section-three-right {
@@ -818,8 +929,10 @@
 
 .splash-student-desk-image img,
 .splash-community-image {
-  max-width: 100%;
+  max-width: 460px;
+  width: 100%;
   height: auto;
+  border-radius: 8px;
   display: block;
 }
 
@@ -843,8 +956,10 @@
 
 .splash-books-image,
 .splash-educator-image {
-  max-width: 100%;
+  max-width: 460px;
+  width: 100%;
   height: auto;
+  border-radius: 8px;
   display: block;
 }
 
@@ -935,21 +1050,26 @@
 }
 
 .oppia-footer-newsletter-button {
-  background-color: #0d48a1;
+  background-color: #ffffff;
   border: none;
   border-radius: 4px;
-  color: #fff;
+  color: #004d40;
   cursor: pointer;
   font-family: 'Roboto', Arial, sans-serif;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
+  min-height: 44px;
   padding: 10px 22px;
-  transition: background-color 0.15s ease;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
-.oppia-footer-newsletter-button:hover {
-  background-color: #1565c0;
+.oppia-footer-newsletter-button:hover,
+.oppia-footer-newsletter-button:focus-visible {
+  background-color: #e0f2f1;
+  color: #00332c;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 /* ===================================================================
@@ -1022,13 +1142,23 @@
   .oppia-splash-main-image-mobile {
     display: flex;
     justify-content: center;
-    width: 100%;
+    align-items: center;
+    width: 260px;
+    height: 260px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(0, 92, 94, 0.18);
+    border: 3px solid #ffffff;
+    background-color: #ffffff;
+    margin: 16px auto 28px;
   }
 
   .splash-main-img-mobile {
-    max-width: 100%;
-    height: auto;
-    mix-blend-mode: multiply;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .oppia-splash-section-two {

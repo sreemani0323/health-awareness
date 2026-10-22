@@ -57,7 +57,7 @@ describe('HomeComponent', () => {
     expect(childPhoto?.getAttribute('src')).toContain('main_photo.jpg');
   });
 
-  it('should render Continue Learning in hero when valid progress exists', () => {
+  it('should render Resume Lesson in hero when valid progress exists', () => {
     progressService.saveLessonProgress(
       'lesson-handwashing',
       'Effective Handwashing Techniques',
@@ -72,11 +72,75 @@ describe('HomeComponent', () => {
 
     const continueBtn = compiled.querySelector('#hero-continue-learning-btn');
     expect(continueBtn).toBeTruthy();
-    expect(continueBtn?.textContent).toContain('Continue Learning');
+    expect(continueBtn?.textContent).toContain('Resume Lesson');
     expect(compiled.querySelector('.resume-title')?.textContent).toContain(
       'Effective Handwashing Techniques'
     );
-    expect(compiled.querySelector('.resume-step')?.textContent).toContain('Card 2 of 3');
+    expect(compiled.querySelector('.resume-step')?.textContent).toContain('Card 2 of 3 (67%)');
+    expect(compiled.querySelector('.resume-badge--in-progress')?.textContent).toContain('In Progress');
+  });
+
+  it('should render Review Lesson in hero when lesson has been completed', () => {
+    progressService.saveLessonProgress(
+      'lesson-handwashing',
+      'Effective Handwashing Techniques',
+      'topic-hygiene',
+      2,
+      3
+    );
+    progressService.markLessonCompleted('lesson-handwashing', 'topic-hygiene');
+
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const continueBtn = compiled.querySelector('#hero-continue-learning-btn');
+    expect(continueBtn).toBeTruthy();
+    expect(continueBtn?.textContent).toContain('Review Lesson');
+    expect(compiled.querySelector('.resume-badge--completed')?.textContent).toContain('Completed Lesson');
+  });
+
+  it('should require confirmation before clearing active lesson bookmark and cancel preserves it', () => {
+    progressService.saveLessonProgress(
+      'lesson-handwashing',
+      'Effective Handwashing Techniques',
+      'topic-hygiene',
+      1,
+      3
+    );
+
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const clearBtn = compiled.querySelector('#hero-clear-resume-btn') as HTMLButtonElement;
+    expect(clearBtn).toBeTruthy();
+    expect(clearBtn.textContent).toContain('Clear saved progress');
+
+    // Click clear triggers confirmation dialog
+    clearBtn.click();
+    fixture.detectChanges();
+
+    const modal = compiled.querySelector('.clear-confirm-modal');
+    expect(modal).toBeTruthy();
+    expect(compiled.querySelector('#clear-dialog-title')?.textContent).toContain('Clear Saved Lesson Bookmark?');
+
+    // Cancel leaves progress intact
+    const cancelBtn = compiled.querySelector('#btn-cancel-clear-progress') as HTMLButtonElement;
+    cancelBtn.click();
+    fixture.detectChanges();
+
+    expect(progressService.hasResume()).toBe(true);
+    expect(compiled.querySelector('.clear-confirm-modal')).toBeNull();
+
+    // Confirm clears bookmark
+    clearBtn.click();
+    fixture.detectChanges();
+    const confirmBtn = compiled.querySelector('#btn-confirm-clear-progress') as HTMLButtonElement;
+    confirmBtn.click();
+    fixture.detectChanges();
+
+    expect(progressService.hasResume()).toBe(false);
   });
 
   it('should render featured lesson and practical health tip', () => {
@@ -117,7 +181,7 @@ describe('HomeComponent', () => {
     expect(firstToggle.textContent).toContain('Completed Today');
   });
 
-  it('should render saved milestones and allow clearing device progress', () => {
+  it('should render saved milestones and allow clearing device progress with confirmation', () => {
     progressService.saveLessonProgress('lesson-handwashing', 'Handwashing', 'topic-hygiene', 2, 3);
     progressService.markLessonCompleted('lesson-handwashing', 'topic-hygiene');
 
@@ -133,6 +197,12 @@ describe('HomeComponent', () => {
     expect(clearBtn).toBeTruthy();
 
     clearBtn.click();
+    fixture.detectChanges();
+
+    // Confirmation dialog appears
+    const confirmBtn = compiled.querySelector('#btn-confirm-clear-progress') as HTMLButtonElement;
+    expect(confirmBtn).toBeTruthy();
+    confirmBtn.click();
     fixture.detectChanges();
 
     expect(progressService.hasResume()).toBe(false);

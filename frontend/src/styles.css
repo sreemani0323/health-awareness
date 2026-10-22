@@ -102,7 +102,7 @@
   --transition-slow: 500ms var(--ease-out);
 
   /* Layout */
-  --container-max: 1100px;
+  --container-max: 1140px;
   --container-narrow: 704px;
   --navbar-height: 56px;
 }
@@ -153,6 +153,131 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+}
+
+/* --- Consolidated Button Design System --- */
+
+.btn {
+  align-items: center;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--ff-heading, 'Capriola', 'Roboto', Arial, sans-serif);
+  font-size: var(--fs-base, 1rem);
+  font-weight: var(--fw-medium, 500);
+  gap: var(--space-xs, 0.5rem);
+  justify-content: center;
+  line-height: var(--lh-tight, 1.2);
+  min-height: 44px; /* WCAG 2.2 touch target standard */
+  padding: 10px 22px;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color var(--transition-fast, 150ms ease),
+              border-color var(--transition-fast, 150ms ease),
+              color var(--transition-fast, 150ms ease),
+              box-shadow var(--transition-fast, 150ms ease),
+              transform var(--transition-fast, 150ms ease);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Primary — Main page action (Teal public-health brand) */
+.btn-primary,
+.btn.btn-primary {
+  background-color: var(--clr-teal, #00645c);
+  border: 1.5px solid var(--clr-teal, #00645c);
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 100, 92, 0.2);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background-color: #004d40;
+  border-color: #004d40;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 100, 92, 0.28);
+}
+
+/* Secondary — Supporting actions (Clean outline / soft surface) */
+.btn-secondary,
+.btn.btn-secondary,
+.btn-outline,
+.btn.btn-outline {
+  background-color: transparent;
+  border: 1.5px solid var(--clr-teal, #00645c);
+  color: var(--clr-teal, #00645c);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible,
+.btn-outline:hover,
+.btn-outline:focus-visible {
+  background-color: rgba(0, 100, 92, 0.08);
+  border-color: #004d40;
+  color: #004d40;
+}
+
+/* Informational / Accent — Distinct informative actions */
+.btn-accent,
+.btn.btn-accent,
+.btn-info,
+.btn.btn-info {
+  background-color: #00796b;
+  border: 1.5px solid #00796b;
+  color: #fff;
+}
+
+.btn-accent:hover,
+.btn-accent:focus-visible,
+.btn-info:hover,
+.btn-info:focus-visible {
+  background-color: #00695c;
+  border-color: #00695c;
+  color: #fff;
+}
+
+/* Destructive / Danger — Confirmed actions such as clearing saved progress */
+.btn-destructive,
+.btn.btn-destructive,
+.btn-danger,
+.btn.btn-danger {
+  background-color: #d32f2f;
+  border: 1.5px solid #d32f2f;
+  color: #fff;
+}
+
+.btn-destructive:hover,
+.btn-destructive:focus-visible,
+.btn-danger:hover,
+.btn-danger:focus-visible {
+  background-color: #b71c1c;
+  border-color: #b71c1c;
+  color: #fff;
+}
+
+.btn-destructive-outline,
+.btn.btn-destructive-outline {
+  background-color: transparent;
+  border: 1.5px solid #d32f2f;
+  color: #d32f2f;
+}
+
+.btn-destructive-outline:hover,
+.btn-destructive-outline:focus-visible {
+  background-color: rgba(211, 47, 47, 0.08);
+  border-color: #b71c1c;
+  color: #b71c1c;
 }
 
 /* --- Utility Classes --- */
@@ -215,6 +340,18 @@ button {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Staggered animation delays */

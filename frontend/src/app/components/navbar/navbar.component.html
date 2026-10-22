@@ -146,7 +146,8 @@
       class="oppia-navbar-mobile-toggle"
       type="button"
       [attr.aria-expanded]="isMobileMenuOpen()"
-      aria-label="Toggle navigation menu"
+      [attr.aria-label]="isMobileMenuOpen() ? 'Close navigation menu' : 'Open navigation menu'"
+      aria-controls="nav-mobile-menu"
       (click)="toggleMobileMenu()"
       id="nav-mobile-toggle"
     >
@@ -156,49 +157,168 @@
     </button>
   </div>
 
-  <!-- Mobile Dropdown Menu -->
+  <!-- Mobile Backdrop & Dropdown Menu -->
   @if (isMobileMenuOpen()) {
-    <div class="oppia-navbar-mobile-menu" id="nav-mobile-menu">
+    <div class="oppia-navbar-backdrop" (click)="closeMobileMenu()" aria-hidden="true"></div>
+    <div
+      class="oppia-navbar-mobile-menu"
+      id="nav-mobile-menu"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Site navigation menu"
+    >
+      <div class="oppia-mobile-menu-header">
+        <span class="oppia-mobile-menu-title">Navigation</span>
+        <button
+          type="button"
+          class="oppia-mobile-close-btn"
+          (click)="closeMobileMenu()"
+          aria-label="Close navigation menu"
+        >
+          ✕
+        </button>
+      </div>
+
       <ul class="oppia-mobile-links">
         <li>
-          <a routerLink="/" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-home">Home</a>
+          <a
+            routerLink="/"
+            routerLinkActive="active-mobile-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-home"
+          >
+            <span class="nav-icon" aria-hidden="true">🏠</span>
+            <span>Home</span>
+          </a>
         </li>
         <li>
-          <a routerLink="/topics" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-learn">Learn</a>
+          <a
+            routerLink="/topics"
+            routerLinkActive="active-mobile-link"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-learn"
+          >
+            <span class="nav-icon" aria-hidden="true">📖</span>
+            <span>Learn Health Topics</span>
+          </a>
         </li>
         <li>
-          <a routerLink="/get-involved" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-get-involved">Get Involved</a>
+          <a
+            routerLink="/about"
+            routerLinkActive="active-mobile-link"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-about"
+          >
+            <span class="nav-icon" aria-hidden="true">ℹ️</span>
+            <span>About</span>
+          </a>
         </li>
         <li>
-          <a routerLink="/about" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-about">About</a>
+          <a
+            routerLink="/get-involved"
+            routerLinkActive="active-mobile-link"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-get-involved"
+          >
+            <span class="nav-icon" aria-hidden="true">🤝</span>
+            <span>Get Involved</span>
+          </a>
+        </li>
+
+        <li class="mobile-divider" aria-hidden="true"></li>
+
+        <li>
+          <a
+            routerLink="/report"
+            routerLinkActive="active-mobile-link"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-report"
+          >
+            <span class="nav-icon" aria-hidden="true">📢</span>
+            <span>Report Concern</span>
+          </a>
         </li>
         <li>
-          <a routerLink="/report" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-report">Report a Concern</a>
+          <a
+            routerLink="/track"
+            routerLinkActive="active-mobile-link"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-track"
+          >
+            <span class="nav-icon" aria-hidden="true">🔍</span>
+            <span>Track Concern</span>
+          </a>
+        </li>
+
+        <li class="mobile-divider" aria-hidden="true"></li>
+
+        <li>
+          <a
+            routerLink="/staff"
+            routerLinkActive="active-mobile-link"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-staff"
+          >
+            <span class="nav-icon" aria-hidden="true">🩺</span>
+            <span>Staff Portal</span>
+          </a>
         </li>
         <li>
-          <a routerLink="/track" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-track">Track Concern</a>
+          <a
+            routerLink="/creator"
+            routerLinkActive="active-mobile-link"
+            (click)="closeMobileMenu()"
+            class="oppia-mobile-link"
+            id="mobile-nav-creator"
+          >
+            <span class="nav-icon" aria-hidden="true">✍️</span>
+            <span>Creator Studio</span>
+          </a>
         </li>
-        <li>
-          <a routerLink="/staff" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-staff">Staff Portal</a>
-        </li>
-        <li>
-          <a routerLink="/creator" (click)="closeMobileMenu()" class="oppia-mobile-link" id="mobile-nav-creator">Creator Studio</a>
-        </li>
+
+        <li class="mobile-divider" aria-hidden="true"></li>
+
         @if (learnerAuth?.isAuthenticated()) {
           <li>
-            <button type="button" (click)="onSyncClick()" class="oppia-mobile-link" id="mobile-nav-learner-sync">
-              ☁️ Sync Now ({{ learnerAuth?.displayName() }})
+            <button
+              type="button"
+              (click)="onSyncClick()"
+              class="oppia-mobile-link oppia-mobile-learner-action"
+              id="mobile-nav-learner-sync"
+            >
+              <span class="nav-icon" aria-hidden="true">☁️</span>
+              <span>Sync Now ({{ learnerAuth?.displayName() }})</span>
             </button>
           </li>
           <li>
-            <button type="button" (click)="onSignOutClick()" class="oppia-mobile-link" id="mobile-nav-learner-logout">
-              Sign Out ({{ learnerAuth?.displayName() }})
+            <button
+              type="button"
+              (click)="onSignOutClick()"
+              class="oppia-mobile-link oppia-mobile-logout-action"
+              id="mobile-nav-learner-logout"
+            >
+              <span class="nav-icon" aria-hidden="true">🚪</span>
+              <span>Sign Out ({{ learnerAuth?.displayName() }})</span>
             </button>
           </li>
         } @else {
           <li>
-            <button type="button" (click)="openLearnerAuth('login')" class="oppia-mobile-link" id="mobile-nav-learner-sync">
-              👤 Learner Sign In / Register (Cloud Sync)
+            <button
+              type="button"
+              (click)="openLearnerAuth('login')"
+              class="oppia-mobile-link oppia-mobile-learner-action"
+              id="mobile-nav-learner-sync"
+            >
+              <span class="nav-icon" aria-hidden="true">👤</span>
+              <span>Sign In / Sync Progress</span>
             </button>
           </li>
         }

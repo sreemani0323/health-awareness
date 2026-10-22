@@ -19,13 +19,16 @@
   display: flex;
   height: 100%;
   justify-content: space-between;
-  max-width: 1140px;
+  max-width: 1200px;
+  padding: 0 16px;
+  width: 100%;
 }
 
 /* Brand */
 .oppia-navbar-brand-name {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .oppia-logo-link {
@@ -57,7 +60,7 @@
 .oppia-navbar-tabs {
   align-items: center;
   display: flex;
-  gap: 4px;
+  gap: 3px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -76,12 +79,13 @@
   cursor: pointer;
   display: flex;
   font-family: 'Roboto', Arial, sans-serif;
-  font-size: 15px;
+  font-size: 13.5px;
   font-weight: 500;
   line-height: 1.2;
-  padding: 8px 14px;
+  padding: 7px 10px;
   text-decoration: none;
   transition: background-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 
 .oppia-navbar-tab:hover {
@@ -103,11 +107,21 @@
 .oppia-navbar-mobile-toggle {
   background: transparent;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
   display: none;
   flex-direction: column;
   gap: 5px;
-  padding: 8px;
+  padding: 10px 8px;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.oppia-navbar-mobile-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 .hamburger-bar {
@@ -119,43 +133,136 @@
   width: 22px;
 }
 
-/* Mobile Dropdown Menu */
+.hamburger-bar--open:nth-child(1) {
+  transform: translateY(7.5px) rotate(45deg);
+}
+
+.hamburger-bar--open:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-bar--open:nth-child(3) {
+  transform: translateY(-7.5px) rotate(-45deg);
+}
+
+/* Mobile Backdrop & Drawer Menu */
+.oppia-navbar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 998;
+}
+
 .oppia-navbar-mobile-menu {
   background-color: #004d40;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  display: block;
-  left: 0;
-  position: absolute;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: -4px 4px 20px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  max-width: 340px;
+  width: 85vw;
+  height: calc(100vh - 56px);
+  position: fixed;
+  right: 0;
   top: 56px;
-  width: 100%;
   z-index: 999;
+  overflow-y: auto;
+  animation: slideInRight 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.oppia-mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.oppia-mobile-menu-title {
+  color: #fff;
+  font-family: 'Capriola', 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.oppia-mobile-close-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  padding: 8px;
+  cursor: pointer;
+  line-height: 1;
 }
 
 .oppia-mobile-links {
   list-style: none;
   margin: 0;
-  padding: 12px 16px;
+  padding: 12px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .oppia-mobile-link {
   background: transparent;
   border: none;
+  border-radius: 6px;
   color: #fff;
   cursor: pointer;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: 'Roboto', Arial, sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  padding: 10px 12px;
+  min-height: 44px;
+  padding: 10px 14px;
   text-align: left;
   text-decoration: none;
   width: 100%;
+  transition: background-color 0.15s ease;
 }
 
-.oppia-mobile-link:hover {
+.oppia-mobile-link:hover,
+.oppia-mobile-link:focus-visible {
   background-color: rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
+}
+
+.oppia-mobile-link.active-mobile-link {
+  background-color: rgba(255, 255, 255, 0.22);
+  font-weight: 600;
+}
+
+.mobile-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 8px 0;
+}
+
+.nav-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.oppia-mobile-learner-action {
+  background-color: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  margin-top: 4px;
+}
+
+.oppia-mobile-logout-action {
+  color: #ffcdd2;
+}
+
+.oppia-mobile-logout-action:hover {
+  background-color: rgba(239, 68, 68, 0.25);
 }
 
 /* Learner Sync & Status Styles */
@@ -163,8 +270,9 @@
   background-color: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 16px;
-  padding: 6px 12px;
-  margin-left: 4px;
+  padding: 5px 10px;
+  margin-left: 2px;
+  font-size: 12.5px;
 }
 
 .learner-sync-btn:hover {
@@ -175,8 +283,9 @@
   background-color: rgba(0, 200, 83, 0.2);
   border: 1px solid rgba(0, 200, 83, 0.5);
   border-radius: 16px;
-  padding: 6px 12px;
-  margin-left: 4px;
+  padding: 5px 10px;
+  margin-left: 2px;
+  font-size: 12.5px;
 }
 
 .learner-status-btn:hover {
@@ -192,15 +301,15 @@
 .learner-session-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .learner-logout-btn {
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 14px;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 4px 8px;
+  font-size: 11.5px;
   cursor: pointer;
   color: #fff;
   transition: all 0.15s ease;
@@ -212,7 +321,7 @@
 }
 
 /* Responsive */
-@media (max-width: 820px) {
+@media (max-width: 1040px) {
   .oppia-navbar-tabs {
     display: none;
   }

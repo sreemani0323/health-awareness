@@ -13,34 +13,100 @@
         </h2>
       </div>
 
-      <!-- Action 1: Continue Learning (Displayed ONLY when a valid saved position exists) -->
+      <!-- Action 1: Saved Progress / Continue Learning / Review Lesson -->
       @if (hasResume && resumeState; as r) {
         <div class="oppia-splash-resume-card" id="hero-resume-container">
           <div class="resume-card-header">
-            <span class="resume-badge">Saved Progress</span>
-            <span class="resume-step">Card {{ r.cardIndex + 1 }} of {{ r.totalCards }}</span>
+            @if (isResumeCompleted) {
+              <span class="resume-badge resume-badge--completed">✓ Completed Lesson</span>
+              <span class="resume-step">All {{ r.totalCards }} cards completed</span>
+            } @else {
+              <span class="resume-badge resume-badge--in-progress">In Progress</span>
+              <span class="resume-step">Card {{ r.cardIndex + 1 }} of {{ r.totalCards }} ({{ resumeProgressPercent }}%)</span>
+            }
           </div>
+
+          <!-- Progress bar -->
+          <div
+            class="resume-progress-track"
+            role="progressbar"
+            [attr.aria-valuenow]="isResumeCompleted ? 100 : resumeProgressPercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="isResumeCompleted ? 'Lesson 100% completed' : ('Lesson progress ' + resumeProgressPercent + ' percent')"
+          >
+            <div
+              class="resume-progress-fill"
+              [class.resume-progress-fill--completed]="isResumeCompleted"
+              [style.width.%]="isResumeCompleted ? 100 : resumeProgressPercent"
+            ></div>
+          </div>
+
           <div class="resume-title">{{ r.lessonTitle }}</div>
+
           <div class="resume-actions">
-            <a
-              [routerLink]="['/lessons', r.lessonId]"
-              [queryParams]="{ step: r.cardIndex + 1 }"
-              class="btn oppia-splash-button resume-btn"
-              id="hero-continue-learning-btn"
-            >
-              <span>Continue Learning</span>
-              <span aria-hidden="true">→</span>
-            </a>
+            @if (isResumeCompleted) {
+              <a
+                [routerLink]="['/lessons', r.lessonId]"
+                [queryParams]="{ step: 1 }"
+                class="btn btn-primary resume-btn"
+                id="hero-continue-learning-btn"
+              >
+                <span>Review Lesson</span>
+                <span aria-hidden="true">↺</span>
+              </a>
+            } @else {
+              <a
+                [routerLink]="['/lessons', r.lessonId]"
+                [queryParams]="{ step: r.cardIndex + 1 }"
+                class="btn btn-primary resume-btn"
+                id="hero-continue-learning-btn"
+              >
+                <span>Resume Lesson</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            }
             <button
               type="button"
-              class="resume-clear-link"
-              (click)="clearProgress()"
+              class="btn btn-destructive-outline resume-clear-btn"
+              (click)="openClearBookmarkDialog()"
               id="hero-clear-resume-btn"
-              title="Clear saved progress on this shared device"
+              title="Clear active lesson bookmark on this device"
             >
-              Clear
+              <span aria-hidden="true">🗑️</span>
+              <span>Clear saved progress</span>
             </button>
           </div>
+        </div>
+      } @else if (completedCount > 0) {
+        <!-- State: Completed Lessons on device, but no active bookmark -->
+        <div class="oppia-splash-resume-card resume-card--empty" id="hero-resume-empty-container">
+          <div class="resume-card-header">
+            <span class="resume-badge resume-badge--completed">Learning Active</span>
+            <span class="resume-step">{{ completedCount }} {{ completedCount === 1 ? 'lesson' : 'lessons' }} completed</span>
+          </div>
+          <div class="resume-title">Ready for your next health topic?</div>
+          <p class="resume-empty-desc">
+            You've completed {{ completedCount }} {{ completedCount === 1 ? 'lesson' : 'lessons' }} so far! Explore another topic to continue building preventive health habits.
+          </p>
+          <div class="resume-actions">
+            <a routerLink="/topics" class="btn btn-primary resume-btn" id="hero-resume-explore-btn">
+              <span>Choose Next Topic</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      } @else {
+        <!-- State: First time / No saved progress -->
+        <div class="oppia-splash-resume-card resume-card--welcome" id="hero-welcome-container">
+          <div class="resume-card-header">
+            <span class="resume-badge resume-badge--new">Interactive Learning</span>
+            <span class="resume-step">Free &amp; Open Access</span>
+          </div>
+          <div class="resume-title">Start Your First Micro-Lesson</div>
+          <p class="resume-empty-desc">
+            Learn practical steps for safe drinking water, mosquito control, and personal hygiene in 5-minute interactive cards.
+          </p>
         </div>
       }
 
@@ -48,18 +114,18 @@
       <div class="oppia-splash-button-container">
         <a
           routerLink="/topics"
-          class="btn oppia-splash-button oppia-splash-button-browse"
+          class="btn btn-primary oppia-splash-button"
           id="hero-explore-btn"
         >
           Explore Health Topics
         </a>
       </div>
 
-      <!-- Action 3: Try a Small Health Activity (Anchor or direct action) -->
+      <!-- Action 3: Try a Small Health Activity (Unified palette) -->
       <div class="oppia-splash-button-container">
         <a
           href="#family-activities"
-          class="btn oppia-splash-button oppia-splash-button-activity"
+          class="btn btn-secondary oppia-splash-button"
           id="hero-activity-btn"
         >
           Try a Small Health Activity
@@ -70,7 +136,7 @@
       <div class="oppia-splash-button-container">
         <a
           routerLink="/report"
-          class="btn oppia-splash-button oppia-splash-button-report"
+          class="btn btn-primary oppia-splash-button oppia-splash-button-report"
           id="hero-report-btn"
         >
           📢 Report a Community Concern
@@ -81,9 +147,9 @@
       <div class="oppia-splash-button-container app-link-container">
         <button
           type="button"
-          class="oppia-splash-app-link"
+          class="btn btn-secondary oppia-splash-app-link"
           id="hero-android-btn"
-          (click)="showComingSoon('Android App')"
+          (click)="showComingSoon('Android App on Google Play')"
         >
           <span>📱 Access the Android App</span>
         </button>
@@ -190,7 +256,7 @@
           <span>🏛 WHO & CDC guidance</span>
         </div>
         <div class="featured-lesson-action">
-          <a routerLink="/lessons/lesson-handwashing" class="oppia-learner-confirm-button" id="start-featured-lesson-btn">
+          <a routerLink="/lessons/lesson-handwashing" class="btn btn-primary" id="start-featured-lesson-btn">
             <span>Start This Lesson</span>
             <span aria-hidden="true">→</span>
           </a>
@@ -289,10 +355,12 @@
             </div>
             <button
               type="button"
-              class="clear-device-btn"
-              (click)="clearProgress()"
+              class="btn btn-destructive-outline clear-device-btn"
+              (click)="openClearAllDeviceDialog()"
               id="clear-all-device-progress-btn"
+              title="Clear all saved progress and badges on this shared device"
             >
+              <span aria-hidden="true">🗑️</span>
               <span>Clear Saved Progress</span>
             </button>
           </div>
@@ -377,7 +445,7 @@
       <div class="oppia-splash-button-container">
         <a
           routerLink="/topics"
-          class="btn oppia-splash-button oppia-splash-button-browse"
+          class="btn btn-primary oppia-splash-button"
           id="students-start-learning-btn"
         >
           Explore All Topics
@@ -421,7 +489,7 @@
       <div class="oppia-splash-button-container">
         <button
           type="button"
-          class="btn oppia-splash-button oppia-splash-button-browse"
+          class="btn btn-secondary oppia-splash-button"
           id="educator-resources-btn"
           (click)="showComingSoon('Educator resources')"
         >
@@ -443,25 +511,32 @@
         <p>Get notified when new lessons, topics, and community features are available.</p>
       </div>
       <div class="oppia-footer-newsletter-input">
-        <div class="oppia-newsletter-input-group">
+        <form (ngSubmit)="onSubscribeNewsletter()" class="oppia-newsletter-input-group" id="newsletter-form" novalidate>
+          <label for="newsletter-email-input" class="sr-only">Email address for health updates</label>
           <input
             type="email"
             class="oppia-newsletter-input"
             placeholder="Enter your email address"
             [ngModel]="newsletterEmail()"
             (ngModelChange)="newsletterEmail.set($event)"
+            name="newsletterEmailInput"
             aria-label="Email address for health updates"
             id="newsletter-email-input"
+            required
           >
           <button
-            type="button"
-            class="oppia-footer-newsletter-button"
+            type="submit"
+            class="btn btn-primary oppia-footer-newsletter-button"
             id="newsletter-subscribe-btn"
-            (click)="onSubscribeNewsletter()"
           >
             <span>Subscribe</span>
           </button>
-        </div>
+        </form>
+        @if (newsletterError()) {
+          <div class="newsletter-error-notice" role="alert" id="newsletter-error-notice">
+            ⚠️ {{ newsletterError() }}
+          </div>
+        }
         @if (newsletterSuccess()) {
           <div class="newsletter-success-notice" role="status" id="newsletter-success-notice">
             ✓ {{ newsletterSuccess() }}
@@ -471,6 +546,52 @@
     </div>
   </section>
 </div>
+
+<!-- Clear Progress Confirmation Dialog -->
+@if (showClearConfirmation()) {
+  <div class="modal-backdrop" (click)="closeClearConfirmation()" aria-hidden="true"></div>
+  <div
+    class="clear-confirm-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="clear-dialog-title"
+    aria-describedby="clear-dialog-desc"
+  >
+    <div class="confirm-modal-header">
+      <span class="confirm-modal-icon" aria-hidden="true">⚠️</span>
+      <h3 id="clear-dialog-title" class="confirm-modal-title">
+        {{ isClearingEntireDevice() ? 'Clear All Device Learning Records?' : 'Clear Saved Lesson Bookmark?' }}
+      </h3>
+    </div>
+    <div class="confirm-modal-body">
+      <p id="clear-dialog-desc">
+        @if (isClearingEntireDevice()) {
+          This will clear all locally stored completed lesson history, family activity checklists, and milestone badges from this device. If you are signed in, your cloud account progress is safely preserved on the server.
+        } @else {
+          Are you sure you want to clear your saved position for <strong>{{ resumeState?.lessonTitle }}</strong>? Your completed lesson history, badges, and household activity checklists will not be deleted.
+        }
+      </p>
+    </div>
+    <div class="confirm-modal-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="closeClearConfirmation()"
+        id="btn-cancel-clear-progress"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn btn-destructive"
+        (click)="confirmClearProgress()"
+        id="btn-confirm-clear-progress"
+      >
+        {{ isClearingEntireDevice() ? 'Yes, Clear All Progress' : 'Yes, Clear Bookmark' }}
+      </button>
+    </div>
+  </div>
+}
 
 <!-- Reusable Coming Soon Toast Notification -->
 @if (comingSoonMessage()) {

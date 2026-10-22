@@ -1,7 +1,6 @@
 /* ===================================================================
    Oppia-Faithful Footer Styles
-   Reference: core/templates/base-components/oppia-footer.component.css
-              core/templates/components/button-directives/social-buttons.component.css
+   Enhanced Typography, Contrast, Keyboard Focus, and Responsive Layout
    =================================================================== */
 
 .oppia-footer {
@@ -15,7 +14,8 @@
 
 .oppia-footer-container {
   max-width: 1140px;
-  padding: 40px 20px;
+  margin: 0 auto;
+  padding: 48px 24px 36px;
 }
 
 .oppia-footer-row {
@@ -28,61 +28,69 @@
 /* Mission Column */
 .oppia-mission-col {
   flex: 2;
-  min-width: 280px;
-  max-width: 420px;
+  min-width: 260px;
+  max-width: 400px;
 }
 
 .oppia-mission {
-  color: #fff;
+  color: #ffffff;
   font-family: 'Roboto', Arial, sans-serif;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0 0 20px;
 }
 
 .oppia-footer-cta-wrapper {
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .oppia-footer-cta-btn {
   background-color: transparent;
-  border: 1.5px solid #fff;
-  border-radius: 4px;
-  color: #fff;
-  display: inline-block;
+  border: 1.5px solid #ffffff;
+  border-radius: 6px;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Roboto', Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 18px;
+  font-size: 14.5px;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 10px 22px;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .oppia-footer-cta-btn:hover {
-  background-color: #fff;
+  background-color: #ffffff;
   color: #094142;
+}
+
+.oppia-footer-cta-btn:focus-visible {
+  outline: 2px solid #57c785;
+  outline-offset: 3px;
 }
 
 .oppia-footer-separator {
   display: none;
   border: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
-  margin: 20px 0;
+  margin: 24px 0;
   width: 100%;
 }
 
 /* Navigation Columns */
 .oppia-footer-col {
   flex: 1;
-  min-width: 150px;
+  min-width: 160px;
 }
 
 .oppia-footer-heading {
-  color: #fff;
-  font-size: 14px;
+  color: #a3e0c4;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   margin: 0 0 16px;
   text-transform: uppercase;
 }
@@ -94,18 +102,20 @@
 }
 
 .oppia-footer-col li {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .oppia-footer-col a,
 .footer-text-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
+  display: inline-block;
   font-family: 'Roboto', Arial, sans-serif;
-  font-size: 14px;
-  padding: 0;
+  font-size: 14.5px;
+  line-height: 1.4;
+  padding: 4px 0;
   text-align: left;
   text-decoration: none;
   transition: color 0.15s ease;
@@ -113,20 +123,32 @@
 
 .oppia-footer-col a:hover,
 .footer-text-btn:hover {
-  color: #fff;
+  color: #ffffff;
   text-decoration: underline;
 }
 
-/* Social Icon Column (Oppia Reference: social-buttons.component.css) */
+.oppia-footer-col a:focus-visible,
+.footer-text-btn:focus-visible,
+.footer-inline-btn:focus-visible {
+  outline: 2px solid #57c785;
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* Social Icon Column */
 .oppia-social-col {
   min-width: 220px;
+}
+
+.oppia-follow-us {
+  margin-bottom: 14px;
 }
 
 .oppia-footer-social-icons {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
 .oppia-social-icon-btn {
@@ -135,16 +157,21 @@
   border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
-  height: 38px;
+  height: 42px;
   justify-content: center;
   padding: 0;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-  width: 38px;
+  width: 42px;
 }
 
 .oppia-social-icon-btn:hover {
-  box-shadow: 2px 2px 4px 1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
   transform: translateY(-2px);
+}
+
+.oppia-social-icon-btn:focus-visible {
+  outline: 2px solid #57c785;
+  outline-offset: 3px;
 }
 
 .oppia-youtube-follow {
@@ -160,7 +187,7 @@
 }
 
 .oppia-twitter-follow {
-  background: #000;
+  background: #111;
 }
 
 .oppia-github-follow {
@@ -176,25 +203,32 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0;
-  transition: opacity 0.2s ease;
+  padding: 4px 0;
+  transition: opacity 0.2s ease, transform 0.15s ease;
 }
 
 .oppia-android-app-badge-btn:hover {
-  opacity: 0.9;
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.oppia-android-app-badge-btn:focus-visible {
+  outline: 2px solid #57c785;
+  outline-offset: 4px;
+  border-radius: 6px;
 }
 
 .oppia-android-app-button {
   display: block;
-  height: 40px;
+  height: 42px;
   width: auto;
 }
 
 /* Legal / Terms / Privacy bottom bar */
 .oppia-footer-terms-privacy {
   background-color: #062e2f;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 18px 24px;
 }
 
 .oppia-terms-inner {
@@ -203,6 +237,7 @@
   flex-wrap: wrap;
   gap: 20px;
   justify-content: space-between;
+  margin: 0 auto;
   max-width: 1140px;
 }
 
@@ -210,12 +245,12 @@
 .footer-inline-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
   font-family: 'Roboto', Arial, sans-serif;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 400;
-  padding: 0;
+  padding: 4px 0;
   text-decoration: none;
 }
 
@@ -225,15 +260,29 @@
 }
 
 .oppia-footer-disclaimer {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.72);
   font-style: italic;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Responsive Breakpoints */
+@media (max-width: 1040px) and (min-width: 641px) {
+  .oppia-footer-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px 48px;
+  }
+  .oppia-mission-col {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .oppia-footer-container {
+    padding: 36px 20px 28px;
+  }
   .oppia-footer-row {
     flex-direction: column;
-    gap: 24px;
+    gap: 28px;
   }
   .oppia-mission-col,
   .oppia-footer-col {
@@ -245,6 +294,15 @@
   .oppia-terms-inner {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oppia-footer-cta-btn,
+  .oppia-social-icon-btn,
+  .oppia-android-app-badge-btn {
+    transition: none;
+    transform: none !important;
   }
 }

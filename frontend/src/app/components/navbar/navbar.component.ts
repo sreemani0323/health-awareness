@@ -1,4 +1,4 @@
-import { Component, signal, inject, ViewChild } from '@angular/core';
+import { Component, signal, inject, ViewChild, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ComingSoonService } from '../../services/coming-soon.service';
@@ -21,6 +21,13 @@ export class NavbarComponent {
   @ViewChild(LearnerAuthModalComponent) authModal?: LearnerAuthModalComponent;
 
   readonly isMobileMenuOpen = signal<boolean>(false);
+
+  @HostListener('document:keydown.escape')
+  onEscapePress(): void {
+    if (this.isMobileMenuOpen()) {
+      this.closeMobileMenu();
+    }
+  }
 
   toggleMobileMenu(): void {
     this.isMobileMenuOpen.update((v) => !v);
