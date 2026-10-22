@@ -60,6 +60,7 @@ $testArgs = @("-m", "pytest")
 if ($UnitOnly) {
     Write-Host "Mode: Unit tests only (Domain validation + Controller + Security + Concern tests)" -ForegroundColor Yellow
     $testArgs += "backend/tests/test_domain_validation.py"
+    $testArgs += "backend/tests/test_medical_wording_review.py"
     $testArgs += "backend/tests/test_api_controllers.py"
     $testArgs += "backend/tests/test_security.py"
     $testArgs += "backend/tests/test_concerns.py"

@@ -138,7 +138,7 @@ def get_water_lessons() -> list[dict]:
                         },
                         {
                             "block_type": "callout",
-                            "body": "Boiling Warning: Boiling kills 100% of biological pathogens (bacteria, viruses, and parasites). However, boiling DOES NOT remove chemical toxins like arsenic or lead; in fact, prolonged boiling concentrates dissolved minerals by evaporating pure steam.",
+                            "body": "Boiling Guidance: Bringing water to a rolling boil is highly effective at inactivating biological pathogens (bacteria, viruses, and parasites). However, boiling DOES NOT remove chemical contaminants like arsenic, lead, or fluoride; in fact, prolonged boiling can concentrate dissolved chemicals by evaporating steam.",
                         },
                     ],
                     "source_ids": ["src-who-water-guidelines", "src-cdc-water"],
@@ -723,11 +723,11 @@ def get_water_lessons() -> list[dict]:
                             "speaker": "Dr. Varma",
                             "avatar": "👨🏽",
                             "side": "right",
-                            "body": "Not at all, Neha! Reverse Osmosis is designed specifically to remove dissolved mineral salts and heavy metals when Total Dissolved Solids (TDS) exceed 500 mg/L. RO wastes up to 3 to 4 liters of water for every liter purified! If your goal is killing biological bacteria and viruses, a rolling boil, chlorine tablets, or a UV filter is completely effective and much more sustainable.",
+                            "body": "Not at all, Neha! Reverse Osmosis is designed specifically to remove dissolved mineral salts and heavy metals when Total Dissolved Solids (TDS) exceed 500 mg/L. RO wastes up to 3 to 4 liters of water for every liter purified! If your main goal is protecting against biological pathogens like bacteria and viruses, methods like a rolling boil, appropriate chlorine treatment, or an effective filter provide reliable disinfection without high water wastage.",
                         },
                         {
                             "block_type": "callout",
-                            "body": "The Rolling Boil Standard: Bringing water to a vigorous, rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters / 6,500 feet) inactivates 100% of enteric bacteria, viruses, and hardy protozoan cysts like Cryptosporidium and Giardia.",
+                            "body": "The Rolling Boil Standard: Bringing clear water to a vigorous, rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters / 6,500 feet) reliably inactivates common biological pathogens, including bacteria, viruses, and protozoan cysts like Giardia and Cryptosporidium. Note that boiling treats biological organisms, but does not remove chemical contaminants like lead or fluoride.",
                         },
                     ],
                     "source_ids": ["src-cdc-water", "src-who-hwts"],
@@ -741,7 +741,7 @@ def get_water_lessons() -> list[dict]:
                         {"block_type": "heading", "body": "Practice Check 1: Sequence Chemical Water Disinfection"},
                         {
                             "block_type": "text",
-                            "body": "During floods or emergency situations when fuel for boiling is unavailable, chlorine tablets (such as Halazone / sodium dichloroisocyanurate) are widely distributed by health departments. Arrange the chemical treatment steps in proper sequence.",
+                            "body": "During emergency situations or when fuel for boiling is unavailable, chlorine disinfection products (such as sodium dichloroisocyanurate tablets or chlorine solutions) are widely distributed by health agencies. Product strengths vary, so always follow manufacturer instructions. For typical household chlorine tablets in clear water, arrange the general steps in sequence:",
                         },
                     ],
                     "source_ids": ["src-who-hwts"],
@@ -750,8 +750,8 @@ def get_water_lessons() -> list[dict]:
                         "question_prompt": "Arrange the steps for treating water with chlorine tablets in the correct sequence:",
                         "options": [
                             {"option_id": "step-prefilter", "label": "1. If water is turbid, filter through a clean folded cotton cloth or allow sediment to settle", "is_correct": True, "feedback": "Mud and organic particles consume chlorine and protect microbes."},
-                            {"option_id": "step-add-tablet", "label": "2. Add the correct strength chlorine tablet according to the vessel volume", "is_correct": True, "feedback": "Proper dosage ensures adequate free residual chlorine."},
-                            {"option_id": "step-wait-30min", "label": "3. Stir well and wait for at least 30 minutes of contact time before drinking", "is_correct": True, "feedback": "30 minutes is the mandatory contact time for chlorine to penetrate and destroy viral and bacterial cell walls."},
+                            {"option_id": "step-add-tablet", "label": "2. Add the correct strength chlorine tablet according to the vessel volume and product label directions", "is_correct": True, "feedback": "Proper dosage ensures adequate free residual chlorine without over-chlorination."},
+                            {"option_id": "step-wait-30min", "label": "3. Stir well and observe the recommended contact time (commonly at least 30 minutes for standard tablets) before drinking", "is_correct": True, "feedback": "An adequate contact time (typically 30 minutes for common household chlorine products in clear water) allows the disinfectant to act on target biological pathogens. Always verify specific manufacturer label instructions."},
                             {"option_id": "step-store-sealed", "label": "4. Store the treated water in a covered, clean container with a dedicated tap", "is_correct": True, "feedback": "Keeps chlorine-treated water safe from secondary contamination."},
                         ],
                         "correct_order": ["step-prefilter", "step-add-tablet", "step-wait-30min", "step-store-sealed"],
@@ -770,7 +770,7 @@ def get_water_lessons() -> list[dict]:
                         },
                         {
                             "block_type": "callout",
-                            "body": "Method Comparison:\n• Boiling: Kills 100% of biological microbes; zero chemical removal.\n• Chlorine: Highly effective against bacteria and viruses; weak against Cryptosporidium cysts; requires 30 min contact time.\n• Ceramic Gravity Filter: Physically blocks bacteria and protozoa; requires regular gentle cleaning of candles.\n• UV Light: Inactivates microbial DNA; requires clear water (turbidity shields germs); does not alter taste.\n• Reverse Osmosis: Removes dissolved salts/heavy metals; high water wastage; only indicated when TDS is high.",
+                            "body": "Method Comparison:\n• Boiling: Highly effective against common biological pathogens (bacteria, viruses, parasites); does not remove dissolved chemical contaminants or heavy metals.\n• Chlorine: Effective against most bacteria and viruses, but has limited efficacy against certain protozoan cysts (like Cryptosporidium). Always follow product label directions for dose and contact time (commonly at least 30 minutes in clear water).\n• Ceramic Gravity Filter: Physically traps bacteria and protozoa; requires regular gentle cleaning of candles without soap.\n• UV Disinfection: Inactivates microbial DNA; requires clear, low-turbidity water to be effective.\n• Reverse Osmosis: Removes dissolved mineral salts and heavy metals; produces wastewater; primarily indicated when chemical TDS is elevated.",
                         },
                     ],
                     "source_ids": ["src-cdc-water", "src-who-water-guidelines"],
@@ -792,7 +792,7 @@ def get_water_lessons() -> list[dict]:
                                 "option_id": "boil-1min",
                                 "label": "At least 1 full minute of vigorous rolling boil (3 minutes at elevations above 2,000 meters).",
                                 "is_correct": True,
-                                "feedback": "Correct! Reaching 100°C and maintaining a rolling boil for 60 seconds inactivates all human waterborne pathogens, including heat-resistant cysts.",
+                                "feedback": "Correct! Maintaining a rolling boil for 1 minute (3 minutes at elevations above 2,000 meters) effectively inactivates common waterborne biological pathogens, including bacteria, viruses, and protozoan cysts like Giardia and Cryptosporidium.",
                             },
                             {
                                 "option_id": "boil-warm",
@@ -851,13 +851,13 @@ def get_water_lessons() -> list[dict]:
                     "source_ids": ["src-who-hwts"],
                     "interaction": {
                         "interaction_type": "single_choice",
-                        "question_prompt": "What is the mandatory minimum contact time required after adding a chlorine tablet to drinking water before it is safe to consume?",
+                        "question_prompt": "For standard household chlorine water-treatment tablets, what is the commonly recommended minimum contact time in clear water before drinking?",
                         "options": [
                             {
                                 "option_id": "q2-30min",
-                                "label": "At least 30 minutes.",
+                                "label": "At least 30 minutes (always verifying specific product label instructions).",
                                 "is_correct": True,
-                                "feedback": "Exact public health requirement! 30 minutes ensures adequate chemical oxidation of microbial proteins and nucleic acids.",
+                                "feedback": "Exact public health benchmark! A 30-minute contact time is the widely established standard for typical household chlorine water-purification tablets in clear water. Always follow specific product label instructions.",
                             },
                             {
                                 "option_id": "q2-10sec",
@@ -869,7 +869,7 @@ def get_water_lessons() -> list[dict]:
                                 "option_id": "q2-24hours",
                                 "label": "At least 24 hours.",
                                 "is_correct": False,
-                                "feedback": "30 minutes is the established clinical benchmark; waiting 24 hours allows residual chlorine to dissipate.",
+                                "feedback": "30 minutes is the established benchmark; waiting 24 hours allows residual chlorine to dissipate.",
                             },
                         ],
                         "incorrect_behaviour": "retry",
@@ -979,11 +979,11 @@ def get_water_lessons() -> list[dict]:
                         {"block_type": "heading", "body": "Summary & Practical Action"},
                         {
                             "block_type": "key_takeaway",
-                            "body": "The 1-Minute Rolling Boil: Reaching a vigorous rolling boil for 1 full minute destroys 100% of biological waterborne pathogens.",
+                            "body": "The Rolling Boil Standard: A rolling boil for 1 full minute (3 minutes at elevations above 2,000 meters) reliably inactivates common biological waterborne pathogens. Boiling treats biological microbes, not chemical contaminants.",
                         },
                         {
                             "block_type": "key_takeaway",
-                            "body": "Chlorine Needs 30 Minutes: When using chlorine tablets or drops, always wait at least 30 minutes before drinking.",
+                            "body": "Chlorine Contact Time: When using chlorine tablets or solutions, ensure water is clear and follow product label directions for correct dosage and required contact time (commonly at least 30 minutes).",
                         },
                         {
                             "block_type": "callout",

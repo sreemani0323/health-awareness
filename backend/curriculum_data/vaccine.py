@@ -679,7 +679,7 @@ def get_vaccine_lessons() -> list[dict]:
             ],
             "estimated_duration_minutes": 6,
             "status": "published",
-            "source_ids": ["src-who-vaccine-safety", "src-who-vaccines"],
+            "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
             "cards": [
                 {
                     "card_id": "react-card-1",
@@ -699,14 +699,14 @@ def get_vaccine_lessons() -> list[dict]:
                             "speaker": "Dr. Radhika",
                             "avatar": "👩🏽",
                             "side": "right",
-                            "body": "Please, Manju, NEVER massage, press, or apply mustard oil or ice directly to a vaccination site! Massaging damages irritated muscle tissue and introduces bacterial infections. Mild low-grade fever and slight redness are normal, healthy signs that the baby's immune system is actively creating protective antibodies. Apply a clean, cool, damp cloth gently on the site, continue frequent breastfeeding, and the fever will subside within 24 to 48 hours.",
+                            "body": "Please, Manju, NEVER massage, press, or apply mustard oil or ice directly to a vaccination site! Massaging damages irritated muscle tissue and can introduce bacterial infections. Mild low-grade fever and slight redness are common, short-lived reactions as the body responds to the vaccine. However, fever is not required for the vaccine to work—babies without fever develop excellent protection too. Apply a clean, cool, damp cloth gently on the site, dress her in light clothing, and continue frequent breastfeeding. If she is very uncomfortable or fever persists, paracetamol may be given in a child-appropriate dose under a doctor's or health worker's guidance.",
                         },
                         {
                             "block_type": "callout",
-                            "body": "Reactogenicity vs Injury: Mild fever (<38.5°C / 101.3°F), local soreness, and slight irritability are expected physiological signs of immune activation. They resolve spontaneously within 1 to 2 days without causing harm.",
+                            "body": "Common Reactions vs Red Flags: Mild low-grade fever (<38.5°C / 101.3°F), localized soreness, and slight fussiness are common, self-limiting reactions that typically subside within 24 to 48 hours. Lack of fever is equally normal and does not mean the vaccine was ineffective. Seek prompt medical care for persistent high fever, breathing difficulties, or excessive floppiness.",
                         },
                     ],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": None,
                 },
                 {
@@ -716,16 +716,16 @@ def get_vaccine_lessons() -> list[dict]:
                     "content_blocks": [
                         {"block_type": "heading", "body": "Practice Check 1: Safe Injection Site Comfort"},
                     ],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "single_choice",
                         "question_prompt": "What is the recommended, medically safe method to soothe a sore, tender thigh or arm after vaccination?",
                         "options": [
                             {
                                 "option_id": "care-cool-cloth",
-                                "label": "Place a clean, cool, damp cloth gently over the area and wear loose clothing; never massage the site.",
+                                "label": "Place a clean, cool, damp cloth gently over the area and keep clothing loose; never massage the site or apply oils.",
                                 "is_correct": True,
-                                "feedback": "Correct! A clean, cool damp cloth relieves inflammation safely without traumatizing muscle or introducing microbes.",
+                                "feedback": "Correct! According to Indian MoHFW and WHO guidance, a clean, cool damp cloth soothes local discomfort without irritating muscle or risking infection. Never massage or apply oils.",
                             },
                             {
                                 "option_id": "care-massage-oil",
@@ -751,14 +751,14 @@ def get_vaccine_lessons() -> list[dict]:
                         {"block_type": "heading", "body": "The 30-Minute Clinic Observation Rule"},
                         {
                             "block_type": "text",
-                            "body": "Severe allergic reactions (anaphylaxis) following vaccination are extraordinarily rare—occurring in approximately 1 to 2 per million doses.",
+                            "body": "Severe allergic reactions (anaphylaxis) following vaccination are extraordinarily rare—occurring in approximately 1 to 2 per million doses. When they do occur, they almost always begin within minutes of injection.",
                         },
                         {
                             "block_type": "callout",
-                            "body": "The 30-Minute Rule: Every parent and adult is advised to wait at the healthcare clinic or Anganwadi for at least 30 minutes following vaccination. In the vanishingly rare event that an acute allergic reaction occurs (hives, wheezing, facial swelling), clinic staff have life-saving medications (adrenaline/epinephrine) on hand to treat it immediately and completely.",
+                            "body": "The 30-Minute Observation Rule: Under Indian MoHFW Universal Immunization Programme (UIP) and WHO guidelines, every parent and beneficiary is advised to wait at the clinic or session site for at least 30 minutes following vaccination. In the rare event of an acute allergic reaction (such as facial swelling, hives, or breathing difficulty), healthcare personnel are trained and equipped with adrenaline and emergency supplies to treat it immediately and safely.",
                         },
                     ],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": None,
                 },
                 {
@@ -768,15 +768,15 @@ def get_vaccine_lessons() -> list[dict]:
                     "content_blocks": [
                         {"block_type": "heading", "body": "Practice Check 2: Identifying Red-Flag Symptoms"},
                     ],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "multi_select",
-                        "question_prompt": "Select all rare red-flag symptoms that require immediate medical attention after a vaccination visit:",
+                        "question_prompt": "Select all rare red-flag symptoms that require immediate medical attention following a vaccination visit:",
                         "options": [
-                            {"option_id": "red-flag-breathing", "label": "Difficulty breathing, persistent wheezing, or swelling of the face, lips, or throat", "is_correct": True, "feedback": "Signs of acute allergic reaction requiring immediate clinical intervention."},
-                            {"option_id": "red-flag-convulsion", "label": "Febrile seizures, convulsions, or extreme lethargy / floppiness", "is_correct": True, "feedback": "Requires urgent medical assessment by a physician."},
-                            {"option_id": "red-flag-high-fever", "label": "Persistent very high fever (>39°C / 102.2°F) that does not respond to paracetamol", "is_correct": True, "feedback": "Warrants clinical evaluation to rule out coincident bacterial illness."},
-                            {"option_id": "normal-mild-fuss", "label": "Mild fussiness and wanting to nurse or sleep more for one afternoon", "is_correct": False, "feedback": "Mild fussiness is an expected, harmless reactogenic response that resolves on its own."},
+                            {"option_id": "red-flag-breathing", "label": "Difficulty breathing, persistent wheezing, or swelling of the face, lips, or throat", "is_correct": True, "feedback": "Signs of an acute allergic reaction requiring immediate emergency medical care."},
+                            {"option_id": "red-flag-convulsion", "label": "Febrile seizures, convulsions, extreme lethargy / floppiness, or persistent inconsolable crying for several hours", "is_correct": True, "feedback": "Requires urgent medical assessment by a physician or health facility."},
+                            {"option_id": "red-flag-high-fever", "label": "Persistent high fever (>39°C / 102.2°F) or large local redness spreading significantly beyond the injection site", "is_correct": True, "feedback": "Warrants prompt clinical evaluation to investigate and treat appropriately."},
+                            {"option_id": "normal-mild-fuss", "label": "Mild fussiness, slight low-grade warmth, or wanting to nurse and rest more for an afternoon", "is_correct": False, "feedback": "Mild fussiness and slight warmth are common, temporary reactions that typically resolve within 1–2 days with comfort and rest."},
                         ],
                         "incorrect_behaviour": "retry",
                     },
@@ -787,28 +787,28 @@ def get_vaccine_lessons() -> list[dict]:
                     "position": 5,
                     "card_type": "interaction",
                     "content_blocks": [{"block_type": "heading", "body": "Chapter Assessment Question 1 of 5"}],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "single_choice",
-                        "question_prompt": "Why is a mild, low-grade fever after vaccination considered a positive biological indicator?",
+                        "question_prompt": "How should common, mild post-vaccination reactions—such as low-grade fever or injection-site soreness—be understood regarding vaccine effectiveness?",
                         "options": [
                             {
-                                "option_id": "q1-fever-pyrogens",
-                                "label": "It demonstrates that the immune system is actively responding to the antigen, releasing natural cytokines and generating protective antibodies.",
+                                "option_id": "q1-common-reaction",
+                                "label": "They are common, temporary physiological responses to immune stimulation, but they are neither required for protection nor a measure of protective antibody levels.",
                                 "is_correct": True,
-                                "feedback": "Correct! Fever cytokines (like interleukin-1 and interferon) are natural hallmarks of a functioning immune response.",
+                                "feedback": "Correct! While mild fever and soreness commonly occur, individuals who experience no fever or visible reaction still develop robust protective immunity. Reactions do not prove or measure antibody levels.",
+                            },
+                            {
+                                "option_id": "q1-fever-mandatory",
+                                "label": "A child must develop a fever above 39°C (102.2°F) for the vaccine to produce any protective antibodies.",
+                                "is_correct": False,
+                                "feedback": "Incorrect. Fever is neither required nor desirable for a vaccine to work; many children achieve full protective immunity without any fever.",
                             },
                             {
                                 "option_id": "q1-fever-poison",
-                                "label": "It indicates the syringe was made of boiling copper.",
+                                "label": "Any mild fever indicates that the syringe or vaccine was contaminated with toxic chemicals.",
                                 "is_correct": False,
-                                "feedback": "Sterile disposable plastic syringes are used; the fever is an internal immunological process.",
-                            },
-                            {
-                                "option_id": "q1-fever-paralysis",
-                                "label": "It means the child will grow five centimeters taller overnight.",
-                                "is_correct": False,
-                                "feedback": "Fever does not spur immediate height growth; it reflects immune activation.",
+                                "feedback": "Incorrect. Mild transient warmth or low-grade fever is an expected, sterile biological response to immune stimulation, not chemical contamination.",
                             },
                         ],
                         "incorrect_behaviour": "retry",
@@ -819,16 +819,16 @@ def get_vaccine_lessons() -> list[dict]:
                     "position": 6,
                     "card_type": "interaction",
                     "content_blocks": [{"block_type": "heading", "body": "Chapter Assessment Question 2 of 5"}],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "single_choice",
-                        "question_prompt": "Why should you wait at the health facility for at least 30 minutes after receiving a vaccine?",
+                        "question_prompt": "Why does Indian MoHFW and WHO immunization guidance recommend waiting at the healthcare facility for at least 30 minutes after receiving a vaccine?",
                         "options": [
                             {
                                 "option_id": "q2-anaphylaxis-window",
-                                "label": "On the extremely rare chance of a severe allergic reaction (anaphylaxis), healthcare staff can administer life-saving epinephrine immediately.",
+                                "label": "In the rare event of an acute allergic reaction (anaphylaxis), trained healthcare personnel can promptly provide life-saving care with adrenaline.",
                                 "is_correct": True,
-                                "feedback": "Exact public health protocol! Anaphylaxis occurs within minutes; immediate clinic treatment completely reverses it.",
+                                "feedback": "Exact public health protocol! Severe acute reactions usually appear within minutes; immediate clinic evaluation and management effectively resolve them.",
                             },
                             {
                                 "option_id": "q2-wait-for-mail",
@@ -851,16 +851,16 @@ def get_vaccine_lessons() -> list[dict]:
                     "position": 7,
                     "card_type": "interaction",
                     "content_blocks": [{"block_type": "heading", "body": "Chapter Assessment Question 3 of 5"}],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "single_choice",
-                        "question_prompt": "Why should parents NOT administer paracetamol prophylactically BEFORE a vaccination shot just in case?",
+                        "question_prompt": "Why do clinical guidelines advise against routinely administering paracetamol to an infant BEFORE vaccination as a preventive measure?",
                         "options": [
                             {
                                 "option_id": "q3-prophylactic-paracetamol",
-                                "label": "Clinical studies show taking antipyretics before vaccination may slightly dampen the initial antibody response; use it only afterwards if genuine fever or distress occurs.",
+                                "label": "Routine antipyretics before shots may slightly reduce initial antibody response; give paracetamol only afterwards if fever or distress occurs under guidance.",
                                 "is_correct": True,
-                                "feedback": "Correct! Routine preventive antipyretics before vaccination are discouraged; give paracetamol only if a fever or discomfort actually develops post-shot.",
+                                "feedback": "Correct! Routine preventive antipyretics before vaccination are discouraged; give paracetamol only if fever or discomfort actually develops post-shot under medical guidance.",
                             },
                             {
                                 "option_id": "q3-paracetamol-stone",
@@ -883,7 +883,7 @@ def get_vaccine_lessons() -> list[dict]:
                     "position": 8,
                     "card_type": "interaction",
                     "content_blocks": [{"block_type": "heading", "body": "Chapter Assessment Question 4 of 5"}],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "single_choice",
                         "question_prompt": "What is the expected, normal reaction at the injection site several weeks after the BCG (tuberculosis) vaccine is given on the upper left arm?",
@@ -915,7 +915,7 @@ def get_vaccine_lessons() -> list[dict]:
                     "position": 9,
                     "card_type": "interaction",
                     "content_blocks": [{"block_type": "heading", "body": "Chapter Assessment Question 5 of 5"}],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "single_choice",
                         "question_prompt": "What is an AEFI (Adverse Event Following Immunization) reporting system designed to achieve in public health?",
@@ -950,18 +950,22 @@ def get_vaccine_lessons() -> list[dict]:
                         {"block_type": "heading", "body": "Summary & Practical Action"},
                         {
                             "block_type": "key_takeaway",
-                            "body": "Normal Reactogenicity: Mild fever and injection tenderness show the immune system is creating antibodies; cool damp cloths and rest are best.",
+                            "body": "Common Reactions vs Protection: Mild low-grade fever and localized tenderness are common, temporary reactions that usually subside in 1–2 days. They are not required for immunity—individuals without fever gain robust protection as well.",
                         },
                         {
                             "block_type": "key_takeaway",
-                            "body": "Wait 30 Minutes: Always remain at the clinic for 30 minutes following vaccination for routine safety observation.",
+                            "body": "Safe Comfort Care: Soothe injection-site tenderness with a clean, cool, damp cloth and loose clothing. Never massage, rub, or apply oils or ice. Use paracetamol under medical guidance if fever or discomfort requires it.",
+                        },
+                        {
+                            "block_type": "key_takeaway",
+                            "body": "Wait 30 Minutes: Always remain at the clinic or session site for at least 30 minutes following vaccination for routine safety observation.",
                         },
                         {
                             "block_type": "callout",
-                            "body": "Real-World Action: When you or your child receive a vaccine, always plan an extra 30 minutes in your schedule to wait comfortably at the clinic after the shot!",
+                            "body": "Real-World Action: When attending an immunization session, plan an extra 30 minutes to wait comfortably at the clinic so health workers can monitor your child safely before you head home.",
                         },
                     ],
-                    "source_ids": ["src-who-vaccine-safety"],
+                    "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": None,
                 },
             ],

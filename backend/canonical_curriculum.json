@@ -2521,7 +2521,7 @@
             },
             {
               "block_type": "callout",
-              "body": "Boiling Warning: Boiling kills 100% of biological pathogens (bacteria, viruses, and parasites). However, boiling DOES NOT remove chemical toxins like arsenic or lead; in fact, prolonged boiling concentrates dissolved minerals by evaporating pure steam."
+              "body": "Boiling Guidance: Bringing water to a rolling boil is highly effective at inactivating biological pathogens (bacteria, viruses, and parasites). However, boiling DOES NOT remove chemical contaminants like arsenic, lead, or fluoride; in fact, prolonged boiling can concentrate dissolved chemicals by evaporating steam."
             }
           ],
           "source_ids": [
@@ -3246,11 +3246,11 @@
               "speaker": "Dr. Varma",
               "avatar": "👨🏽",
               "side": "right",
-              "body": "Not at all, Neha! Reverse Osmosis is designed specifically to remove dissolved mineral salts and heavy metals when Total Dissolved Solids (TDS) exceed 500 mg/L. RO wastes up to 3 to 4 liters of water for every liter purified! If your goal is killing biological bacteria and viruses, a rolling boil, chlorine tablets, or a UV filter is completely effective and much more sustainable."
+              "body": "Not at all, Neha! Reverse Osmosis is designed specifically to remove dissolved mineral salts and heavy metals when Total Dissolved Solids (TDS) exceed 500 mg/L. RO wastes up to 3 to 4 liters of water for every liter purified! If your main goal is protecting against biological pathogens like bacteria and viruses, methods like a rolling boil, appropriate chlorine treatment, or an effective filter provide reliable disinfection without high water wastage."
             },
             {
               "block_type": "callout",
-              "body": "The Rolling Boil Standard: Bringing water to a vigorous, rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters / 6,500 feet) inactivates 100% of enteric bacteria, viruses, and hardy protozoan cysts like Cryptosporidium and Giardia."
+              "body": "The Rolling Boil Standard: Bringing clear water to a vigorous, rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters / 6,500 feet) reliably inactivates common biological pathogens, including bacteria, viruses, and protozoan cysts like Giardia and Cryptosporidium. Note that boiling treats biological organisms, but does not remove chemical contaminants like lead or fluoride."
             }
           ],
           "source_ids": [
@@ -3270,7 +3270,7 @@
             },
             {
               "block_type": "text",
-              "body": "During floods or emergency situations when fuel for boiling is unavailable, chlorine tablets (such as Halazone / sodium dichloroisocyanurate) are widely distributed by health departments. Arrange the chemical treatment steps in proper sequence."
+              "body": "During emergency situations or when fuel for boiling is unavailable, chlorine disinfection products (such as sodium dichloroisocyanurate tablets or chlorine solutions) are widely distributed by health agencies. Product strengths vary, so always follow manufacturer instructions. For typical household chlorine tablets in clear water, arrange the general steps in sequence:"
             }
           ],
           "source_ids": [
@@ -3288,15 +3288,15 @@
               },
               {
                 "option_id": "step-add-tablet",
-                "label": "2. Add the correct strength chlorine tablet according to the vessel volume",
+                "label": "2. Add the correct strength chlorine tablet according to the vessel volume and product label directions",
                 "is_correct": true,
-                "feedback": "Proper dosage ensures adequate free residual chlorine."
+                "feedback": "Proper dosage ensures adequate free residual chlorine without over-chlorination."
               },
               {
                 "option_id": "step-wait-30min",
-                "label": "3. Stir well and wait for at least 30 minutes of contact time before drinking",
+                "label": "3. Stir well and observe the recommended contact time (commonly at least 30 minutes for standard tablets) before drinking",
                 "is_correct": true,
-                "feedback": "30 minutes is the mandatory contact time for chlorine to penetrate and destroy viral and bacterial cell walls."
+                "feedback": "An adequate contact time (typically 30 minutes for common household chlorine products in clear water) allows the disinfectant to act on target biological pathogens. Always verify specific manufacturer label instructions."
               },
               {
                 "option_id": "step-store-sealed",
@@ -3329,7 +3329,7 @@
             },
             {
               "block_type": "callout",
-              "body": "Method Comparison:\n• Boiling: Kills 100% of biological microbes; zero chemical removal.\n• Chlorine: Highly effective against bacteria and viruses; weak against Cryptosporidium cysts; requires 30 min contact time.\n• Ceramic Gravity Filter: Physically blocks bacteria and protozoa; requires regular gentle cleaning of candles.\n• UV Light: Inactivates microbial DNA; requires clear water (turbidity shields germs); does not alter taste.\n• Reverse Osmosis: Removes dissolved salts/heavy metals; high water wastage; only indicated when TDS is high."
+              "body": "Method Comparison:\n• Boiling: Highly effective against common biological pathogens (bacteria, viruses, parasites); does not remove dissolved chemical contaminants or heavy metals.\n• Chlorine: Effective against most bacteria and viruses, but has limited efficacy against certain protozoan cysts (like Cryptosporidium). Always follow product label directions for dose and contact time (commonly at least 30 minutes in clear water).\n• Ceramic Gravity Filter: Physically traps bacteria and protozoa; requires regular gentle cleaning of candles without soap.\n• UV Disinfection: Inactivates microbial DNA; requires clear, low-turbidity water to be effective.\n• Reverse Osmosis: Removes dissolved mineral salts and heavy metals; produces wastewater; primarily indicated when chemical TDS is elevated."
             }
           ],
           "source_ids": [
@@ -3359,7 +3359,7 @@
                 "option_id": "boil-1min",
                 "label": "At least 1 full minute of vigorous rolling boil (3 minutes at elevations above 2,000 meters).",
                 "is_correct": true,
-                "feedback": "Correct! Reaching 100°C and maintaining a rolling boil for 60 seconds inactivates all human waterborne pathogens, including heat-resistant cysts."
+                "feedback": "Correct! Maintaining a rolling boil for 1 minute (3 minutes at elevations above 2,000 meters) effectively inactivates common waterborne biological pathogens, including bacteria, viruses, and protozoan cysts like Giardia and Cryptosporidium."
               },
               {
                 "option_id": "boil-warm",
@@ -3431,13 +3431,13 @@
           ],
           "interaction": {
             "interaction_type": "single_choice",
-            "question_prompt": "What is the mandatory minimum contact time required after adding a chlorine tablet to drinking water before it is safe to consume?",
+            "question_prompt": "For standard household chlorine water-treatment tablets, what is the commonly recommended minimum contact time in clear water before drinking?",
             "options": [
               {
                 "option_id": "q2-30min",
-                "label": "At least 30 minutes.",
+                "label": "At least 30 minutes (always verifying specific product label instructions).",
                 "is_correct": true,
-                "feedback": "Exact public health requirement! 30 minutes ensures adequate chemical oxidation of microbial proteins and nucleic acids."
+                "feedback": "Exact public health benchmark! A 30-minute contact time is the widely established standard for typical household chlorine water-purification tablets in clear water. Always follow specific product label instructions."
               },
               {
                 "option_id": "q2-10sec",
@@ -3449,7 +3449,7 @@
                 "option_id": "q2-24hours",
                 "label": "At least 24 hours.",
                 "is_correct": false,
-                "feedback": "30 minutes is the established clinical benchmark; waiting 24 hours allows residual chlorine to dissipate."
+                "feedback": "30 minutes is the established benchmark; waiting 24 hours allows residual chlorine to dissipate."
               }
             ],
             "incorrect_behaviour": "retry"
@@ -3583,11 +3583,11 @@
             },
             {
               "block_type": "key_takeaway",
-              "body": "The 1-Minute Rolling Boil: Reaching a vigorous rolling boil for 1 full minute destroys 100% of biological waterborne pathogens."
+              "body": "The Rolling Boil Standard: A rolling boil for 1 full minute (3 minutes at elevations above 2,000 meters) reliably inactivates common biological waterborne pathogens. Boiling treats biological microbes, not chemical contaminants."
             },
             {
               "block_type": "key_takeaway",
-              "body": "Chlorine Needs 30 Minutes: When using chlorine tablets or drops, always wait at least 30 minutes before drinking."
+              "body": "Chlorine Contact Time: When using chlorine tablets or solutions, ensure water is clear and follow product label directions for correct dosage and required contact time (commonly at least 30 minutes)."
             },
             {
               "block_type": "callout",
@@ -5559,13 +5559,13 @@
       "lesson_id": "lesson-community-prevention-symptoms--4817",
       "version_number": 2,
       "title": "Understanding Mosquito-Borne Illnesses and Seeking Appropriate Care",
-      "summary": "Recognize critical Dengue, Malaria, and Chikungunya symptoms, identify emergency Dengue warning signs, understand the life-threatening danger of Aspirin/Ibuprofen, and master hydration.",
+      "summary": "Recognize critical Dengue, Malaria, and Chikungunya symptoms, identify emergency Dengue warning signs, understand why Aspirin and NSAIDs should be avoided due to bleeding risks, and manage fever and hydration appropriately.",
       "language": "en",
       "learning_objectives": [
         "Differentiate clinical symptom presentations of Dengue, Malaria, and Chikungunya.",
         "Identify emergency 'warning signs' of severe Dengue requiring immediate hospital admission.",
-        "Explain why NSAIDs (Aspirin, Ibuprofen, Diclofenac) are strictly contraindicated in suspected Dengue.",
-        "Describe the essential role of oral fluid maintenance and early blood testing."
+        "Explain why NSAIDs (such as Aspirin, Ibuprofen, and Diclofenac) should be avoided in suspected Dengue to minimize bleeding risks.",
+        "Describe the essential role of oral fluid maintenance and early medical evaluation."
       ],
       "estimated_duration_minutes": 7,
       "status": "published",
@@ -5596,11 +5596,11 @@
               "speaker": "Dr. Lakshmi",
               "avatar": "👩🏽",
               "side": "right",
-              "body": "Stop, Rohan! Never take Aspirin, Ibuprofen, or Diclofenac when you have sudden fever during Dengue season! Dengue damages blood platelets and causes capillary fragility. NSAIDs like Ibuprofen thin your blood and trigger massive, life-threatening internal gastrointestinal bleeding! The only safe medicine for fever and pain in suspected Dengue is Paracetamol, along with continuous oral fluids."
+              "body": "Stop, Rohan! When you have sudden fever during mosquito season, do not take Aspirin, Ibuprofen, Diclofenac, or other Non-Steroidal Anti-Inflammatory Drugs (NSAIDs). Dengue can lower blood platelet counts and increase bleeding tendency, and NSAIDs interfere with normal blood clotting, which elevates the risk of bleeding complications. For fever and body aches, paracetamol is generally used under appropriate medical guidance, alongside plenty of oral fluids. If symptoms persist or any warning signs appear, you should be evaluated promptly by a qualified healthcare professional."
             },
             {
               "block_type": "callout",
-              "body": "CRITICAL MEDICAL WARNING: In any acute febrile illness where Dengue is possible, DO NOT take Aspirin, Ibuprofen, Naproxen, or Diclofenac. They inhibit platelet aggregation and dramatically elevate the risk of fatal hemorrhage. Use Paracetamol only (following weight-appropriate dosing), and seek professional medical evaluation."
+              "body": "FEVER MEDICATION GUIDANCE: In any acute febrile illness where Dengue is suspected, avoid Aspirin, Ibuprofen, Naproxen, and Diclofenac because they impair platelet function and increase the risk of bleeding complications. Paracetamol is commonly used to manage fever and discomfort under proper medical advice and weight-appropriate dosing. Seek prompt evaluation from a doctor or health facility."
             }
           ],
           "source_ids": [
@@ -5624,25 +5624,25 @@
           ],
           "interaction": {
             "interaction_type": "single_choice",
-            "question_prompt": "Which medicine is medically safe to reduce fever and body aches in a patient with suspected Dengue fever?",
+            "question_prompt": "Which medication is generally recommended for fever and discomfort in suspected Dengue under appropriate medical guidance?",
             "options": [
               {
                 "option_id": "med-paracetamol",
-                "label": "Paracetamol (Acetaminophen) at appropriate dosages, accompanied by ample oral fluids.",
+                "label": "Paracetamol (Acetaminophen) at appropriate dosages, accompanied by ample oral fluids and medical guidance.",
                 "is_correct": true,
-                "feedback": "Correct! Paracetamol does not impair platelet function or irritate gastric mucosa, making it the only safe choice in Dengue."
+                "feedback": "Correct! Paracetamol helps relieve fever and discomfort without interfering with platelet aggregation or irritating the stomach lining. Medical guidance should be sought if symptoms persist."
               },
               {
                 "option_id": "med-aspirin",
-                "label": "Aspirin (Disprin) to thin the blood quickly.",
+                "label": "Aspirin (Disprin) to reduce the fever quickly.",
                 "is_correct": false,
-                "feedback": "Lethal hazard! Aspirin irreversibly inhibits platelets and triggers catastrophic internal bleeding in Dengue."
+                "feedback": "Avoid Aspirin in suspected Dengue. Aspirin inhibits platelet aggregation and can increase the risk of bleeding complications."
               },
               {
                 "option_id": "med-ibuprofen",
-                "label": "Ibuprofen (Brufen) or Combiflam.",
+                "label": "Ibuprofen (Brufen) or other NSAIDs.",
                 "is_correct": false,
-                "feedback": "Strictly contraindicated! NSAIDs cause gastric ulceration and severe hemorrhagic complications in Dengue."
+                "feedback": "Avoid NSAIDs like Ibuprofen in suspected Dengue, as they interfere with blood clotting and can increase the risk of bleeding."
               }
             ],
             "incorrect_behaviour": "retry"
@@ -5771,25 +5771,25 @@
           ],
           "interaction": {
             "interaction_type": "single_choice",
-            "question_prompt": "Why are Non-Steroidal Anti-Inflammatory Drugs (NSAIDs) like Ibuprofen, Aspirin, and Diclofenac strictly forbidden in Dengue?",
+            "question_prompt": "Why should Non-Steroidal Anti-Inflammatory Drugs (NSAIDs) like Ibuprofen, Aspirin, and Diclofenac be avoided in suspected Dengue?",
             "options": [
               {
                 "option_id": "q2-nsaid-bleed",
-                "label": "They impair platelet aggregation and cause gastric erosions, triggering life-threatening internal hemorrhage.",
+                "label": "They inhibit platelet aggregation and can irritate the stomach lining, increasing the risk of bleeding complications.",
                 "is_correct": true,
-                "feedback": "Correct! Platelets are already compromised by Dengue; adding antiplatelet NSAIDs can cause fatal gastrointestinal hemorrhage."
+                "feedback": "Correct! Because Dengue can lower blood platelet counts and increase vascular fragility, NSAIDs increase the risk of bleeding complications."
               },
               {
                 "option_id": "q2-bitter-taste",
                 "label": "They make milk taste too bitter to drink.",
                 "is_correct": false,
-                "feedback": "Taste is irrelevant; the danger is lethal internal hemorrhage."
+                "feedback": "Taste is not the reason; the concern is the increased risk of bleeding due to impaired platelet function."
               },
               {
                 "option_id": "q2-freeze-blood",
                 "label": "They cause blood to freeze solid like an icicle.",
                 "is_correct": false,
-                "feedback": "NSAIDs inhibit clotting; they do not freeze blood."
+                "feedback": "NSAIDs interfere with blood clotting mechanisms; they do not freeze blood."
               }
             ],
             "incorrect_behaviour": "retry"
@@ -5923,15 +5923,15 @@
             },
             {
               "block_type": "key_takeaway",
-              "body": "NO Aspirin / Ibuprofen: In suspected Dengue, use ONLY Paracetamol and copious fluids; NSAIDs trigger fatal internal bleeding."
+              "body": "Avoid Aspirin & NSAIDs: In suspected Dengue, avoid Aspirin, Ibuprofen, and other NSAIDs as they increase the risk of bleeding. Paracetamol is commonly used under medical guidance for fever, and adequate fluids should be maintained."
             },
             {
               "block_type": "key_takeaway",
-              "body": "Watch the Critical Phase: When fever drops, watch for severe abdominal pain, persistent vomiting, or bleeding—rush to the hospital immediately if seen."
+              "body": "Watch the Critical Phase: When fever drops, watch for warning signs like severe abdominal pain, persistent vomiting, or bleeding—seek emergency medical care immediately if seen."
             },
             {
               "block_type": "callout",
-              "body": "Real-World Action: Check your home medicine cabinet right now. Clearly mark Paracetamol as your household fever medicine, and ensure no family member takes Ibuprofen or Aspirin for sudden unverified fever!"
+              "body": "Real-World Action: Review household fever care practices. For sudden unverified fever during mosquito season, avoid self-medicating with Aspirin or NSAIDs, use paracetamol with appropriate guidance, and consult a qualified healthcare provider promptly if warning signs appear."
             }
           ],
           "source_ids": [
@@ -7119,7 +7119,7 @@
       "status": "published",
       "source_ids": [
         "src-who-vaccine-safety",
-        "src-who-vaccines"
+        "src-mohfw-uip"
       ],
       "cards": [
         {
@@ -7143,15 +7143,16 @@
               "speaker": "Dr. Radhika",
               "avatar": "👩🏽",
               "side": "right",
-              "body": "Please, Manju, NEVER massage, press, or apply mustard oil or ice directly to a vaccination site! Massaging damages irritated muscle tissue and introduces bacterial infections. Mild low-grade fever and slight redness are normal, healthy signs that the baby's immune system is actively creating protective antibodies. Apply a clean, cool, damp cloth gently on the site, continue frequent breastfeeding, and the fever will subside within 24 to 48 hours."
+              "body": "Please, Manju, NEVER massage, press, or apply mustard oil or ice directly to a vaccination site! Massaging damages irritated muscle tissue and can introduce bacterial infections. Mild low-grade fever and slight redness are common, short-lived reactions as the body responds to the vaccine. However, fever is not required for the vaccine to work—babies without fever develop excellent protection too. Apply a clean, cool, damp cloth gently on the site, dress her in light clothing, and continue frequent breastfeeding. If she is very uncomfortable or fever persists, paracetamol may be given in a child-appropriate dose under a doctor's or health worker's guidance."
             },
             {
               "block_type": "callout",
-              "body": "Reactogenicity vs Injury: Mild fever (<38.5°C / 101.3°F), local soreness, and slight irritability are expected physiological signs of immune activation. They resolve spontaneously within 1 to 2 days without causing harm."
+              "body": "Common Reactions vs Red Flags: Mild low-grade fever (<38.5°C / 101.3°F), localized soreness, and slight fussiness are common, self-limiting reactions that typically subside within 24 to 48 hours. Lack of fever is equally normal and does not mean the vaccine was ineffective. Seek prompt medical care for persistent high fever, breathing difficulties, or excessive floppiness."
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": null
         },
@@ -7166,7 +7167,8 @@
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": {
             "interaction_type": "single_choice",
@@ -7174,9 +7176,9 @@
             "options": [
               {
                 "option_id": "care-cool-cloth",
-                "label": "Place a clean, cool, damp cloth gently over the area and wear loose clothing; never massage the site.",
+                "label": "Place a clean, cool, damp cloth gently over the area and keep clothing loose; never massage the site or apply oils.",
                 "is_correct": true,
-                "feedback": "Correct! A clean, cool damp cloth relieves inflammation safely without traumatizing muscle or introducing microbes."
+                "feedback": "Correct! According to Indian MoHFW and WHO guidance, a clean, cool damp cloth soothes local discomfort without irritating muscle or risking infection. Never massage or apply oils."
               },
               {
                 "option_id": "care-massage-oil",
@@ -7205,15 +7207,16 @@
             },
             {
               "block_type": "text",
-              "body": "Severe allergic reactions (anaphylaxis) following vaccination are extraordinarily rare—occurring in approximately 1 to 2 per million doses."
+              "body": "Severe allergic reactions (anaphylaxis) following vaccination are extraordinarily rare—occurring in approximately 1 to 2 per million doses. When they do occur, they almost always begin within minutes of injection."
             },
             {
               "block_type": "callout",
-              "body": "The 30-Minute Rule: Every parent and adult is advised to wait at the healthcare clinic or Anganwadi for at least 30 minutes following vaccination. In the vanishingly rare event that an acute allergic reaction occurs (hives, wheezing, facial swelling), clinic staff have life-saving medications (adrenaline/epinephrine) on hand to treat it immediately and completely."
+              "body": "The 30-Minute Observation Rule: Under Indian MoHFW Universal Immunization Programme (UIP) and WHO guidelines, every parent and beneficiary is advised to wait at the clinic or session site for at least 30 minutes following vaccination. In the rare event of an acute allergic reaction (such as facial swelling, hives, or breathing difficulty), healthcare personnel are trained and equipped with adrenaline and emergency supplies to treat it immediately and safely."
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": null
         },
@@ -7228,35 +7231,36 @@
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": {
             "interaction_type": "multi_select",
-            "question_prompt": "Select all rare red-flag symptoms that require immediate medical attention after a vaccination visit:",
+            "question_prompt": "Select all rare red-flag symptoms that require immediate medical attention following a vaccination visit:",
             "options": [
               {
                 "option_id": "red-flag-breathing",
                 "label": "Difficulty breathing, persistent wheezing, or swelling of the face, lips, or throat",
                 "is_correct": true,
-                "feedback": "Signs of acute allergic reaction requiring immediate clinical intervention."
+                "feedback": "Signs of an acute allergic reaction requiring immediate emergency medical care."
               },
               {
                 "option_id": "red-flag-convulsion",
-                "label": "Febrile seizures, convulsions, or extreme lethargy / floppiness",
+                "label": "Febrile seizures, convulsions, extreme lethargy / floppiness, or persistent inconsolable crying for several hours",
                 "is_correct": true,
-                "feedback": "Requires urgent medical assessment by a physician."
+                "feedback": "Requires urgent medical assessment by a physician or health facility."
               },
               {
                 "option_id": "red-flag-high-fever",
-                "label": "Persistent very high fever (>39°C / 102.2°F) that does not respond to paracetamol",
+                "label": "Persistent high fever (>39°C / 102.2°F) or large local redness spreading significantly beyond the injection site",
                 "is_correct": true,
-                "feedback": "Warrants clinical evaluation to rule out coincident bacterial illness."
+                "feedback": "Warrants prompt clinical evaluation to investigate and treat appropriately."
               },
               {
                 "option_id": "normal-mild-fuss",
-                "label": "Mild fussiness and wanting to nurse or sleep more for one afternoon",
+                "label": "Mild fussiness, slight low-grade warmth, or wanting to nurse and rest more for an afternoon",
                 "is_correct": false,
-                "feedback": "Mild fussiness is an expected, harmless reactogenic response that resolves on its own."
+                "feedback": "Mild fussiness and slight warmth are common, temporary reactions that typically resolve within 1–2 days with comfort and rest."
               }
             ],
             "incorrect_behaviour": "retry"
@@ -7273,29 +7277,30 @@
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": {
             "interaction_type": "single_choice",
-            "question_prompt": "Why is a mild, low-grade fever after vaccination considered a positive biological indicator?",
+            "question_prompt": "How should common, mild post-vaccination reactions—such as low-grade fever or injection-site soreness—be understood regarding vaccine effectiveness?",
             "options": [
               {
-                "option_id": "q1-fever-pyrogens",
-                "label": "It demonstrates that the immune system is actively responding to the antigen, releasing natural cytokines and generating protective antibodies.",
+                "option_id": "q1-common-reaction",
+                "label": "They are common, temporary physiological responses to immune stimulation, but they are neither required for protection nor a measure of protective antibody levels.",
                 "is_correct": true,
-                "feedback": "Correct! Fever cytokines (like interleukin-1 and interferon) are natural hallmarks of a functioning immune response."
+                "feedback": "Correct! While mild fever and soreness commonly occur, individuals who experience no fever or visible reaction still develop robust protective immunity. Reactions do not prove or measure antibody levels."
+              },
+              {
+                "option_id": "q1-fever-mandatory",
+                "label": "A child must develop a fever above 39°C (102.2°F) for the vaccine to produce any protective antibodies.",
+                "is_correct": false,
+                "feedback": "Incorrect. Fever is neither required nor desirable for a vaccine to work; many children achieve full protective immunity without any fever."
               },
               {
                 "option_id": "q1-fever-poison",
-                "label": "It indicates the syringe was made of boiling copper.",
+                "label": "Any mild fever indicates that the syringe or vaccine was contaminated with toxic chemicals.",
                 "is_correct": false,
-                "feedback": "Sterile disposable plastic syringes are used; the fever is an internal immunological process."
-              },
-              {
-                "option_id": "q1-fever-paralysis",
-                "label": "It means the child will grow five centimeters taller overnight.",
-                "is_correct": false,
-                "feedback": "Fever does not spur immediate height growth; it reflects immune activation."
+                "feedback": "Incorrect. Mild transient warmth or low-grade fever is an expected, sterile biological response to immune stimulation, not chemical contamination."
               }
             ],
             "incorrect_behaviour": "retry"
@@ -7312,17 +7317,18 @@
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": {
             "interaction_type": "single_choice",
-            "question_prompt": "Why should you wait at the health facility for at least 30 minutes after receiving a vaccine?",
+            "question_prompt": "Why does Indian MoHFW and WHO immunization guidance recommend waiting at the healthcare facility for at least 30 minutes after receiving a vaccine?",
             "options": [
               {
                 "option_id": "q2-anaphylaxis-window",
-                "label": "On the extremely rare chance of a severe allergic reaction (anaphylaxis), healthcare staff can administer life-saving epinephrine immediately.",
+                "label": "In the rare event of an acute allergic reaction (anaphylaxis), trained healthcare personnel can promptly provide life-saving care with adrenaline.",
                 "is_correct": true,
-                "feedback": "Exact public health protocol! Anaphylaxis occurs within minutes; immediate clinic treatment completely reverses it."
+                "feedback": "Exact public health protocol! Severe acute reactions usually appear within minutes; immediate clinic evaluation and management effectively resolve them."
               },
               {
                 "option_id": "q2-wait-for-mail",
@@ -7351,17 +7357,18 @@
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": {
             "interaction_type": "single_choice",
-            "question_prompt": "Why should parents NOT administer paracetamol prophylactically BEFORE a vaccination shot just in case?",
+            "question_prompt": "Why do clinical guidelines advise against routinely administering paracetamol to an infant BEFORE vaccination as a preventive measure?",
             "options": [
               {
                 "option_id": "q3-prophylactic-paracetamol",
-                "label": "Clinical studies show taking antipyretics before vaccination may slightly dampen the initial antibody response; use it only afterwards if genuine fever or distress occurs.",
+                "label": "Routine antipyretics before shots may slightly reduce initial antibody response; give paracetamol only afterwards if fever or distress occurs under guidance.",
                 "is_correct": true,
-                "feedback": "Correct! Routine preventive antipyretics before vaccination are discouraged; give paracetamol only if a fever or discomfort actually develops post-shot."
+                "feedback": "Correct! Routine preventive antipyretics before vaccination are discouraged; give paracetamol only if fever or discomfort actually develops post-shot under medical guidance."
               },
               {
                 "option_id": "q3-paracetamol-stone",
@@ -7390,7 +7397,8 @@
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": {
             "interaction_type": "single_choice",
@@ -7429,7 +7437,8 @@
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": {
             "interaction_type": "single_choice",
@@ -7468,19 +7477,24 @@
             },
             {
               "block_type": "key_takeaway",
-              "body": "Normal Reactogenicity: Mild fever and injection tenderness show the immune system is creating antibodies; cool damp cloths and rest are best."
+              "body": "Common Reactions vs Protection: Mild low-grade fever and localized tenderness are common, temporary reactions that usually subside in 1–2 days. They are not required for immunity—individuals without fever gain robust protection as well."
             },
             {
               "block_type": "key_takeaway",
-              "body": "Wait 30 Minutes: Always remain at the clinic for 30 minutes following vaccination for routine safety observation."
+              "body": "Safe Comfort Care: Soothe injection-site tenderness with a clean, cool, damp cloth and loose clothing. Never massage, rub, or apply oils or ice. Use paracetamol under medical guidance if fever or discomfort requires it."
+            },
+            {
+              "block_type": "key_takeaway",
+              "body": "Wait 30 Minutes: Always remain at the clinic or session site for at least 30 minutes following vaccination for routine safety observation."
             },
             {
               "block_type": "callout",
-              "body": "Real-World Action: When you or your child receive a vaccine, always plan an extra 30 minutes in your schedule to wait comfortably at the clinic after the shot!"
+              "body": "Real-World Action: When attending an immunization session, plan an extra 30 minutes to wait comfortably at the clinic so health workers can monitor your child safely before you head home."
             }
           ],
           "source_ids": [
-            "src-who-vaccine-safety"
+            "src-who-vaccine-safety",
+            "src-mohfw-uip"
           ],
           "interaction": null
         }
@@ -8582,15 +8596,15 @@
         },
         {
           "id": "mc-wat-3",
-          "question_prompt": "Scenario: How long must water be maintained at a continuous rolling boil to guarantee destruction of all waterborne pathogens including Cryptosporidium cysts?",
+          "question_prompt": "Scenario: How long must water be maintained at a continuous rolling boil to reliably inactivate biological pathogens including Cryptosporidium cysts?",
           "hint": "Think about the WHO and CDC benchmark duration.",
-          "explanation": "A vigorous rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters) inactivates 100% of human waterborne pathogens, including heat-resistant protozoan cysts.",
+          "explanation": "A vigorous rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters / ~6,500 feet) reliably inactivates common waterborne pathogens, including bacteria, viruses, and heat-resistant protozoan cysts. Note that boiling does not remove chemical contaminants or heavy metals.",
           "options": [
             {
               "id": "w3-a",
-              "label": "At least 1 full minute of vigorous rolling boil (3 minutes at high altitudes above 2,000 m).",
+              "label": "At least 1 full minute of vigorous rolling boil (3 minutes at elevations above 2,000 m).",
               "is_correct": true,
-              "feedback": "Exact public health standard! Reaching 100°C for 60 seconds ensures total biological disinfection."
+              "feedback": "Exact public health standard! Maintaining a rolling boil for 1 minute (3 minutes at high altitude) provides reliable biological pathogen inactivation."
             },
             {
               "id": "w3-b",
@@ -8602,7 +8616,7 @@
               "id": "w3-c",
               "label": "At least 4 continuous hours.",
               "is_correct": false,
-              "feedback": "Hours of boiling wastes precious fuel and concentrates dissolved minerals."
+              "feedback": "Hours of boiling wastes fuel and concentrates dissolved solids without added microbiological safety."
             }
           ]
         },
@@ -8800,21 +8814,21 @@
       "questions": [
         {
           "id": "mc-mos-1",
-          "question_prompt": "Scenario: A resident has high fever (103°F), retro-orbital eye pain, and joint aches during peak Dengue season. Which over-the-counter medicine must they NEVER take?",
-          "hint": "What class of fever medicine impairs platelets and triggers fatal bleeding in Dengue?",
-          "explanation": "Aspirin, Ibuprofen, and other NSAIDs thin blood and inhibit platelet function, dramatically increasing the risk of fatal internal hemorrhage in Dengue. Only Paracetamol is safe.",
+          "question_prompt": "Scenario: A resident has high fever (103°F), retro-orbital eye pain, and joint aches during peak Dengue season. Which over-the-counter medicine must they avoid?",
+          "hint": "Which class of fever and pain medicines impairs platelets and increases bleeding risk in dengue?",
+          "explanation": "Aspirin, ibuprofen, and other non-steroidal anti-inflammatory drugs (NSAIDs) inhibit platelet function and irritate gastric mucosa, increasing bleeding risk in suspected dengue. Paracetamol is generally used for fever and pain under appropriate guidance, and clinical warning signs require prompt medical evaluation.",
           "options": [
             {
               "id": "m1-a",
               "label": "Aspirin, Ibuprofen, Naproxen, or Diclofenac (NSAIDs).",
               "is_correct": true,
-              "feedback": "Correct! NSAIDs cause gastric bleeding and platelet impairment in Dengue patients."
+              "feedback": "Correct! NSAIDs inhibit platelet function and increase bleeding risk in suspected dengue."
             },
             {
               "id": "m1-b",
-              "label": "Paracetamol at standard weight-appropriate dosages.",
+              "label": "Paracetamol taken at standard weight-appropriate dosages under appropriate guidance.",
               "is_correct": false,
-              "feedback": "Paracetamol is the only safe fever medicine recommended in suspected Dengue."
+              "feedback": "Paracetamol is generally recommended for fever and pain in suspected dengue; NSAIDs must be avoided."
             },
             {
               "id": "m1-c",
@@ -9149,14 +9163,14 @@
         {
           "id": "mc-vax-4",
           "question_prompt": "Scenario: Six hours after receiving her 6-week immunization, a baby develops a mild fever of 38°C (100.4°F) and injection-site tenderness. What is the proper response?",
-          "hint": "Is mild fever an expected sign of immune activation?",
-          "explanation": "Mild low-grade fever and local tenderness are expected, normal reactogenic responses indicating active antibody production. Give cool damp cloths, comfort nursing, and paracetamol if prescribed.",
+          "hint": "Is mild fever a common, temporary reaction following vaccination?",
+          "explanation": "Mild low-grade fever and local tenderness are common, temporary reactions following immunization. They typically resolve within 1–2 days and are not required for immunity. Provide comforting measures (cool damp cloth, frequent feeds, paracetamol under guidance if needed), and seek medical care if fever is high or persistent.",
           "options": [
             {
               "id": "v4-a",
-              "label": "Provide comforting measures (cool damp cloth, frequent feeds, paracetamol if prescribed); this is a normal reactogenic response.",
+              "label": "Provide comforting measures (cool damp cloth, frequent feeds, paracetamol if advised); this is a common, short-lived reaction.",
               "is_correct": true,
-              "feedback": "Correct! Normal reactogenicity resolves spontaneously within 24 to 48 hours."
+              "feedback": "Correct! Common mild reactions typically resolve within 24 to 48 hours without causing harm."
             },
             {
               "id": "v4-b",

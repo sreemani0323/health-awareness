@@ -167,13 +167,13 @@ def get_mastery_challenges() -> list[dict]:
                 },
                 {
                     "id": "mc-wat-3",
-                    "question_prompt": "Scenario: How long must water be maintained at a continuous rolling boil to guarantee destruction of all waterborne pathogens including Cryptosporidium cysts?",
+                    "question_prompt": "Scenario: How long must water be maintained at a continuous rolling boil to reliably inactivate biological pathogens including Cryptosporidium cysts?",
                     "hint": "Think about the WHO and CDC benchmark duration.",
-                    "explanation": "A vigorous rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters) inactivates 100% of human waterborne pathogens, including heat-resistant protozoan cysts.",
+                    "explanation": "A vigorous rolling boil for at least 1 full minute (or 3 minutes at elevations above 2,000 meters / ~6,500 feet) reliably inactivates common waterborne pathogens, including bacteria, viruses, and heat-resistant protozoan cysts. Note that boiling does not remove chemical contaminants or heavy metals.",
                     "options": [
-                        {"id": "w3-a", "label": "At least 1 full minute of vigorous rolling boil (3 minutes at high altitudes above 2,000 m).", "is_correct": True, "feedback": "Exact public health standard! Reaching 100°C for 60 seconds ensures total biological disinfection."},
+                        {"id": "w3-a", "label": "At least 1 full minute of vigorous rolling boil (3 minutes at elevations above 2,000 m).", "is_correct": True, "feedback": "Exact public health standard! Maintaining a rolling boil for 1 minute (3 minutes at high altitude) provides reliable biological pathogen inactivation."},
                         {"id": "w3-b", "label": "Just until the first tiny bubble appears on the pot bottom (around 60°C).", "is_correct": False, "feedback": "Sub-boiling temperatures leave hardy protozoan cysts viable."},
-                        {"id": "w3-c", "label": "At least 4 continuous hours.", "is_correct": False, "feedback": "Hours of boiling wastes precious fuel and concentrates dissolved minerals."},
+                        {"id": "w3-c", "label": "At least 4 continuous hours.", "is_correct": False, "feedback": "Hours of boiling wastes fuel and concentrates dissolved solids without added microbiological safety."},
                     ],
                 },
                 {
@@ -267,12 +267,12 @@ def get_mastery_challenges() -> list[dict]:
             "questions": [
                 {
                     "id": "mc-mos-1",
-                    "question_prompt": "Scenario: A resident has high fever (103°F), retro-orbital eye pain, and joint aches during peak Dengue season. Which over-the-counter medicine must they NEVER take?",
-                    "hint": "What class of fever medicine impairs platelets and triggers fatal bleeding in Dengue?",
-                    "explanation": "Aspirin, Ibuprofen, and other NSAIDs thin blood and inhibit platelet function, dramatically increasing the risk of fatal internal hemorrhage in Dengue. Only Paracetamol is safe.",
+                    "question_prompt": "Scenario: A resident has high fever (103°F), retro-orbital eye pain, and joint aches during peak Dengue season. Which over-the-counter medicine must they avoid?",
+                    "hint": "Which class of fever and pain medicines impairs platelets and increases bleeding risk in dengue?",
+                    "explanation": "Aspirin, ibuprofen, and other non-steroidal anti-inflammatory drugs (NSAIDs) inhibit platelet function and irritate gastric mucosa, increasing bleeding risk in suspected dengue. Paracetamol is generally used for fever and pain under appropriate guidance, and clinical warning signs require prompt medical evaluation.",
                     "options": [
-                        {"id": "m1-a", "label": "Aspirin, Ibuprofen, Naproxen, or Diclofenac (NSAIDs).", "is_correct": True, "feedback": "Correct! NSAIDs cause gastric bleeding and platelet impairment in Dengue patients."},
-                        {"id": "m1-b", "label": "Paracetamol at standard weight-appropriate dosages.", "is_correct": False, "feedback": "Paracetamol is the only safe fever medicine recommended in suspected Dengue."},
+                        {"id": "m1-a", "label": "Aspirin, Ibuprofen, Naproxen, or Diclofenac (NSAIDs).", "is_correct": True, "feedback": "Correct! NSAIDs inhibit platelet function and increase bleeding risk in suspected dengue."},
+                        {"id": "m1-b", "label": "Paracetamol taken at standard weight-appropriate dosages under appropriate guidance.", "is_correct": False, "feedback": "Paracetamol is generally recommended for fever and pain in suspected dengue; NSAIDs must be avoided."},
                         {"id": "m1-c", "label": "Oral rehydration fluids and coconut water.", "is_correct": False, "feedback": "Oral hydration is safe and strongly recommended in Dengue."},
                     ],
                 },
@@ -423,10 +423,10 @@ def get_mastery_challenges() -> list[dict]:
                 {
                     "id": "mc-vax-4",
                     "question_prompt": "Scenario: Six hours after receiving her 6-week immunization, a baby develops a mild fever of 38°C (100.4°F) and injection-site tenderness. What is the proper response?",
-                    "hint": "Is mild fever an expected sign of immune activation?",
-                    "explanation": "Mild low-grade fever and local tenderness are expected, normal reactogenic responses indicating active antibody production. Give cool damp cloths, comfort nursing, and paracetamol if prescribed.",
+                    "hint": "Is mild fever a common, temporary reaction following vaccination?",
+                    "explanation": "Mild low-grade fever and local tenderness are common, temporary reactions following immunization. They typically resolve within 1–2 days and are not required for immunity. Provide comforting measures (cool damp cloth, frequent feeds, paracetamol under guidance if needed), and seek medical care if fever is high or persistent.",
                     "options": [
-                        {"id": "v4-a", "label": "Provide comforting measures (cool damp cloth, frequent feeds, paracetamol if prescribed); this is a normal reactogenic response.", "is_correct": True, "feedback": "Correct! Normal reactogenicity resolves spontaneously within 24 to 48 hours."},
+                        {"id": "v4-a", "label": "Provide comforting measures (cool damp cloth, frequent feeds, paracetamol if advised); this is a common, short-lived reaction.", "is_correct": True, "feedback": "Correct! Common mild reactions typically resolve within 24 to 48 hours without causing harm."},
                         {"id": "v4-b", "label": "Vigorously scrub the injection site with hot mustard oil and red chili.", "is_correct": False, "feedback": "Massaging injection sites traumatizes tissue and causes secondary infection."},
                         {"id": "v4-c", "label": "Rush to the ICU for immediate open-heart surgery.", "is_correct": False, "feedback": "Mild low-grade fever is an expected, harmless physiological response."},
                     ],
