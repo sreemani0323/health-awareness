@@ -422,7 +422,7 @@ def get_mastery_challenges() -> list[dict]:
                 },
                 {
                     "id": "mc-vax-4",
-                    "question_prompt": "Scenario: Six hours after receiving her 6-week immunization, a baby develops a measured fever of 38°C (100.4°F) and injection-site tenderness. What is the proper response?",
+                    "question_prompt": "Scenario: A 6-week-old baby develops a measured fever of 38°C (100.4°F) and injection-site tenderness six hours after receiving her immunization. What is the proper response?",
                     "hint": "In an infant under 3 months, should a fever of 38°C be evaluated promptly by a healthcare professional?",
                     "explanation": "In young infants under 3 months of age (such as a 6-week-old), a measured temperature of 38°C (100.4°F) requires prompt assessment by a healthcare professional (doctor, paediatrician, or health worker). Caregivers should never assume fever is purely post-vaccination or wait 48 hours without clinical advice. While awaiting assessment, keep the baby comfortable with light clothing and frequent feeds; do not administer medications without professional guidance. Distinguish this from emergency red flags (breathing difficulty, facial or throat swelling, seizures, or unresponsiveness), which require immediate emergency hospital care.",
                     "options": [

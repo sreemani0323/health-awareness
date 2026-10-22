@@ -251,6 +251,9 @@ class TestPostVaccinationAdviceWording:
         q4 = next(q for q in vaccine_ch["questions"] if q["id"] == "mc-vax-4")
 
         q_text = json.dumps(q4).lower()
+        # Explicitly specifies a 6-week-old baby
+        assert "a 6-week-old baby" in q4["question_prompt"].lower()
+
         # Does not imply fever is required for immunity
         assert "indicating active antibody production" not in q_text
 
