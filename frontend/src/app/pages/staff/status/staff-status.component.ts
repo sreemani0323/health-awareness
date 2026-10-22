@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CreatorApiService } from '../../../services/creator-api.service';
+import { ApiConfigService } from '../../../services/api-config.service';
 import { PublicStaffApplicationView } from '../../../models/creator.models';
 
 @Component({
@@ -14,6 +15,7 @@ import { PublicStaffApplicationView } from '../../../models/creator.models';
 })
 export class StaffStatusComponent implements OnInit {
   private creatorApi = inject(CreatorApiService);
+  private apiConfig = inject(ApiConfigService);
   private route = inject(ActivatedRoute);
 
   // Search state
@@ -50,7 +52,7 @@ export class StaffStatusComponent implements OnInit {
     this.isRecovering.set(true);
     this.errorMessage.set(null);
     try {
-      const resp = await fetch('/api/v1/staff/applications/recover', {
+      const resp = await fetch(this.apiConfig.getApiUrl('/staff/applications/recover'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ email }),

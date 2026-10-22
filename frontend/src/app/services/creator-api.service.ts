@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, throwError, BehaviorSubject, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { ApiConfigService } from './api-config.service';
 import { ApiResponse } from '../models/api.models';
 import {
   AuthUser,
@@ -26,7 +26,10 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class CreatorApiService {
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly apiConfig = inject(ApiConfigService);
+  private get baseUrl(): string {
+    return this.apiConfig.apiBaseUrl;
+  }
   private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 

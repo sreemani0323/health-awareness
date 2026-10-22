@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, throwError } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { ApiConfigService } from './api-config.service';
 import {
   ApiResponse,
   Topic,
@@ -19,7 +19,10 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private readonly baseUrl = environment.apiBaseUrl;
+  private readonly apiConfig = inject(ApiConfigService);
+  private get baseUrl(): string {
+    return this.apiConfig.apiBaseUrl;
+  }
 
   constructor(private readonly http: HttpClient) {}
 

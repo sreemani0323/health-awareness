@@ -1,4 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { ApiConfigService } from './api-config.service';
+import { SecureStorageService } from './secure-storage.service';
 
 export interface LearnerUser {
   id: string;
@@ -40,6 +42,9 @@ const USER_KEY = 'healthaware_learner_profile';
 export class LearnerAuthService {
   private readonly tokenKey = TOKEN_KEY;
   private readonly userKey = USER_KEY;
+  private readonly apiConfig = inject(ApiConfigService);
+  private readonly secureStorage = inject(SecureStorageService);
+  private cachedToken: string | null = null;
 
   readonly isAuthenticated = signal<boolean>(false);
   readonly currentUser = signal<LearnerUser | null>(null);
@@ -58,21 +63,22 @@ export class LearnerAuthService {
   }
 
   /**
-   * Restores stored JWT and learner profile from client storage.
+   * Restores stored JWT and learner profile from secure client storage.
    */
-  private restoreSession(): void {
+  private async restoreSession(): Promise<void> {
     try {
-      const token = localStorage.getItem(this.tokenKey);
+      const token = await this.secureStorage.getItem(this.tokenKey);
       if (!token) return;
 
       // Check token expiration if standard JWT
       const payload = this.decodeJwtPayload(token);
       if (payload && payload.exp && payload.exp * 1000 < Date.now()) {
-        this.logout();
+        await this.logout();
         return;
       }
 
-      const rawUser = localStorage.getItem(this.userKey);
+      this.cachedToken = token;
+      const rawUser = await this.secureStorage.getItem(this.userKey);
       let user: LearnerUser | null = null;
       if (rawUser) {
         user = JSON.parse(rawUser);
@@ -118,35 +124,47 @@ export class LearnerAuthService {
    * Returns current active Bearer JWT token if authenticated and not expired.
    */
   getToken(): string | null {
-    try {
-      const token = localStorage.getItem(this.tokenKey);
-      if (!token) return null;
-
-      const payload = this.decodeJwtPayload(token);
-      if (payload && payload.exp && payload.exp * 1000 < Date.now()) {
-        this.logout();
-        return null;
+    if (!this.cachedToken) {
+      // Synchronous fallback read from localStorage on web if not yet cached
+      try {
+        const token = localStorage.getItem(this.tokenKey);
+        if (token) {
+          const payload = this.decodeJwtPayload(token);
+          if (payload && payload.exp && payload.exp * 1000 < Date.now()) {
+            this.logout();
+            return null;
+          }
+          this.cachedToken = token;
+        }
+      } catch {
+        // ignore
       }
-      return token;
-    } catch {
-      return null;
     }
+    return this.cachedToken;
   }
 
   /**
-   * Stores learner JWT and initializes authenticated session.
+   * Stores learner JWT and initializes authenticated session using hardware-backed secure storage.
    */
   setSession(token: string, user?: LearnerUser): void {
     if (!token) return;
     try {
-      localStorage.setItem(this.tokenKey, token);
+      this.cachedToken = token;
       const decoded = this.decodeJwtPayload(token);
       const profile: LearnerUser = user || {
         id: decoded?.sub || 'learner',
         name: decoded?.name || decoded?.email || 'Learner',
         email: decoded?.email,
       };
-      localStorage.setItem(this.userKey, JSON.stringify(profile));
+
+      // Store securely without plaintext fallback
+      this.secureStorage.setItem(this.tokenKey, token).catch((e) => {
+        console.error('Failed to securely store JWT:', e);
+      });
+      this.secureStorage.setItem(this.userKey, JSON.stringify(profile)).catch((e) => {
+        console.error('Failed to securely store user profile:', e);
+      });
+
       this.currentUser.set(profile);
       this.isAuthenticated.set(true);
       this.errorMessage.set(null);
@@ -160,9 +178,10 @@ export class LearnerAuthService {
    * Clears all in-memory credentials and status. Does NOT wipe anonymous learning progress.
    */
   logout(): void {
+    this.cachedToken = null;
     try {
-      localStorage.removeItem(this.tokenKey);
-      localStorage.removeItem(this.userKey);
+      this.secureStorage.removeItem(this.tokenKey).catch(() => {});
+      this.secureStorage.removeItem(this.userKey).catch(() => {});
     } catch (e) {
       console.warn('Error clearing learner session:', e);
     }
@@ -181,7 +200,7 @@ export class LearnerAuthService {
     if (!token) return null;
 
     try {
-      const resp = await fetch('/api/v1/learner/progress', {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/progress'), {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
@@ -222,7 +241,7 @@ export class LearnerAuthService {
 
     this.syncStatus.set('syncing');
     try {
-      const resp = await fetch('/api/v1/learner/progress', {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/progress'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -264,7 +283,7 @@ export class LearnerAuthService {
   ): Promise<{ success: boolean; token?: string; user?: LearnerUser; error?: string }> {
     this.errorMessage.set(null);
     try {
-      const resp = await fetch('/api/v1/learner/auth/register', {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -306,7 +325,7 @@ export class LearnerAuthService {
   ): Promise<{ success: boolean; token?: string; user?: LearnerUser; error?: string }> {
     this.errorMessage.set(null);
     try {
-      const resp = await fetch('/api/v1/learner/auth/login', {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -343,7 +362,7 @@ export class LearnerAuthService {
   async recover(email: string): Promise<{ success: boolean; message?: string; error?: string }> {
     this.errorMessage.set(null);
     try {
-      const resp = await fetch('/api/v1/learner/auth/recover', {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/recover'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

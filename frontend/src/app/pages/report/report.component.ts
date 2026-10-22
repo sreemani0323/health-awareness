@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { ConcernService, ConcernSubmitResponse } from '../../services/concern.service';
 
 interface CategoryOption {
@@ -21,6 +23,8 @@ interface CategoryOption {
 export class ReportConcernComponent {
   private concernService = inject(ConcernService);
   private router = inject(Router);
+
+  readonly isNative = signal<boolean>(Capacitor.isNativePlatform());
 
   currentStep = signal<number>(1);
   submitting = signal<boolean>(false);
@@ -145,6 +149,39 @@ export class ReportConcernComponent {
       const reader = new FileReader();
       reader.onload = (e) => this.photoPreview.set(e.target?.result as string);
       reader.readAsDataURL(file);
+    }
+  }
+
+  async captureNativePhoto(source: 'camera' | 'photos'): Promise<void> {
+    try {
+      this.errorMessage.set(null);
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: source === 'camera' ? CameraSource.Camera : CameraSource.Photos,
+        quality: 85,
+        allowEditing: false,
+      });
+
+      if (photo.webPath) {
+        this.photoPreview.set(photo.webPath);
+        const response = await fetch(photo.webPath);
+        const blob = await response.blob();
+        if (blob.size > 5 * 1024 * 1024) {
+          this.errorMessage.set('Photo size must not exceed 5 MB.');
+          this.removePhoto();
+          return;
+        }
+        const ext = photo.format || 'jpg';
+        const file = new File([blob], `concern_evidence_${Date.now()}.${ext}`, {
+          type: blob.type || `image/${ext}`,
+        });
+        this.selectedPhoto.set(file);
+      }
+    } catch (err: any) {
+      if (err?.message && !err.message.includes('User cancelled')) {
+        console.warn('Camera error:', err);
+        this.errorMessage.set('Could not access camera/photos: ' + (err.message || 'Permission denied'));
+      }
     }
   }
 

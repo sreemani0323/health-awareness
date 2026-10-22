@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ApiConfigService } from './api-config.service';
 
 export interface ConcernSubmission {
   category: string;
@@ -76,8 +77,13 @@ export interface StaffMeResponse {
 })
 export class ConcernService {
   private http = inject(HttpClient);
-  private apiUrl = '/api/v1/concerns';
-  private staffUrl = '/api/v1/staff';
+  private apiConfig = inject(ApiConfigService);
+  private get apiUrl(): string {
+    return this.apiConfig.getApiUrl('/concerns');
+  }
+  private get staffUrl(): string {
+    return this.apiConfig.getApiUrl('/staff');
+  }
 
   submitConcern(data: ConcernSubmission): Observable<ConcernSubmitResponse> {
     const formData = new FormData();

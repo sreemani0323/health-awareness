@@ -218,20 +218,31 @@
           </div>
 
           @if (!photoPreview()) {
-            <div class="upload-dropzone">
-              <input
-                type="file"
-                id="photo-file-input"
-                accept="image/jpeg,image/png,image/webp"
-                (change)="onPhotoSelected($event)"
-                class="file-input-hidden"
-              />
-              <label for="photo-file-input" class="dropzone-label">
-                <span class="upload-icon">📷</span>
-                <span class="upload-text">Click to browse or take a photo</span>
-                <span class="upload-hint">Supported formats: JPG, PNG, WebP (Max 5MB)</span>
-              </label>
-            </div>
+            @if (isNative()) {
+              <div class="native-photo-actions">
+                <button type="button" class="btn btn-primary" (click)="captureNativePhoto('camera')" id="btn-camera-capture">
+                  📷 Take Photo with Camera
+                </button>
+                <button type="button" class="btn btn-secondary" (click)="captureNativePhoto('photos')" id="btn-gallery-select">
+                  🖼️ Choose from Device Photos
+                </button>
+              </div>
+            } @else {
+              <div class="upload-dropzone">
+                <input
+                  type="file"
+                  id="photo-file-input"
+                  accept="image/jpeg,image/png,image/webp"
+                  (change)="onPhotoSelected($event)"
+                  class="file-input-hidden"
+                />
+                <label for="photo-file-input" class="dropzone-label">
+                  <span class="upload-icon">📷</span>
+                  <span class="upload-text">Click to browse or take a photo</span>
+                  <span class="upload-hint">Supported formats: JPG, PNG, WebP (Max 5MB)</span>
+                </label>
+              </div>
+            }
           } @else {
             <div class="preview-wrapper">
               <img [src]="photoPreview()" alt="Uploaded evidence preview" class="evidence-preview-img" />
