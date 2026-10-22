@@ -245,14 +245,37 @@ class TestPostVaccinationAdviceWording:
         assert "adrenaline" in card3_text or "epinephrine" in card3_text
 
     def test_vaccine_mastery_capstone_question_wording(self):
-        """Capstone question mc-vax-4 avoids implying fever is required for antibody production."""
+        """Capstone question mc-vax-4 adheres to young infant (<3 month) fever safety guidelines."""
         challenges = get_mastery_challenges()
         vaccine_ch = next(ch for ch in challenges if ch["topic_id"] == "topic-vaccine")
         q4 = next(q for q in vaccine_ch["questions"] if q["id"] == "mc-vax-4")
 
         q_text = json.dumps(q4).lower()
+        # Does not imply fever is required for immunity
         assert "indicating active antibody production" not in q_text
-        assert "not required for immunity" in q_text or "common, temporary" in q_text
+
+        # Rejects implausible or sensational distractors
+        assert "open-heart surgery" not in q_text
+        assert "red chili" not in q_text
+
+        # Correct option requires prompt clinical assessment, not routine home care alone
+        correct_opts = [o for o in q4["options"] if o["is_correct"]]
+        assert len(correct_opts) == 1
+        correct_opt = correct_opts[0]
+        correct_text = correct_opt["label"].lower()
+        assert "healthcare professional" in correct_text or "clinical assessment" in correct_text
+        assert "48 hours" not in correct_text
+
+        # Distractor advising waiting 48 hours / sweating out fever is marked incorrect
+        wait_distractor = next(
+            o for o in q4["options"] if "48 hours" in o["label"] or "sweat out" in o["label"]
+        )
+        assert wait_distractor["is_correct"] is False
+
+        # Explanation distinguishes prompt clinical evaluation from emergency red flags
+        explanation = q4["explanation"].lower()
+        assert "prompt assessment" in explanation or "healthcare professional" in explanation
+        assert "breathing difficulty" in explanation or "seizures" in explanation or "unresponsiveness" in explanation
 
 
 class TestAuthoritativeSourceLinkages:
