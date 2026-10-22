@@ -424,10 +424,10 @@ def get_mastery_challenges() -> list[dict]:
                     "id": "mc-vax-4",
                     "question_prompt": "Scenario: Six hours after receiving her 6-week immunization, a baby develops a mild fever of 38°C (100.4°F) and injection-site tenderness. What is the proper response?",
                     "hint": "Is mild fever a common, temporary reaction following vaccination?",
-                    "explanation": "Mild low-grade fever and local tenderness are common, temporary reactions following immunization. They typically resolve within 1–2 days and are not required for immunity. Provide comforting measures (cool damp cloth, frequent feeds, paracetamol under guidance if needed), and seek medical care if fever is high or persistent.",
+                    "explanation": "Mild low-grade fever and local tenderness are common, temporary reactions following immunization. They typically resolve within 1–2 days and are not required for immunity. Provide comforting measures (cool damp cloth, frequent feeds, paracetamol under guidance if needed). Seek immediate emergency help if breathing difficulty or seizures occur, and consult a healthcare professional if fever persists beyond 48 hours.",
                     "options": [
                         {"id": "v4-a", "label": "Provide comforting measures (cool damp cloth, frequent feeds, paracetamol if advised); this is a common, short-lived reaction.", "is_correct": True, "feedback": "Correct! Common mild reactions typically resolve within 24 to 48 hours without causing harm."},
-                        {"id": "v4-b", "label": "Vigorously scrub the injection site with hot mustard oil and red chili.", "is_correct": False, "feedback": "Massaging injection sites traumatizes tissue and causes secondary infection."},
+                        {"id": "v4-b", "label": "Vigorously scrub the injection site with hot mustard oil and red chili.", "is_correct": False, "feedback": "Massaging injection sites and applying oils or irritants can irritate sensitive skin and increases the risk of secondary infection. Never rub the site."},
                         {"id": "v4-c", "label": "Rush to the ICU for immediate open-heart surgery.", "is_correct": False, "feedback": "Mild low-grade fever is an expected, harmless physiological response."},
                     ],
                 },

@@ -188,6 +188,13 @@ class TestPostVaccinationAdviceWording:
         assert "difficulty breathing" in content_text.lower()
         assert "convulsion" in content_text.lower() or "seizure" in content_text.lower()
 
+        # Check distinction between emergency help and prompt healthcare professional advice
+        assert "immediate emergency help" in content_text.lower() or "immediate emergency medical care" in content_text.lower()
+        assert "prompt healthcare advice" in content_text.lower() or "prompt advice from a healthcare professional" in content_text.lower()
+
+        # Check absence of unsupported causal claim
+        assert "damages irritated muscle tissue and can introduce bacterial infections" not in content_text.lower()
+
     def test_does_not_imply_fever_is_required_for_vaccine_to_work(self, canonical_curriculum):
         """Must not claim or imply that fever is necessary for protection or proves antibodies."""
         ver = next(

@@ -699,11 +699,11 @@ def get_vaccine_lessons() -> list[dict]:
                             "speaker": "Dr. Radhika",
                             "avatar": "👩🏽",
                             "side": "right",
-                            "body": "Please, Manju, NEVER massage, press, or apply mustard oil or ice directly to a vaccination site! Massaging damages irritated muscle tissue and can introduce bacterial infections. Mild low-grade fever and slight redness are common, short-lived reactions as the body responds to the vaccine. However, fever is not required for the vaccine to work—babies without fever develop excellent protection too. Apply a clean, cool, damp cloth gently on the site, dress her in light clothing, and continue frequent breastfeeding. If she is very uncomfortable or fever persists, paracetamol may be given in a child-appropriate dose under a doctor's or health worker's guidance.",
+                            "body": "Please, Manju, NEVER massage, rub, or apply mustard oil, herbal pastes, ointments, or ice directly to a vaccination site! Rubbing or applying topical products can irritate tender skin and increases the risk of contamination or secondary infection. Mild low-grade warmth and slight redness are common, short-lived reactions as the body responds to the vaccine. However, fever is not required for the vaccine to work—babies without fever develop excellent protection too. Apply a clean, cool, damp cloth gently on the site, dress her in loose clothing, and continue frequent breastfeeding. If she is very uncomfortable or fever causes distress, paracetamol may be given in a child-appropriate dose under a doctor's or health worker's guidance.",
                         },
                         {
                             "block_type": "callout",
-                            "body": "Common Reactions vs Red Flags: Mild low-grade fever (<38.5°C / 101.3°F), localized soreness, and slight fussiness are common, self-limiting reactions that typically subside within 24 to 48 hours. Lack of fever is equally normal and does not mean the vaccine was ineffective. Seek prompt medical care for persistent high fever, breathing difficulties, or excessive floppiness.",
+                            "body": "Common Reactions vs Medical Care: Mild low-grade warmth, local tenderness, and slight fussiness are common, self-limiting reactions that typically resolve within 1 to 2 days without indicating vaccine failure. Seek IMMEDIATE EMERGENCY HELP for acute symptoms such as difficulty breathing, facial swelling, convulsions, or extreme lethargy. Seek PROMPT HEALTHCARE ADVICE if fever persists beyond 24–48 hours, is unresponsive to paracetamol, or if redness spreads significantly beyond the site.",
                         },
                     ],
                     "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
@@ -729,9 +729,9 @@ def get_vaccine_lessons() -> list[dict]:
                             },
                             {
                                 "option_id": "care-massage-oil",
-                                "label": "Vigorously knead and massage the injection site with hot mustard oil and black pepper.",
+                                "label": "Vigorously knead and massage the injection site with hot mustard oil, herbal balms, or black pepper.",
                                 "is_correct": False,
-                                "feedback": "Vigorous massage traumatizes tissue, spreads inflammation, and invites secondary bacterial abscesses.",
+                                "feedback": "Vigorous rubbing and applying topical oils or balms can irritate tender tissue and increase the risk of skin contamination or secondary bacterial infection. Never massage the site.",
                             },
                             {
                                 "option_id": "care-tight-bandage",
@@ -771,12 +771,12 @@ def get_vaccine_lessons() -> list[dict]:
                     "source_ids": ["src-who-vaccine-safety", "src-mohfw-uip"],
                     "interaction": {
                         "interaction_type": "multi_select",
-                        "question_prompt": "Select all rare red-flag symptoms that require immediate medical attention following a vaccination visit:",
+                        "question_prompt": "Select all symptoms following vaccination that require clinical evaluation (immediate emergency help or prompt healthcare professional advice):",
                         "options": [
-                            {"option_id": "red-flag-breathing", "label": "Difficulty breathing, persistent wheezing, or swelling of the face, lips, or throat", "is_correct": True, "feedback": "Signs of an acute allergic reaction requiring immediate emergency medical care."},
-                            {"option_id": "red-flag-convulsion", "label": "Febrile seizures, convulsions, extreme lethargy / floppiness, or persistent inconsolable crying for several hours", "is_correct": True, "feedback": "Requires urgent medical assessment by a physician or health facility."},
-                            {"option_id": "red-flag-high-fever", "label": "Persistent high fever (>39°C / 102.2°F) or large local redness spreading significantly beyond the injection site", "is_correct": True, "feedback": "Warrants prompt clinical evaluation to investigate and treat appropriately."},
-                            {"option_id": "normal-mild-fuss", "label": "Mild fussiness, slight low-grade warmth, or wanting to nurse and rest more for an afternoon", "is_correct": False, "feedback": "Mild fussiness and slight warmth are common, temporary reactions that typically resolve within 1–2 days with comfort and rest."},
+                            {"option_id": "red-flag-breathing", "label": "Difficulty breathing, persistent wheezing, or swelling of the face, lips, or throat", "is_correct": True, "feedback": "Requires immediate emergency medical care for potential acute allergic reaction."},
+                            {"option_id": "red-flag-convulsion", "label": "Febrile seizures, convulsions, or extreme lethargy and unresponsiveness", "is_correct": True, "feedback": "Requires immediate emergency medical evaluation at a hospital or health facility."},
+                            {"option_id": "red-flag-high-fever", "label": "Fever persisting beyond 24–48 hours or redness spreading significantly beyond the injection site", "is_correct": True, "feedback": "Requires prompt advice from a healthcare professional to rule out coincident illness or secondary infection."},
+                            {"option_id": "normal-mild-fuss", "label": "Mild fussiness, slight low-grade warmth, or wanting to nurse and rest more during the first 24 hours", "is_correct": False, "feedback": "Common, expected minor reactions that resolve safely with fluids, comfort, and rest."},
                         ],
                         "incorrect_behaviour": "retry",
                     },
@@ -955,6 +955,10 @@ def get_vaccine_lessons() -> list[dict]:
                         {
                             "block_type": "key_takeaway",
                             "body": "Safe Comfort Care: Soothe injection-site tenderness with a clean, cool, damp cloth and loose clothing. Never massage, rub, or apply oils or ice. Use paracetamol under medical guidance if fever or discomfort requires it.",
+                        },
+                        {
+                            "block_type": "key_takeaway",
+                            "body": "When to Seek Care: Seek immediate emergency help for breathing difficulty, facial swelling, or seizures. Seek prompt advice from a healthcare professional if fever persists beyond 48 hours or redness spreads.",
                         },
                         {
                             "block_type": "key_takeaway",
