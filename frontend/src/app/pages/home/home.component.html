@@ -6,6 +6,12 @@
   <section class="oppia-splash-section-one" id="hero-section" aria-label="Hero introduction">
     <!-- Left Column: Heading, Subtitle, Responsive Starting Actions -->
     <div class="oppia-splash-section-one-left">
+      <!-- Eyebrow Pill -->
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-chip">🌿 Grassroots Health Initiative</span>
+        <span class="hero-eyebrow-text">Science-backed habits for communities</span>
+      </div>
+
       <h1 class="oppia-splash-h1">Everyday Health Knowledge for Everyone</h1>
       <div class="oppia-splash-h2-container">
         <h2 class="oppia-splash-h2">
@@ -110,68 +116,116 @@
         </div>
       }
 
-      <!-- Action 2: Explore Health Topics -->
-      <div class="oppia-splash-button-container">
-        <a
-          routerLink="/topics"
-          class="btn btn-primary oppia-splash-button"
-          id="hero-explore-btn"
-        >
-          Explore Health Topics
-        </a>
+      <!-- Responsive Action Group -->
+      <div class="hero-actions-group">
+        <div class="hero-primary-actions">
+          <div class="oppia-splash-button-container">
+            <a
+              routerLink="/topics"
+              class="btn btn-primary oppia-splash-button hero-btn-primary"
+              id="hero-explore-btn"
+            >
+              <span>Explore Health Topics</span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div class="oppia-splash-button-container">
+            <a
+              routerLink="/report"
+              class="btn oppia-splash-button oppia-splash-button-report hero-btn-report"
+              id="hero-report-btn"
+            >
+              <span>📢 Report a Community Concern</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-secondary-actions">
+          <div class="oppia-splash-button-container">
+            <a
+              href="#family-activities"
+              class="btn oppia-splash-button oppia-splash-button-activity hero-btn-activity"
+              id="hero-activity-btn"
+            >
+              <span>⚡ Try a Small Health Activity</span>
+            </a>
+          </div>
+          <div class="oppia-splash-button-container app-link-container">
+            <button
+              type="button"
+              class="btn oppia-splash-app-link hero-btn-android"
+              id="hero-android-btn"
+              (click)="showComingSoon('Android App on Google Play')"
+            >
+              <span>📱 Access the Android App</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <!-- Action 3: Try a Small Health Activity (Unified palette) -->
-      <div class="oppia-splash-button-container">
-        <a
-          href="#family-activities"
-          class="btn btn-secondary oppia-splash-button"
-          id="hero-activity-btn"
-        >
-          Try a Small Health Activity
-        </a>
-      </div>
-
-      <!-- Action 4: Report a Concern -->
-      <div class="oppia-splash-button-container">
-        <a
-          routerLink="/report"
-          class="btn btn-primary oppia-splash-button oppia-splash-button-report"
-          id="hero-report-btn"
-        >
-          📢 Report a Community Concern
-        </a>
-      </div>
-
-      <!-- Secondary: Android App (Preserved) -->
-      <div class="oppia-splash-button-container app-link-container">
-        <button
-          type="button"
-          class="btn btn-secondary oppia-splash-app-link"
-          id="hero-android-btn"
-          (click)="showComingSoon('Android App on Google Play')"
-        >
-          <span>📱 Access the Android App</span>
-        </button>
+      <!-- Trust & Proof Stats Strip -->
+      <div class="hero-proof-bar" aria-label="Program highlights">
+        <div class="hero-proof-item">
+          <span class="proof-dot"></span>
+          <span><strong>4</strong> Core Topics</span>
+        </div>
+        <div class="hero-proof-divider" aria-hidden="true">•</div>
+        <div class="hero-proof-item">
+          <span class="proof-dot"></span>
+          <span><strong>20</strong> Chapters</span>
+        </div>
+        <div class="hero-proof-divider" aria-hidden="true">•</div>
+        <div class="hero-proof-item">
+          <span class="proof-dot"></span>
+          <span><strong>100%</strong> Free</span>
+        </div>
+        <div class="hero-proof-divider" aria-hidden="true">•</div>
+        <div class="hero-proof-item">
+          <span class="proof-dot"></span>
+          <span><strong>Offline</strong> APK</span>
+        </div>
       </div>
     </div>
 
-    <!-- Right Column: User-Provided Health Education Photograph -->
+    <!-- Right Column: User-Provided Health Education Photograph Showcase -->
     <div class="oppia-splash-section-one-right">
-      <div class="oppia-splash-main-image">
-        <img
-          src="/assets/images/splash/main_photo.jpg"
-          width="3000"
-          height="3000"
-          alt="Community health workers and students conducting health awareness activities at an Anganwadi center"
-          class="splash-main-img-desktop"
-        >
+      <div class="hero-visual-card">
+        <div class="hero-visual-glow" aria-hidden="true"></div>
+
+        <div class="oppia-splash-main-image">
+          <img
+            src="/assets/images/splash/main_photo.jpg"
+            width="2872"
+            height="1873"
+            alt="Community health workers and students conducting health awareness activities at an Anganwadi center"
+            class="splash-main-img-desktop"
+            loading="eager"
+          >
+        </div>
+
+        <!-- Floating Trust Badges -->
+        <div class="hero-floating-badge badge-top-right">
+          <span class="badge-icon">🌿</span>
+          <div class="badge-text">
+            <span class="badge-title">Field Verified</span>
+            <span class="badge-sub">Anganwadi Programs</span>
+          </div>
+        </div>
+
+        <div class="hero-floating-badge badge-bottom-left">
+          <span class="badge-icon">✓</span>
+          <div class="badge-text">
+            <span class="badge-title">20 Micro-Lessons</span>
+            <span class="badge-sub">Bite-sized &amp; Interactive</span>
+          </div>
+        </div>
       </div>
+
       <div class="oppia-splash-main-image-mobile">
         <img
           src="/assets/images/splash/main_photo.jpg"
-          width="3000"
-          height="3000"
+          width="2872"
+          height="1873"
           alt="Community health workers and students conducting health awareness activities at an Anganwadi center"
           class="splash-main-img-mobile"
         >
