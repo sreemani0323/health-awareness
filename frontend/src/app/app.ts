@@ -3,6 +3,7 @@ import { RouterOutlet, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -10,7 +11,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 @Component({
   selector: 'ha-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, FooterComponent],
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, BottomNavComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

@@ -12,6 +12,12 @@
   flex: 1 0 auto;
 }
 
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .skip-link {
   position: absolute;
   top: -60px;
