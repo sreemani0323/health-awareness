@@ -2,7 +2,7 @@
  * Type definitions and manifest validation contracts for HealthAware Android direct distribution.
  */
 
-export type ReleaseStatus = 'published' | 'signing_pending' | 'unavailable';
+export type ReleaseStatus = 'published' | 'ready' | 'signing_pending' | 'unavailable';
 
 export interface AppReleaseManifest {
   /** Android application package ID (must match build.gradle applicationId) */
@@ -67,13 +67,13 @@ export function validateReleaseManifest(manifest: unknown): {
     errors.push('Missing or invalid versionCode (must be positive integer)');
   }
 
-  if (!m.status || !['published', 'signing_pending', 'unavailable'].includes(m.status)) {
+  if (!m.status || !['published', 'ready', 'signing_pending', 'unavailable'].includes(m.status)) {
     errors.push(`Invalid release status: '${m.status}'`);
   }
 
   // If marked as available for public download, enforce strict release artifact verification
   if (m.isAvailable === true) {
-    if (m.status !== 'published') {
+    if (m.status !== 'published' && m.status !== 'ready') {
       errors.push('isAvailable is true but status is not "published"');
     }
 

@@ -12,7 +12,7 @@
   "sha256": "74CC4F548F33A56F15A290880CA3C82693A1402E881DB05B16B3BD58C690C40D",
   "releaseDate": "2026-10-25",
   "isAvailable": true,
-  "status": "ready",
+  "status": "published",
   "statusMessage": "Official signed release build v1.0 is verified and available for direct download.",
   "requiresManualPermission": true
 }
