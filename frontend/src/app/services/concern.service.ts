@@ -14,6 +14,7 @@ export interface ConcernSubmission {
   latitude?: number;
   longitude?: number;
   photo?: File;
+  photos?: File[];
 }
 
 export interface ConcernSubmitResponse {
@@ -96,7 +97,13 @@ export class ConcernService {
     formData.append('duration', data.duration);
     if (data.latitude) formData.append('latitude', data.latitude.toString());
     if (data.longitude) formData.append('longitude', data.longitude.toString());
-    if (data.photo) formData.append('photo', data.photo, data.photo.name);
+    if (data.photos && data.photos.length > 0) {
+      data.photos.forEach((file) => {
+        formData.append('photos', file, file.name);
+      });
+    } else if (data.photo) {
+      formData.append('photo', data.photo, data.photo.name);
+    }
 
     return this.http.post<ConcernSubmitResponse>(this.apiUrl, formData, {
       withCredentials: true,

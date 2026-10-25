@@ -953,8 +953,16 @@ class StaffApplicationService:
             setup_token_hash = hashlib.sha256(raw_setup_token.encode("utf-8")).hexdigest()
             setup_token_expires_at = now + timedelta(hours=SETUP_TOKEN_EXPIRY_HOURS)
 
-            scrambled_dummy_pw = secrets.token_urlsafe(32)
-            hashed_pw = hash_password(scrambled_dummy_pw)
+            # Check if applicant pre-set password during verified role-request registration
+            pre_hash = (model.verification_checklist or {}).get("pre_provisioned_password_hash")
+            if pre_hash:
+                hashed_pw = pre_hash
+                must_change = False
+                scrambled_dummy_pw = "Password chosen by applicant during registration"
+            else:
+                scrambled_dummy_pw = secrets.token_urlsafe(32)
+                hashed_pw = hash_password(scrambled_dummy_pw)
+                must_change = True
 
             new_user = UserModel(
                 user_id=new_user_id,
@@ -963,7 +971,7 @@ class StaffApplicationService:
                 role=approved_role,
                 password_hash=hashed_pw,
                 is_active=True,
-                must_change_password=True,
+                must_change_password=must_change,
                 setup_token_hash=setup_token_hash,
                 setup_token_expires_at=setup_token_expires_at,
                 created_at=now,

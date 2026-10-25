@@ -1,0 +1,221 @@
+@if (distribution.isOpen()) {
+  <div
+    class="ha-modal-backdrop"
+    (click)="onBackdropClick($event)"
+    role="presentation"
+  >
+    <div
+      class="ha-modal-container"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="download-modal-title"
+    >
+      <!-- Modal Header -->
+      <div class="ha-modal-header">
+        <div class="ha-modal-title-group">
+          <div class="ha-app-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.68-.05-.85.26l-1.88 3.24c-1.34-.59-2.84-.92-4.45-.92-1.61 0-3.11.33-4.45.92L5.67 5.71c-.17-.31-.56-.41-.85-.26-.31.16-.42.54-.26.85l1.84 3.18C3.84 10.98 2 13.79 2 17h20c0-3.21-1.84-6.02-4.4-7.52zM7 14.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="download-modal-title" class="ha-modal-title">HealthAware for Android</h2>
+            <p class="ha-modal-subtitle">Direct APK Distribution & Installation Guide</p>
+          </div>
+        </div>
+
+        <button
+          #modalCloseBtn
+          type="button"
+          class="ha-modal-close-btn"
+          (click)="close()"
+          aria-label="Close download modal"
+          id="download-modal-close"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="ha-modal-body">
+        @if (distribution.isLoading()) {
+          <div class="ha-loading-state" role="status" aria-live="polite">
+            <div class="ha-spinner" aria-hidden="true"></div>
+            <p>Loading distribution manifest...</p>
+          </div>
+        } @else if (distribution.errorMessage()) {
+          <div class="ha-alert ha-alert-error" role="alert">
+            <p><strong>Notice:</strong> {{ distribution.errorMessage() }}</p>
+          </div>
+        } @else if (distribution.manifest(); as manifest) {
+          <!-- CASE 1: APK Release is Available and Verified -->
+          @if (manifest.isAvailable) {
+            <div class="ha-release-card">
+              <div class="ha-release-meta-grid">
+                <div class="ha-meta-item">
+                  <span class="ha-meta-label">Version</span>
+                  <span class="ha-meta-value">v{{ manifest.versionName }} (Build {{ manifest.versionCode }})</span>
+                </div>
+                <div class="ha-meta-item">
+                  <span class="ha-meta-label">File Size</span>
+                  <span class="ha-meta-value">{{ manifest.fileSizeFormatted || 'Under 25 MB' }}</span>
+                </div>
+                <div class="ha-meta-item">
+                  <span class="ha-meta-label">Android OS</span>
+                  <span class="ha-meta-value">{{ manifest.minAndroidVersion }}</span>
+                </div>
+                <div class="ha-meta-item">
+                  <span class="ha-meta-label">Package ID</span>
+                  <span class="ha-meta-value ha-code-snippet">{{ manifest.applicationId }}</span>
+                </div>
+              </div>
+
+              <div class="ha-action-container">
+                <a
+                  [href]="manifest.downloadUrl"
+                  [download]="manifest.fileName"
+                  class="ha-btn ha-btn-primary ha-btn-download"
+                  id="btn-download-apk"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Download APK ({{ manifest.fileSizeFormatted || 'Direct' }})</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- SHA-256 Checksum Verification -->
+            @if (manifest.sha256) {
+              <div class="ha-integrity-card">
+                <div class="ha-integrity-header">
+                  <span class="ha-integrity-badge">SHA-256 Checksum</span>
+                  <button
+                    type="button"
+                    class="ha-btn-copy"
+                    (click)="copyChecksum(manifest.sha256)"
+                    aria-label="Copy SHA-256 checksum to clipboard"
+                    id="btn-copy-sha256"
+                  >
+                    @if (distribution.copiedSha()) {
+                      <span>✓ Copied</span>
+                    } @else {
+                      <span>Copy Hash</span>
+                    }
+                  </button>
+                </div>
+                <p class="ha-sha-string" id="display-sha256">{{ manifest.sha256 }}</p>
+                <p class="ha-sha-tip">
+                  You can verify this checksum using <code>certutil -hashfile {{ manifest.fileName }} SHA256</code> on Windows or <code>sha256sum {{ manifest.fileName }}</code> on Linux/Mac.
+                </p>
+              </div>
+            }
+
+            <!-- Sideloading Permission & Installation Steps -->
+            <div class="ha-notice-card">
+              <h3 class="ha-section-heading">Android Sideloading Permission Notice</h3>
+              <p class="ha-permission-warning">
+                Installing applications directly outside Google Play requires explicit permission on your Android device. HealthAware does not contain advertisements, background trackers, or unnecessary device permissions.
+              </p>
+
+              <h4 class="ha-subheading">Installation Steps:</h4>
+              <ol class="ha-steps-list">
+                <li>Tap <strong>Download APK</strong> above to save the installation file.</li>
+                <li>When the download completes, tap the file in your notification bar or Files app.</li>
+                <li>If prompted with <em>"For security, your phone is not allowed to install unknown apps from this source"</em>, tap <strong>Settings</strong> and switch on <strong>Allow from this source</strong>.</li>
+                <li>Return to the installer and tap <strong>Install</strong>.</li>
+              </ol>
+            </div>
+          } @else {
+            <!-- CASE 2: Release is Blocked / Signing Pending -->
+            <div class="ha-pending-card" id="signing-pending-card">
+              <div class="ha-pending-badge-row">
+                <span class="ha-status-badge ha-badge-pending">Cryptographic Signing Pending</span>
+                <span class="ha-version-pill">Target v{{ manifest.versionName }}</span>
+              </div>
+
+              <h3 class="ha-pending-title">Android Release Build in Preparation</h3>
+              <p class="ha-pending-desc">
+                The HealthAware Android package is technically prepared, but public distribution is temporarily held pending official cryptographic release signing with our persistent keystore.
+              </p>
+
+              <div class="ha-callout ha-callout-info">
+                <strong>Why is this held?</strong>
+                <p>
+                  For user security and to guarantee that future updates remain seamless and verified, HealthAware only publishes APKs signed with our persistent production identity. We never distribute insecure debug builds or throwaway temporary keys for public use.
+                </p>
+              </div>
+
+              <div class="ha-spec-summary">
+                <div class="ha-spec-row">
+                  <span class="ha-spec-key">Application ID:</span>
+                  <span class="ha-spec-val"><code>{{ manifest.applicationId }}</code></span>
+                </div>
+                <div class="ha-spec-row">
+                  <span class="ha-spec-key">Target Compatibility:</span>
+                  <span class="ha-spec-val">{{ manifest.minAndroidVersion }} to {{ manifest.targetAndroidVersion }}</span>
+                </div>
+                <div class="ha-spec-row">
+                  <span class="ha-spec-key">Distribution Method:</span>
+                  <span class="ha-spec-val">Versioned Static Host (Cloudflare Pages, &lt; 25 MB)</span>
+                </div>
+              </div>
+
+              <!-- Disabled / Informational Download Action (no dead links) -->
+              <div class="ha-disabled-action-box">
+                <button
+                  type="button"
+                  class="ha-btn ha-btn-disabled"
+                  disabled
+                  id="btn-download-pending"
+                  aria-describedby="pending-note"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                  </svg>
+                  <span>Release APK Pending Signing</span>
+                </button>
+                <p id="pending-note" class="ha-pending-note">
+                  A direct download button and SHA-256 checksum will be published here as soon as release signing is complete. No dead links are served.
+                </p>
+              </div>
+
+              <!-- Sideloading Guidance Ahead of Release -->
+              <div class="ha-prep-guidance">
+                <h4 class="ha-subheading">Android Installation Readiness</h4>
+                <p class="ha-prep-text">
+                  When published, installing the direct APK will require enabling <em>"Allow from this source"</em> in your Android browser settings. HealthAware requires zero invasive permissions and keeps your learning data secure.
+                </p>
+              </div>
+
+              <!-- Alternative Action -->
+              <div class="ha-web-alternative">
+                <p>
+                  <strong>Web App Fully Active:</strong> In the meantime, the complete HealthAware curriculum, interactive challenges, and citizen health concern tracking are fully functional in this web browser.
+                </p>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="ha-modal-footer">
+        <button
+          type="button"
+          class="ha-btn ha-btn-secondary"
+          (click)="close()"
+          id="btn-close-modal"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}

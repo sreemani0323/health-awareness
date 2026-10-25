@@ -152,6 +152,52 @@ def test_attachment_metadata_stripping(tmp_path, monkeypatch):
     assert tmp_path.as_posix() in stored_path.replace("\\", "/")
 
 
+def test_attachment_strips_real_exif_gps_metadata(tmp_path, monkeypatch):
+    """Verified test: An uploaded JPEG containing GPS coordinates and device EXIF has all metadata stripped."""
+    monkeypatch.setenv("ATTACHMENT_STORAGE_BACKEND", "local")
+    storage = AttachmentStorageService(storage_dir=str(tmp_path))
+
+    # 1. Construct a JPEG with real EXIF metadata (Make, Model, and GPS tags)
+    img = Image.new("RGB", (200, 200), color="blue")
+    exif = img.getexif()
+    exif[0x010F] = "TestMobileManufacturer"  # Make
+    exif[0x0110] = "TestDeviceModel"  # Model
+    exif[0x0131] = "CameraApp v1.0"  # Software
+    exif[0x9003] = "2026:10:24 16:30:00"  # DateTimeOriginal
+
+    # GPS IFD tags (Tag 0x8825 points to GPS IFD)
+    gps_ifd = exif.get_ifd(0x8825)
+    gps_ifd[1] = "N"  # GPSLatitudeRef
+    gps_ifd[2] = (28, 36, 50)  # GPSLatitude
+    gps_ifd[3] = "E"  # GPSLongitudeRef
+    gps_ifd[4] = (77, 12, 30)  # GPSLongitude
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", exif=exif)
+    raw_jpeg_with_gps = buf.getvalue()
+
+    # Verify our source image actually contains the EXIF and GPS tags
+    with Image.open(io.BytesIO(raw_jpeg_with_gps)) as verify_src:
+        src_exif = verify_src.getexif()
+        assert len(src_exif) > 0
+        assert src_exif[0x010F] == "TestMobileManufacturer"
+        src_gps = src_exif.get_ifd(0x8825)
+        assert src_gps[1] == "N"
+
+    # 2. Store attachment through the pipeline
+    key, mime, size, checksum = storage.store_attachment(raw_jpeg_with_gps, "citizen_photo.jpg")
+
+    # 3. Read back the stored file and verify EXIF is completely stripped
+    stored_path = storage.get_attachment_path(key)
+    with Image.open(stored_path) as sanitized_img:
+        sanitized_exif = sanitized_img.getexif()
+        # EXIF tags must be completely absent or empty
+        assert len(sanitized_exif) == 0, f"Expected 0 EXIF tags, found: {dict(sanitized_exif)}"
+        assert sanitized_exif.get_ifd(0x8825) == {}
+        # Verify internal _getexif() returns None (standard Pillow indicator of no EXIF)
+        assert sanitized_img._getexif() is None
+
+
 def test_attachment_rejects_unsupported_format(tmp_path, monkeypatch):
     monkeypatch.setenv("ATTACHMENT_STORAGE_BACKEND", "local")
     storage = AttachmentStorageService(storage_dir=str(tmp_path))
@@ -434,3 +480,73 @@ def test_jurisdiction_scoped_officer_restrictions(client):
         "handler_name": "Rangareddy Officer",
     })
     assert assign_res.status_code == 403
+
+
+def test_citizen_submit_multiple_photos_up_to_five(client, test_db):
+    """Verifies that up to five photos can be attached to a concern and persisted."""
+    img1 = Image.new("RGB", (64, 64), color="blue")
+    buf1 = io.BytesIO()
+    img1.save(buf1, format="JPEG")
+    buf1.seek(0)
+
+    img2 = Image.new("RGB", (64, 64), color="green")
+    buf2 = io.BytesIO()
+    img2.save(buf2, format="PNG")
+    buf2.seek(0)
+
+    img3 = Image.new("RGB", (64, 64), color="yellow")
+    buf3 = io.BytesIO()
+    img3.save(buf3, format="JPEG")
+    buf3.seek(0)
+
+    data = {
+        "category": "stagnant_water",
+        "state": "Telangana",
+        "district": "Hyderabad",
+        "locality": "Ameerpet Metro Pillar 1042",
+        "description": "Mosquito larvae breeding in untreated excavation pit.",
+        "duration": "1-2 weeks",
+        "photos": [
+            (buf1, "site1.jpg"),
+            (buf2, "site2.png"),
+            (buf3, "site3.jpg"),
+        ],
+    }
+
+    res = client.post("/api/v1/concerns", data=data, content_type="multipart/form-data")
+    assert res.status_code == 201
+    body = res.get_json()
+    ref_id = body["data"]["reference_id"]
+
+    with get_db_session() as session:
+        report = session.query(ConcernReportModel).filter_by(reference_id=ref_id).first()
+        assert report is not None
+        assert len(report.attachments) == 3
+
+
+def test_citizen_submit_rejects_more_than_five_photos(client, test_db):
+    """Verifies that submitting more than 5 photos returns a 400 validation error."""
+    photos = []
+    for i in range(6):
+        img = Image.new("RGB", (32, 32), color="red")
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG")
+        buf.seek(0)
+        photos.append((buf, f"pic{i}.jpg"))
+
+    data = {
+        "category": "drainage",
+        "state": "Telangana",
+        "district": "Hyderabad",
+        "locality": "Secunderabad Station",
+        "description": "Overflowing sewer line onto sidewalk.",
+        "duration": "< 3 days",
+        "photos": photos,
+    }
+
+    res = client.post("/api/v1/concerns", data=data, content_type="multipart/form-data")
+    assert res.status_code == 400
+    body = res.get_json()
+    assert body["error"]["code"] == "VALIDATION_ERROR"
+    assert "maximum of 5 photo attachments" in body["error"]["message"]
+

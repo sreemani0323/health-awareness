@@ -155,7 +155,7 @@
               type="button"
               class="btn oppia-splash-app-link hero-btn-android"
               id="hero-android-btn"
-              (click)="showComingSoon('Android App on Google Play')"
+              (click)="openAndroidModal()"
             >
               <span>📱 Access the Android App</span>
             </button>
@@ -187,48 +187,19 @@
       </div>
     </div>
 
-    <!-- Right Column: User-Provided Health Education Photograph Showcase -->
+    <!-- Right Column: Single Clean Responsive Image Showcase -->
     <div class="oppia-splash-section-one-right">
       <div class="hero-visual-card">
-        <div class="hero-visual-glow" aria-hidden="true"></div>
-
         <div class="oppia-splash-main-image">
           <img
-            src="/assets/images/splash/main_photo.jpg"
+            src="/assets/images/splash/main_photo.png"
             width="2872"
             height="1873"
-            alt="Community health workers and students conducting health awareness activities at an Anganwadi center"
+            alt="Community health awareness session with health workers and students"
             class="splash-main-img-desktop"
             loading="eager"
           >
         </div>
-
-        <!-- Floating Trust Badges -->
-        <div class="hero-floating-badge badge-top-right">
-          <span class="badge-icon">🌿</span>
-          <div class="badge-text">
-            <span class="badge-title">Field Verified</span>
-            <span class="badge-sub">Anganwadi Programs</span>
-          </div>
-        </div>
-
-        <div class="hero-floating-badge badge-bottom-left">
-          <span class="badge-icon">✓</span>
-          <div class="badge-text">
-            <span class="badge-title">20 Micro-Lessons</span>
-            <span class="badge-sub">Bite-sized &amp; Interactive</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="oppia-splash-main-image-mobile">
-        <img
-          src="/assets/images/splash/main_photo.jpg"
-          width="2872"
-          height="1873"
-          alt="Community health workers and students conducting health awareness activities at an Anganwadi center"
-          class="splash-main-img-mobile"
-        >
       </div>
     </div>
   </section>

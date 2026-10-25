@@ -103,12 +103,136 @@
   color: var(--studio-rose);
   font-size: 0.85rem;
   font-weight: 500;
+  margin-bottom: 16px;
 }
 
-.error-icon {
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--studio-radius-md);
+  color: #065f46;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.success-icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  color: #059669;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8rem;
+  color: var(--studio-teal);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color var(--studio-transition);
+}
+
+.link-btn:hover {
+  color: var(--studio-teal-dark);
+}
+
+.recovery-instructions {
+  font-size: 0.85rem;
+  color: var(--studio-text-muted);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.secondary-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  color: var(--studio-text-muted);
+  border: 1px solid var(--studio-border);
+  border-radius: var(--studio-radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--studio-transition);
+  margin-top: 8px;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background-color: var(--studio-surface-subtle);
+  color: var(--studio-text);
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.login-footer-links {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--studio-border-subtle);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.role-request-prompt,
+.learner-prompt {
+  margin: 0;
+  color: var(--studio-text-muted);
+}
+
+.apply-link {
+  color: var(--studio-teal);
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.apply-link:hover {
+  text-decoration: underline;
+}
+
+.home-link {
+  color: var(--studio-text);
+  font-weight: 500;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .login-btn {

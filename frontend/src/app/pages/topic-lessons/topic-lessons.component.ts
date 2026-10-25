@@ -24,6 +24,9 @@ export class TopicLessonsComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
+  /** Single-chapter reset confirmation state */
+  readonly pendingResetLesson = signal<LessonSummary | null>(null);
+
   /** Topic Mastery Challenge state */
   readonly masteryChallenge = signal<TopicMasteryChallenge | null>(null);
   readonly showMasteryModal = signal(false);
@@ -58,6 +61,30 @@ export class TopicLessonsComponent implements OnInit {
 
   isLessonCompleted(lessonId: string): boolean {
     return this.progressService.isLessonCompleted(lessonId);
+  }
+
+  isLessonInProgress(lessonId: string): boolean {
+    return this.progressService.isLessonInProgress(lessonId);
+  }
+
+  getLessonStatus(lessonId: string): 'completed' | 'in_progress' | 'not_started' {
+    return this.progressService.getLessonStatus(lessonId);
+  }
+
+  confirmResetLesson(lesson: LessonSummary): void {
+    this.pendingResetLesson.set(lesson);
+  }
+
+  cancelResetLesson(): void {
+    this.pendingResetLesson.set(null);
+  }
+
+  executeResetLesson(): void {
+    const lesson = this.pendingResetLesson();
+    if (lesson) {
+      this.progressService.resetLessonProgress(lesson.id);
+      this.pendingResetLesson.set(null);
+    }
   }
 
   getTopicActivity(): PracticalActivity | null {

@@ -1,12 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { FooterComponent } from './footer.component';
 
 describe('FooterComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [FooterComponent],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
   });
 
@@ -87,5 +93,37 @@ describe('FooterComponent', () => {
     expect(toast).toBeTruthy();
     expect(toast?.textContent).toContain('HealthAware official social media');
     expect(toast?.textContent).toContain('Coming Soon');
+  });
+
+  it('should open the Android distribution modal when clicking the Google Play badge', () => {
+    const fixture = TestBed.createComponent(FooterComponent);
+    const component = fixture.componentInstance;
+    const openModalSpy = vi.spyOn(component.distribution, 'openModal');
+    fixture.detectChanges();
+
+    const playBtn = fixture.nativeElement.querySelector('#footer-google-play-btn');
+    playBtn.click();
+
+    expect(openModalSpy).toHaveBeenCalled();
+  });
+
+  it('should render the footer when isNative is false (web platform)', () => {
+    const fixture = TestBed.createComponent(FooterComponent);
+    const component = fixture.componentInstance;
+    vi.spyOn(component, 'isNative', 'get').mockReturnValue(false);
+    fixture.detectChanges();
+
+    const footer = fixture.nativeElement.querySelector('#site-footer');
+    expect(footer).toBeTruthy();
+  });
+
+  it('should suppress the footer when isNative is true (native Capacitor Android app)', () => {
+    const fixture = TestBed.createComponent(FooterComponent);
+    const component = fixture.componentInstance;
+    vi.spyOn(component, 'isNative', 'get').mockReturnValue(true);
+    fixture.detectChanges();
+
+    const footer = fixture.nativeElement.querySelector('#site-footer');
+    expect(footer).toBeNull();
   });
 });

@@ -207,24 +207,30 @@
           <div class="char-count">{{ description().length }} / 2000 characters</div>
         </div>
 
-        <!-- Safe Photo Evidence -->
+        <!-- Safe Photo Evidence (Up to 5 photos) -->
         <div class="form-group photo-upload-box">
-          <label class="form-label">Optional Photo Evidence (JPEG, PNG, WebP — max 5 MB)</label>
+          <div class="photo-upload-header">
+            <label class="form-label">
+              Optional Photo Evidence (Up to 5 images — max 5 MB each)
+            </label>
+            <span class="photo-count-badge">{{ selectedPhotos().length }} / 5 attached</span>
+          </div>
+
           <div class="privacy-notice">
             <span class="notice-icon">🔒</span>
             <span>
-              <strong>Privacy Protection:</strong> Please avoid photographing recognizable faces, vehicle number plates, or the interior of private homes. Photos are scrubbed of metadata and kept strictly private.
+              <strong>Privacy Protection:</strong> Avoid photographing recognizable faces, vehicle number plates, or the interior of private homes. Photos are scrubbed of metadata and kept strictly private.
             </span>
           </div>
 
-          @if (!photoPreview()) {
+          @if (selectedPhotos().length < MAX_PHOTOS) {
             @if (isNative()) {
               <div class="native-photo-actions">
                 <button type="button" class="btn btn-primary" (click)="captureNativePhoto('camera')" id="btn-camera-capture">
                   📷 Take Photo with Camera
                 </button>
                 <button type="button" class="btn btn-secondary" (click)="captureNativePhoto('photos')" id="btn-gallery-select">
-                  🖼️ Choose from Device Photos
+                  🖼️ Choose from Gallery
                 </button>
               </div>
             } @else {
@@ -232,26 +238,57 @@
                 <input
                   type="file"
                   id="photo-file-input"
+                  multiple
                   accept="image/jpeg,image/png,image/webp"
-                  (change)="onPhotoSelected($event)"
+                  (change)="onPhotosSelected($event)"
                   class="file-input-hidden"
                 />
                 <label for="photo-file-input" class="dropzone-label">
                   <span class="upload-icon">📷</span>
-                  <span class="upload-text">Click to browse or take a photo</span>
-                  <span class="upload-hint">Supported formats: JPG, PNG, WebP (Max 5MB)</span>
+                  <span class="upload-text">Click to choose photos (up to 5)</span>
+                  <span class="upload-hint">Supported formats: JPG, PNG, WebP (Max 5MB each)</span>
                 </label>
               </div>
             }
-          } @else {
+          }
+
+          @if (photoPreviews().length > 0) {
+            <div class="multi-preview-grid">
+              @for (preview of photoPreviews(); track $index) {
+                <div class="preview-item">
+                  <img [src]="preview" alt="Uploaded evidence preview {{ $index + 1 }}" class="evidence-preview-img" />
+                  <div class="preview-meta">
+                    <span class="preview-filename">{{ selectedPhotos()[$index]?.name || ('Photo ' + ($index + 1)) }}</span>
+                    <button
+                      type="button"
+                      class="btn btn-danger-sm remove-thumb-btn"
+                      (click)="removePhoto($index)"
+                      [id]="'remove-photo-btn-' + $index"
+                      [attr.aria-label]="'Remove photo ' + ($index + 1)"
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (photoPreview()) {
+            <!-- Legacy single preview fallback -->
             <div class="preview-wrapper">
               <img [src]="photoPreview()" alt="Uploaded evidence preview" class="evidence-preview-img" />
-              <button type="button" class="btn btn-danger-sm" (click)="removePhoto()" id="remove-photo-btn">
+              <button type="button" class="btn btn-danger-sm" (click)="removePhoto(0)" id="remove-photo-btn">
                 Remove Photo
               </button>
             </div>
           }
         </div>
+
+        @if (errorMessage()) {
+          <div class="validation-summary-box" role="alert">
+            <span class="alert-icon">⚠️</span>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
 
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="prevStep()" id="step3-back-btn">
@@ -268,26 +305,46 @@
     @if (currentStep() === 4) {
       <div class="step-content">
         <h2 class="step-heading">Step 4 — Review Your Submission</h2>
-        <p class="step-description">Please double-check the details before submitting to HealthAware.</p>
+        <p class="step-description">Please double-check all details below before submitting to HealthAware.</p>
 
         <div class="review-card">
           <div class="review-row">
-            <div class="review-label">Category:</div>
-            <div class="review-value font-bold">{{ getCategoryLabel(selectedCategory()) }}</div>
+            <div class="review-label">Concern Category:</div>
+            <div class="review-value font-bold">
+              {{ getCategoryLabel(selectedCategory()) }}
+              <div class="review-subtle-hint">{{ getCategorySubtitle(selectedCategory()) }}</div>
+            </div>
           </div>
           <div class="review-row">
-            <div class="review-label">Location:</div>
+            <div class="review-label">State:</div>
+            <div class="review-value">{{ state() }}</div>
+          </div>
+          <div class="review-row">
+            <div class="review-label">District:</div>
+            <div class="review-value font-semibold">{{ district() }}</div>
+          </div>
+          <div class="review-row">
+            <div class="review-label">Municipality / Local Body:</div>
             <div class="review-value">
-              {{ locality() }}, {{ district() }}, {{ state() }}
-              @if (municipality() && !municipalityNotSure()) {
-                <span class="text-muted">({{ municipality() }})</span>
+              @if (municipalityNotSure()) {
+                <span class="badge-neutral">Not sure / Unassigned</span>
+              } @else if (municipality().trim()) {
+                <span>{{ municipality().trim() }}</span>
+              } @else {
+                <span class="text-muted">Not specified</span>
               }
             </div>
           </div>
+          <div class="review-row">
+            <div class="review-label">Locality / Landmark:</div>
+            <div class="review-value font-semibold">{{ locality() }}</div>
+          </div>
           @if (latitude() && longitude()) {
             <div class="review-row">
-              <div class="review-label">GPS:</div>
-              <div class="review-value">{{ latitude() | number:'1.4-4' }}, {{ longitude() | number:'1.4-4' }}</div>
+              <div class="review-label">Device GPS Coordinates:</div>
+              <div class="review-value">
+                <span class="gps-coords-badge">📍 {{ latitude() | number:'1.5-5' }}, {{ longitude() | number:'1.5-5' }}</span>
+              </div>
             </div>
           }
           <div class="review-row">
@@ -295,20 +352,45 @@
             <div class="review-value">{{ duration() }}</div>
           </div>
           <div class="review-row">
-            <div class="review-label">Description:</div>
-            <div class="review-value">{{ description() }}</div>
+            <div class="review-label">Problem Description:</div>
+            <div class="review-value review-desc-text">{{ description() }}</div>
           </div>
-          @if (selectedPhoto()) {
-            <div class="review-row">
-              <div class="review-label">Attached Photo:</div>
-              <div class="review-value">1 photo attached ({{ selectedPhoto()?.name }})</div>
+          <div class="review-row review-row--photos">
+            <div class="review-label">Attached Photos:</div>
+            <div class="review-value">
+              @if (photoPreviews().length > 0) {
+                <div class="review-photos-header">
+                  <strong>{{ photoPreviews().length }} of 5 photos attached</strong>
+                </div>
+                <div class="review-thumbnails-grid">
+                  @for (preview of photoPreviews(); track $index) {
+                    <div class="review-thumb-item">
+                      <img [src]="preview" alt="Attached evidence thumbnail {{ $index + 1 }}" class="review-thumb-img" />
+                      <span class="review-thumb-name">{{ selectedPhotos()[$index]?.name || ('Photo ' + ($index + 1)) }}</span>
+                    </div>
+                  }
+                </div>
+              } @else if (selectedPhoto()) {
+                <div class="review-photos-header">
+                  <strong>1 photo attached ({{ selectedPhoto()?.name }})</strong>
+                </div>
+              } @else {
+                <span class="text-muted">No photos attached (optional)</span>
+              }
             </div>
-          }
+          </div>
         </div>
 
         <div class="intake-disclaimer">
           <strong>Important Notice:</strong> HealthAware is a community health education and civil monitoring initiative. Submitting this report alerts HealthAware case coordinators; it does <em>not</em> constitute a legal municipal government filing or emergency dispatch request.
         </div>
+
+        @if (errorMessage()) {
+          <div class="validation-summary-box" role="alert" id="step4-validation-summary">
+            <span class="alert-icon">⚠️</span>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
 
         <div class="form-actions">
           <button type="button" class="btn btn-secondary" (click)="prevStep()" [disabled]="submitting()" id="step4-back-btn">

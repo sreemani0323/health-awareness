@@ -118,8 +118,17 @@
             <div class="topic-lesson-card-content">
               <div class="topic-lesson-card-title-row">
                 <!-- Oppia module circle badge -->
-                <div class="topic-module-circle-badge lesson-item__number">
-                  {{ idx + 1 }}
+                <div
+                  class="topic-module-circle-badge lesson-item__number"
+                  [class.topic-module-circle-badge--completed]="isLessonCompleted(lesson.id)"
+                  [class.topic-module-circle-badge--in-progress]="isLessonInProgress(lesson.id)"
+                  [attr.aria-label]="isLessonCompleted(lesson.id) ? 'Chapter ' + (idx + 1) + ' completed' : (isLessonInProgress(lesson.id) ? 'Chapter ' + (idx + 1) + ' in progress' : 'Chapter ' + (idx + 1))"
+                >
+                  @if (isLessonCompleted(lesson.id)) {
+                    <span aria-hidden="true">✓</span>
+                  } @else {
+                    {{ idx + 1 }}
+                  }
                 </div>
                 <div class="topic-lesson-card-header-info">
                   <span class="topic-lesson-card-chapter-label">CHAPTER {{ idx + 1 }}</span>
@@ -144,19 +153,59 @@
                     <span class="topic-lesson-completed-badge" [id]="'completed-badge-' + lesson.id">
                       <span aria-hidden="true">✓</span> Completed
                     </span>
+                  } @else if (isLessonInProgress(lesson.id)) {
+                    <span class="topic-lesson-in-progress-badge" [id]="'in-progress-badge-' + lesson.id">
+                      <span class="status-pulse-dot" aria-hidden="true"></span> In Progress
+                    </span>
+                  } @else {
+                    <span class="topic-lesson-not-started-badge" [id]="'not-started-badge-' + lesson.id">
+                      Not Started
+                    </span>
                   }
                 </div>
 
-                <a
-                  [routerLink]="['/lessons', lesson.id]"
-                  class="topic-lesson-card-start-button"
-                  [class.topic-lesson-card-start-button--review]="isLessonCompleted(lesson.id)"
-                  [id]="'start-lesson-' + lesson.id"
-                  [attr.aria-label]="(isLessonCompleted(lesson.id) ? 'Review lesson: ' : 'Start lesson: ') + lesson.title"
-                >
-                  <span>{{ isLessonCompleted(lesson.id) ? 'Review Lesson' : 'Start Lesson' }}</span>
-                  <span class="topic-lesson-card-start-arrow" aria-hidden="true">→</span>
-                </a>
+                <div class="topic-lesson-card-actions">
+                  @if (isLessonCompleted(lesson.id)) {
+                    <button
+                      type="button"
+                      class="topic-lesson-reset-btn"
+                      [id]="'reset-chapter-btn-' + lesson.id"
+                      (click)="confirmResetLesson(lesson)"
+                      [attr.aria-label]="'Reset chapter completion for ' + lesson.title"
+                    >
+                      <span aria-hidden="true">↺</span> Reset
+                    </button>
+                    <a
+                      [routerLink]="['/lessons', lesson.id]"
+                      class="topic-lesson-card-start-button topic-lesson-card-start-button--review"
+                      [id]="'start-lesson-' + lesson.id"
+                      [attr.aria-label]="'Review lesson: ' + lesson.title"
+                    >
+                      <span>Review Lesson</span>
+                      <span class="topic-lesson-card-start-arrow" aria-hidden="true">→</span>
+                    </a>
+                  } @else if (isLessonInProgress(lesson.id)) {
+                    <a
+                      [routerLink]="['/lessons', lesson.id]"
+                      class="topic-lesson-card-start-button topic-lesson-card-start-button--continue"
+                      [id]="'start-lesson-' + lesson.id"
+                      [attr.aria-label]="'Continue lesson: ' + lesson.title"
+                    >
+                      <span>Continue Lesson</span>
+                      <span class="topic-lesson-card-start-arrow" aria-hidden="true">→</span>
+                    </a>
+                  } @else {
+                    <a
+                      [routerLink]="['/lessons', lesson.id]"
+                      class="topic-lesson-card-start-button"
+                      [id]="'start-lesson-' + lesson.id"
+                      [attr.aria-label]="'Start lesson: ' + lesson.title"
+                    >
+                      <span>Start Lesson</span>
+                      <span class="topic-lesson-card-start-arrow" aria-hidden="true">→</span>
+                    </a>
+                  }
+                </div>
               </div>
             </div>
           </div>
@@ -288,6 +337,48 @@
               </div>
             </div>
           }
+        </div>
+      </div>
+    }
+
+    <!-- Single Chapter Reset Confirmation Modal -->
+    @if (pendingResetLesson(); as lessonToReset) {
+      <div class="reset-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+        <div class="reset-modal-content">
+          <div class="reset-modal-header">
+            <div class="reset-modal-icon-wrap" aria-hidden="true">↺</div>
+            <div>
+              <span class="reset-modal-tag">CHAPTER RE-PRACTICE</span>
+              <h3 class="reset-modal-title" id="reset-modal-title">Reset Chapter Progress?</h3>
+            </div>
+          </div>
+          <div class="reset-modal-body">
+            <p class="reset-modal-desc">
+              Are you sure you want to reset completion for <strong>{{ lessonToReset.title }}</strong>?
+            </p>
+            <p class="reset-modal-subdesc">
+              This chapter will be marked as uncompleted so you can re-read and practice all cards fresh from the start.
+              Your other completed chapters, family activities, and earned milestone badges will remain intact.
+            </p>
+          </div>
+          <div class="reset-modal-footer">
+            <button
+              type="button"
+              class="btn-reset-cancel"
+              (click)="cancelResetLesson()"
+              id="cancel-reset-chapter-btn"
+            >
+              Keep Completed
+            </button>
+            <button
+              type="button"
+              class="btn-reset-confirm"
+              (click)="executeResetLesson()"
+              id="confirm-reset-chapter-btn"
+            >
+              Yes, Reset Chapter
+            </button>
+          </div>
         </div>
       </div>
     }

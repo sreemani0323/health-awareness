@@ -480,3 +480,230 @@
   cursor: not-allowed;
   opacity: 0.7;
 }
+
+/* Stepper Navigation */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.step-item.active {
+  opacity: 1;
+}
+
+.step-item.completed {
+  opacity: 0.85;
+}
+
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #cbd5e1;
+}
+
+.step-item.active .step-circle {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.step-item.completed .step-circle {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+}
+
+.step-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.step-divider {
+  flex: 1;
+  max-width: 48px;
+  height: 2px;
+  background: #e2e8f0;
+}
+
+.step-divider.completed {
+  background: #16a34a;
+}
+
+/* Alert Banner: Info */
+.alert-banner.info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
+/* Field Hint */
+.field-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Verification Card (Steps 2 & 3) */
+.verification-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 36px 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.verification-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.verification-icon {
+  font-size: 2.25rem;
+  margin-bottom: 8px;
+}
+
+.centered-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.otp-input {
+  font-family: monospace;
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  max-width: 220px;
+  padding: 12px;
+}
+
+.resend-row {
+  margin-top: 8px;
+}
+
+.link-btn-text {
+  background: none;
+  border: none;
+  color: #0284c7;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.link-btn-text:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.link-btn-text:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.link-btn-text.text-muted {
+  color: #64748b;
+  font-weight: normal;
+}
+
+.verification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.sub-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Password Setup in Step 3 */
+.password-setup-section {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 24px;
+  margin-top: 24px;
+}
+
+.password-setup-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrap .form-input {
+  padding-right: 64px;
+}
+
+.btn-toggle-pwd {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.password-hints {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.password-hints span.valid {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}

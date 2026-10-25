@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Geolocation } from '@capacitor/geolocation';
 import { ConcernService, ConcernSubmitResponse } from '../../services/concern.service';
+import { getActionableErrorMessage } from '../../interceptors/api-timeout-retry.interceptor';
 
 interface CategoryOption {
   id: string;
@@ -44,6 +46,14 @@ export class ReportConcernComponent {
 
   description = signal<string>('');
   duration = signal<string>('< 3 days');
+
+  // Multi-photo evidence state (up to 5 images)
+  readonly MAX_PHOTOS = 5;
+  readonly MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+  selectedPhotos = signal<File[]>([]);
+  photoPreviews = signal<string[]>([]);
+
+  // Backward-compatible signals for legacy single-photo tests
   selectedPhoto = signal<File | null>(null);
   photoPreview = signal<string | null>(null);
 
@@ -117,42 +127,128 @@ export class ReportConcernComponent {
     }
   }
 
-  requestGps() {
-    if (!navigator.geolocation) {
-      this.errorMessage.set('Geolocation is not supported by your browser.');
-      return;
-    }
+  async requestGps(): Promise<void> {
     this.gpsLocating.set(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        this.latitude.set(pos.coords.latitude);
-        this.longitude.set(pos.coords.longitude);
+    this.errorMessage.set(null);
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const permStatus = await Geolocation.checkPermissions();
+        if (permStatus.location === 'denied') {
+          const reqStatus = await Geolocation.requestPermissions();
+          if (reqStatus.location === 'denied') {
+            this.gpsLocating.set(false);
+            this.errorMessage.set(
+              'Location permission was denied. You can still enter your district and locality details manually.'
+            );
+            return;
+          }
+        }
+
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        });
+
+        this.latitude.set(position.coords.latitude);
+        this.longitude.set(position.coords.longitude);
         this.gpsLocating.set(false);
-      },
-      () => {
-        this.gpsLocating.set(false);
-        this.errorMessage.set('Unable to retrieve location. Please fill locality details manually.');
-      },
-      { timeout: 10000 }
-    );
+      } else {
+        if (!navigator.geolocation) {
+          this.gpsLocating.set(false);
+          this.errorMessage.set('Geolocation is not supported by your browser. Please enter locality details manually.');
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            this.latitude.set(pos.coords.latitude);
+            this.longitude.set(pos.coords.longitude);
+            this.gpsLocating.set(false);
+          },
+          (err) => {
+            this.gpsLocating.set(false);
+            let msg = 'Unable to retrieve location. Please fill locality details manually.';
+            if (err.code === err.PERMISSION_DENIED) {
+              msg = 'Location permission was denied in your browser. Please enter details manually.';
+            } else if (err.code === err.TIMEOUT) {
+              msg = 'Location request timed out. Please enter locality details manually.';
+            } else if (err.code === err.POSITION_UNAVAILABLE) {
+              msg = 'Location service is unavailable on your device. Please enter details manually.';
+            }
+            this.errorMessage.set(msg);
+          },
+          { timeout: 10000, enableHighAccuracy: true, maximumAge: 60000 }
+        );
+      }
+    } catch (err: any) {
+      this.gpsLocating.set(false);
+      let msg = 'Could not retrieve device location. Please enter locality details manually.';
+      const errMsg = err?.message || '';
+      if (errMsg.includes('denied')) {
+        msg = 'Location permission was denied. You can enter locality details manually.';
+      } else if (errMsg.includes('disabled') || errMsg.includes('location services are not enabled')) {
+        msg = 'Location services are disabled on your device. Please enable GPS in device Settings or enter locality manually.';
+      } else if (errMsg.includes('timeout')) {
+        msg = 'Location request timed out. Please enter locality details manually.';
+      }
+      this.errorMessage.set(msg);
+    }
   }
 
-  onPhotoSelected(event: Event) {
+  onPhotosSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      if (file.size > 5 * 1024 * 1024) {
-        this.errorMessage.set('Photo size must not exceed 5 MB.');
+    if (!input.files || input.files.length === 0) return;
+
+    const files = Array.from(input.files);
+    this.addPhotos(files);
+    input.value = '';
+  }
+
+  // Legacy single photo event handler for backwards compatibility
+  onPhotoSelected(event: Event): void {
+    this.onPhotosSelected(event);
+  }
+
+  private addPhotos(files: File[]): void {
+    const current = this.selectedPhotos();
+    if (current.length + files.length > this.MAX_PHOTOS) {
+      this.errorMessage.set(
+        `You can attach at most ${this.MAX_PHOTOS} photos. You have already attached ${current.length}.`
+      );
+      return;
+    }
+
+    const validFiles: File[] = [];
+    for (const file of files) {
+      if (file.size > this.MAX_PHOTO_SIZE_BYTES) {
+        this.errorMessage.set(`Photo "${file.name}" exceeds the 5 MB maximum size limit.`);
         return;
       }
-      this.selectedPhoto.set(file);
-      const reader = new FileReader();
-      reader.onload = (e) => this.photoPreview.set(e.target?.result as string);
-      reader.readAsDataURL(file);
+      validFiles.push(file);
     }
+
+    validFiles.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const previewUrl = e.target?.result as string;
+        this.selectedPhotos.update((arr) => [...arr, f]);
+        this.photoPreviews.update((arr) => [...arr, previewUrl]);
+        const updated = this.selectedPhotos();
+        this.selectedPhoto.set(updated[0] || null);
+        this.photoPreview.set(this.photoPreviews()[0] || null);
+      };
+      reader.readAsDataURL(f);
+    });
   }
 
   async captureNativePhoto(source: 'camera' | 'photos'): Promise<void> {
+    if (this.selectedPhotos().length >= this.MAX_PHOTOS) {
+      this.errorMessage.set(`You can attach a maximum of ${this.MAX_PHOTOS} photos.`);
+      return;
+    }
+
     try {
       this.errorMessage.set(null);
       const photo = await Camera.getPhoto({
@@ -163,19 +259,23 @@ export class ReportConcernComponent {
       });
 
       if (photo.webPath) {
-        this.photoPreview.set(photo.webPath);
         const response = await fetch(photo.webPath);
         const blob = await response.blob();
-        if (blob.size > 5 * 1024 * 1024) {
-          this.errorMessage.set('Photo size must not exceed 5 MB.');
-          this.removePhoto();
+        if (blob.size > this.MAX_PHOTO_SIZE_BYTES) {
+          this.errorMessage.set('Captured photo size must not exceed 5 MB.');
           return;
         }
         const ext = photo.format || 'jpg';
-        const file = new File([blob], `concern_evidence_${Date.now()}.${ext}`, {
-          type: blob.type || `image/${ext}`,
-        });
-        this.selectedPhoto.set(file);
+        const file = new File(
+          [blob],
+          `concern_evidence_${Date.now()}_${this.selectedPhotos().length + 1}.${ext}`,
+          { type: blob.type || `image/${ext}` }
+        );
+
+        this.selectedPhotos.update((arr) => [...arr, file]);
+        this.photoPreviews.update((arr) => [...arr, photo.webPath!]);
+        this.selectedPhoto.set(this.selectedPhotos()[0] || null);
+        this.photoPreview.set(this.photoPreviews()[0] || null);
       }
     } catch (err: any) {
       if (err?.message && !err.message.includes('User cancelled')) {
@@ -185,16 +285,42 @@ export class ReportConcernComponent {
     }
   }
 
-  removePhoto() {
-    this.selectedPhoto.set(null);
-    this.photoPreview.set(null);
+  removePhoto(index = 0): void {
+    this.selectedPhotos.update((arr) => arr.filter((_, i) => i !== index));
+    this.photoPreviews.update((arr) => arr.filter((_, i) => i !== index));
+    const updated = this.selectedPhotos();
+    this.selectedPhoto.set(updated[0] || null);
+    this.photoPreview.set(this.photoPreviews()[0] || null);
   }
 
-  submitReport() {
+  submitReport(): void {
+    if (!this.selectedCategory()) {
+      this.errorMessage.set('Category is required. Please return to Step 1 to select one.');
+      return;
+    }
+    if (!this.district().trim()) {
+      this.errorMessage.set('District is required. Please return to Step 2 to enter a district.');
+      return;
+    }
+    if (!this.locality().trim()) {
+      this.errorMessage.set('Locality or landmark is required. Please return to Step 2.');
+      return;
+    }
+    if (!this.description().trim()) {
+      this.errorMessage.set('Description is required. Please return to Step 3.');
+      return;
+    }
+
     this.submitting.set(true);
     this.errorMessage.set(null);
 
     const mun = this.municipalityNotSure() ? 'Not sure' : this.municipality().trim();
+    const photosToSend =
+      this.selectedPhotos().length > 0
+        ? this.selectedPhotos()
+        : this.selectedPhoto()
+          ? [this.selectedPhoto()!]
+          : undefined;
 
     this.concernService
       .submitConcern({
@@ -207,7 +333,8 @@ export class ReportConcernComponent {
         duration: this.duration(),
         latitude: this.latitude() || undefined,
         longitude: this.longitude() || undefined,
-        photo: this.selectedPhoto() || undefined,
+        photos: photosToSend,
+        photo: photosToSend?.[0],
       })
       .subscribe({
         next: (res) => {
@@ -217,13 +344,17 @@ export class ReportConcernComponent {
         },
         error: (err) => {
           this.submitting.set(false);
-          const msg = err.error?.error?.message || 'Submission failed. Please check your network and try again.';
-          this.errorMessage.set(msg);
+          // Preserve all form input fields and attachment files/previews for retry
+          const userMsg =
+            err.error?.userMessage ||
+            err.error?.error?.message ||
+            getActionableErrorMessage(err);
+          this.errorMessage.set(userMsg);
         },
       });
   }
 
-  copyCredentials() {
+  copyCredentials(): void {
     const res = this.submissionResult();
     if (!res) return;
     const text = `HealthAware Concern Reference: ${res.data.reference_id}\nPrivate Tracking Token: ${res.data.tracking_token}\nTrack at: ${window.location.origin}/track`;
@@ -233,7 +364,7 @@ export class ReportConcernComponent {
     });
   }
 
-  printConfirmation() {
+  printConfirmation(): void {
     window.print();
   }
 
@@ -241,4 +372,10 @@ export class ReportConcernComponent {
     const c = this.categories.find((x) => x.id === id);
     return c ? c.title : id;
   }
+
+  getCategorySubtitle(id: string): string {
+    const c = this.categories.find((x) => x.id === id);
+    return c ? c.subtitle : '';
+  }
 }
+

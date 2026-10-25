@@ -17,8 +17,30 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            def releaseKeystorePath = project.hasProperty('HEALTHAWARE_KEYSTORE_PATH') ? project.property('HEALTHAWARE_KEYSTORE_PATH') :
+                                      System.getenv('HEALTHAWARE_KEYSTORE_PATH')
+            def releaseKeystorePassword = project.hasProperty('HEALTHAWARE_KEYSTORE_PASSWORD') ? project.property('HEALTHAWARE_KEYSTORE_PASSWORD') :
+                                          System.getenv('HEALTHAWARE_KEYSTORE_PASSWORD')
+            def releaseKeyAlias = project.hasProperty('HEALTHAWARE_KEY_ALIAS') ? project.property('HEALTHAWARE_KEY_ALIAS') :
+                                  System.getenv('HEALTHAWARE_KEY_ALIAS')
+            def releaseKeyPassword = project.hasProperty('HEALTHAWARE_KEY_PASSWORD') ? project.property('HEALTHAWARE_KEY_PASSWORD') :
+                                     System.getenv('HEALTHAWARE_KEY_PASSWORD')
+
+            if (releaseKeystorePath && file(releaseKeystorePath).exists() && releaseKeystorePassword && releaseKeyAlias && releaseKeyPassword) {
+                storeFile = file(releaseKeystorePath)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                v1SigningEnabled = true
+                v2SigningEnabled = true
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -12,7 +12,7 @@
           type="button"
           role="tab"
           class="tab-btn"
-          [class.tab-btn--active]="activeTab() === 'login'"
+          [class.tab-btn--active]="activeTab() === 'login' || activeTab() === 'recover' || activeTab() === 'reset-password'"
           (click)="switchTab('login')"
           id="learner-tab-login"
         >
@@ -22,7 +22,7 @@
           type="button"
           role="tab"
           class="tab-btn"
-          [class.tab-btn--active]="activeTab() === 'register'"
+          [class.tab-btn--active]="activeTab() === 'register' || activeTab() === 'verify-signup'"
           (click)="switchTab('register')"
           id="learner-tab-register"
         >
@@ -121,6 +121,13 @@
             <p>Save and sync your learning progress across all your devices securely.</p>
           </div>
 
+          <div class="role-scope-notice">
+            <span class="role-scope-badge">CITIZEN LEARNER</span>
+            <p class="role-scope-text">
+              Public registration creates a citizen learner account. Contributor, reviewer, and municipal staff accounts are provisioned separately through institutional verification.
+            </p>
+          </div>
+
           <div class="form-group">
             <label for="learner-reg-name">Full Name or Display Name</label>
             <input
@@ -182,9 +189,9 @@
               id="learner-submit-register-btn"
             >
               @if (isLoading()) {
-                <span>Creating Account...</span>
+                <span>Sending Code...</span>
               } @else {
-                <span>Create Account &amp; Sync</span>
+                <span>Continue &amp; Verify Email</span>
               }
             </button>
           </div>
@@ -203,7 +210,70 @@
         </form>
       }
 
-      <!-- Tab: Recover / Reset -->
+      <!-- Tab: Verify Signup OTP -->
+      @if (activeTab() === 'verify-signup') {
+        <form (ngSubmit)="onVerifySignup()" class="auth-form" id="learner-verify-signup-form">
+          <div class="form-header">
+            <h2 id="modal-title">Verify Your Email</h2>
+            <p>We sent a 6-digit verification code to <strong>{{ email }}</strong>. Enter it below to activate your account.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="learner-verify-otp">6-Digit Verification Code</label>
+            <input
+              type="text"
+              id="learner-verify-otp"
+              name="otp"
+              [(ngModel)]="otp"
+              placeholder="123456"
+              required
+              maxlength="6"
+              pattern="[0-9]{6}"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              class="otp-input"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary btn-block"
+              [disabled]="isLoading() || otp.length !== 6"
+              id="learner-submit-verify-btn"
+            >
+              @if (isLoading()) {
+                <span>Verifying...</span>
+              } @else {
+                <span>Confirm &amp; Complete Registration</span>
+              }
+            </button>
+          </div>
+
+          <div class="form-footer">
+            <button
+              type="button"
+              class="link-btn"
+              (click)="onResendOtp('signup')"
+              [disabled]="isLoading()"
+              id="learner-resend-signup-otp-btn"
+            >
+              Resend Code
+            </button>
+            <span class="footer-separator">•</span>
+            <button
+              type="button"
+              class="link-btn"
+              (click)="switchTab('register')"
+              id="learner-verify-back-btn"
+            >
+              ← Edit Registration
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Tab: Recover / Request Password Reset -->
       @if (activeTab() === 'recover') {
         <form (ngSubmit)="onRecover()" class="auth-form" id="learner-recover-form">
           <div class="form-header">
@@ -232,9 +302,9 @@
               id="learner-submit-recover-btn"
             >
               @if (isLoading()) {
-                <span>Sending...</span>
+                <span>Sending Code...</span>
               } @else {
-                <span>Send Recovery Instructions</span>
+                <span>Send Verification Code</span>
               }
             </button>
           </div>
@@ -251,6 +321,112 @@
           </div>
         </form>
       }
+
+      <!-- Tab: Reset Password with OTP -->
+      @if (activeTab() === 'reset-password') {
+        <form (ngSubmit)="onResetPassword()" class="auth-form" id="learner-reset-password-form">
+          <div class="form-header">
+            <h2 id="modal-title">Set New Password</h2>
+            <p>Enter the 6-digit verification code sent to <strong>{{ email }}</strong> and your new password.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="learner-reset-otp">6-Digit Verification Code</label>
+            <input
+              type="text"
+              id="learner-reset-otp"
+              name="otp"
+              [(ngModel)]="otp"
+              placeholder="123456"
+              required
+              maxlength="6"
+              pattern="[0-9]{6}"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              class="otp-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="learner-reset-new-password">New Password (min 8 characters)</label>
+            <input
+              type="password"
+              id="learner-reset-new-password"
+              name="newPassword"
+              [(ngModel)]="newPassword"
+              placeholder="••••••••"
+              required
+              minlength="8"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="learner-reset-confirm-password">Confirm New Password</label>
+            <input
+              type="password"
+              id="learner-reset-confirm-password"
+              name="confirmNewPassword"
+              [(ngModel)]="confirmNewPassword"
+              placeholder="••••••••"
+              required
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary btn-block"
+              [disabled]="isLoading() || otp.length !== 6 || newPassword.length < 8"
+              id="learner-submit-reset-password-btn"
+            >
+              @if (isLoading()) {
+                <span>Updating Password...</span>
+              } @else {
+                <span>Update Password &amp; Sign In</span>
+              }
+            </button>
+          </div>
+
+          <div class="form-footer">
+            <button
+              type="button"
+              class="link-btn"
+              (click)="onResendOtp('reset_password')"
+              [disabled]="isLoading()"
+              id="learner-resend-reset-otp-btn"
+            >
+              Resend Code
+            </button>
+            <span class="footer-separator">•</span>
+            <button
+              type="button"
+              class="link-btn"
+              (click)="switchTab('login')"
+              id="learner-reset-back-login-btn"
+            >
+              ← Back to Sign In
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Professional & Institutional Portals Entry Points -->
+      <div class="modal-portals-section">
+        <span class="portals-title">Professional &amp; Institutional Portals</span>
+        <div class="portals-links">
+          <a routerLink="/staff/apply" (click)="close()" class="portal-link portal-link--highlight" id="portal-apply-link">
+            <span>Apply for Contributor or Reviewer Role</span> →
+          </a>
+          <a routerLink="/creator/login" (click)="close()" class="portal-link" id="portal-creator-link">
+            <span>Medical Reviewer / Contributor Portal</span> →
+          </a>
+          <a routerLink="/staff" (click)="close()" class="portal-link" id="portal-staff-link">
+            <span>Municipal Staff &amp; Case Management</span> →
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 }

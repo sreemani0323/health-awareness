@@ -1,5 +1,13 @@
 import { Injectable, signal, computed, Optional } from '@angular/core';
 import { LearnerAuthService } from './learner-auth.service';
+import { NetworkStatusService } from './network-status.service';
+
+export type ProgressSyncStatus =
+  | 'local_only'
+  | 'pending_sync'
+  | 'syncing'
+  | 'synced'
+  | 'sync_error';
 
 export interface LessonResumeState {
   lessonId: string;
@@ -80,20 +88,59 @@ const STORAGE_KEY = 'healthaware_progress_v1';
 @Injectable({ providedIn: 'root' })
 export class LearningProgressService {
   private readonly storageKey = STORAGE_KEY;
+  private readonly pendingSyncKey = 'healthaware_progress_pending_sync_v1';
 
   readonly resumeState = signal<LessonResumeState | null>(null);
   readonly completedLessonIds = signal<string[]>([]);
   readonly completedActivityIds = signal<string[]>([]);
   readonly achievedMilestones = signal<Milestone[]>([]);
+  readonly syncStatus = signal<ProgressSyncStatus>('local_only');
+  readonly hasPendingSync = signal<boolean>(false);
 
   readonly hasResume = computed(() => this.resumeState() !== null);
   readonly completedCount = computed(() => this.completedLessonIds().length);
   readonly activitiesCount = computed(() => this.completedActivityIds().length);
 
-  constructor(@Optional() private readonly learnerAuth?: LearnerAuthService) {
+  readonly syncStatusLabel = computed<string>(() => {
+    switch (this.syncStatus()) {
+      case 'synced':
+        return 'Synced with account';
+      case 'syncing':
+        return 'Syncing with account…';
+      case 'pending_sync':
+        return 'Saved locally • Pending sync';
+      case 'sync_error':
+        return 'Saved locally • Sync issue';
+      case 'local_only':
+      default:
+        return 'Saved on this device';
+    }
+  });
+
+  private activeSyncPromise: Promise<void> | null = null;
+
+  constructor(
+    @Optional() private readonly learnerAuth?: LearnerAuthService,
+    @Optional() private readonly networkStatus?: NetworkStatusService,
+  ) {
     this.loadFromStorage();
+    this.restorePendingSyncFlag();
+
+    // Auto-sync listener when network transitions from offline to online
+    if (this.networkStatus) {
+      this.networkStatus.onReconnect(() => {
+        if (this.learnerAuth?.isAuthenticated() && this.hasPendingSync()) {
+          this.syncWithRemote().catch((e) =>
+            console.warn('Auto-reconnect sync failed:', e)
+          );
+        }
+      });
+    }
+
     if (this.learnerAuth?.isAuthenticated()) {
       this.syncWithRemote().catch((e) => console.warn('Startup sync failed:', e));
+    } else {
+      this.syncStatus.set('local_only');
     }
   }
 
@@ -144,6 +191,44 @@ export class LearningProgressService {
    */
   isLessonCompleted(lessonId: string): boolean {
     return this.completedLessonIds().includes(lessonId);
+  }
+
+  /**
+   * Check whether a lesson is currently in-progress (started but not yet completed).
+   */
+  isLessonInProgress(lessonId: string): boolean {
+    const resume = this.resumeState();
+    return !this.isLessonCompleted(lessonId) && resume !== null && resume.lessonId === lessonId;
+  }
+
+  /**
+   * Return the normalized progress status of a chapter.
+   */
+  getLessonStatus(lessonId: string): 'completed' | 'in_progress' | 'not_started' {
+    if (this.isLessonCompleted(lessonId)) return 'completed';
+    if (this.isLessonInProgress(lessonId)) return 'in_progress';
+    return 'not_started';
+  }
+
+  /**
+   * Reset progress and completion state for a single chapter.
+   * Removes only the target lesson from completedLessonIds and clears resume state if it points to it.
+   * Crucially preserves all other completed chapters, family activities, and achieved milestones.
+   */
+  resetLessonProgress(lessonId: string): void {
+    if (!lessonId) return;
+
+    const currentCompleted = this.completedLessonIds();
+    const updated = currentCompleted.filter((id) => id !== lessonId);
+    this.completedLessonIds.set(updated);
+
+    const currentResume = this.resumeState();
+    if (currentResume && currentResume.lessonId === lessonId) {
+      this.resumeState.set(null);
+    }
+
+    this.clearMissedQuestions(lessonId);
+    this.persist();
   }
 
   /**
@@ -339,17 +424,41 @@ export class LearningProgressService {
       console.warn('Error saving learning progress to localStorage:', e);
     }
 
-    if (this.learnerAuth && this.learnerAuth.isAuthenticated()) {
-      this.learnerAuth
-        .pushRemoteProgress({
-          last_lesson: this.resumeState(),
-          completed_lesson_ids: this.completedLessonIds(),
-          completed_activity_ids: this.completedActivityIds(),
-          achieved_milestones: this.achievedMilestones(),
-          client_updated_at: new Date().toISOString(),
-        })
-        .catch((err) => console.warn('Background progress sync failed:', err));
+    if (!this.learnerAuth || !this.learnerAuth.isAuthenticated()) {
+      this.syncStatus.set('local_only');
+      return;
     }
+
+    // Check connectivity before network sync
+    if (this.networkStatus && !this.networkStatus.isOnline()) {
+      this.syncStatus.set('pending_sync');
+      this.savePendingSyncFlag(true);
+      return;
+    }
+
+    this.syncStatus.set('syncing');
+    this.learnerAuth
+      .pushRemoteProgress({
+        last_lesson: this.resumeState(),
+        completed_lesson_ids: this.completedLessonIds(),
+        completed_activity_ids: this.completedActivityIds(),
+        achieved_milestones: this.achievedMilestones(),
+        client_updated_at: new Date().toISOString(),
+      })
+      .then((res) => {
+        if (res) {
+          this.syncStatus.set('synced');
+          this.savePendingSyncFlag(false);
+        } else {
+          this.syncStatus.set('pending_sync');
+          this.savePendingSyncFlag(true);
+        }
+      })
+      .catch((err) => {
+        console.warn('Background progress sync failed:', err);
+        this.syncStatus.set('pending_sync');
+        this.savePendingSyncFlag(true);
+      });
   }
 
   /**
@@ -359,67 +468,89 @@ export class LearningProgressService {
    * - completedActivityIds: set union
    * - achievedMilestones: union deduplicated by id (keeping earliest achievedAt)
    * - lastLesson: latest by updatedAt timestamp
+   *
+   * Protected by singleflight in-flight execution lock to avoid duplicate submissions.
    */
   async syncWithRemote(): Promise<void> {
     if (!this.learnerAuth || !this.learnerAuth.isAuthenticated()) {
+      this.syncStatus.set('local_only');
       return;
     }
 
-    const remote = await this.learnerAuth.fetchRemoteProgress();
-    if (!remote) return;
-
-    // 1. Merge completed lesson IDs
-    const mergedLessons = Array.from(
-      new Set([...this.completedLessonIds(), ...(remote.completed_lesson_ids || [])])
-    );
-
-    // 2. Merge completed activity IDs
-    const mergedActivities = Array.from(
-      new Set([...this.completedActivityIds(), ...(remote.completed_activity_ids || [])])
-    );
-
-    // 3. Merge milestones (deduplicate by id, preserving earliest timestamp)
-    const milestoneMap = new Map<string, Milestone>();
-    for (const m of this.achievedMilestones()) {
-      milestoneMap.set(m.id, m);
+    // Avoid duplicate concurrent sync submissions
+    if (this.activeSyncPromise) {
+      return this.activeSyncPromise;
     }
-    for (const rm of remote.achieved_milestones || []) {
-      const existing = milestoneMap.get(rm.id);
-      if (!existing) {
-        milestoneMap.set(rm.id, {
-          id: rm.id,
-          title: rm.title,
-          description: rm.description,
-          icon: rm.icon,
-          achievedAt: rm.achievedAt,
-        });
-      } else {
-        if (rm.achievedAt && existing.achievedAt && rm.achievedAt < existing.achievedAt) {
-          existing.achievedAt = rm.achievedAt;
+
+    this.activeSyncPromise = this.performSyncWithRemote();
+    try {
+      await this.activeSyncPromise;
+    } finally {
+      this.activeSyncPromise = null;
+    }
+  }
+
+  private async performSyncWithRemote(): Promise<void> {
+    if (!this.learnerAuth || !this.learnerAuth.isAuthenticated()) {
+      this.syncStatus.set('local_only');
+      return;
+    }
+
+    if (this.networkStatus && !this.networkStatus.isOnline()) {
+      this.syncStatus.set('pending_sync');
+      this.savePendingSyncFlag(true);
+      return;
+    }
+
+    this.syncStatus.set('syncing');
+
+    try {
+      const remote = await this.learnerAuth.fetchRemoteProgress();
+      if (!remote) {
+        this.syncStatus.set('pending_sync');
+        this.savePendingSyncFlag(true);
+        return;
+      }
+
+      // 1. Merge completed lesson IDs
+      const mergedLessons = Array.from(
+        new Set([...this.completedLessonIds(), ...(remote.completed_lesson_ids || [])])
+      );
+
+      // 2. Merge completed activity IDs
+      const mergedActivities = Array.from(
+        new Set([...this.completedActivityIds(), ...(remote.completed_activity_ids || [])])
+      );
+
+      // 3. Merge milestones (deduplicate by id, preserving earliest timestamp)
+      const milestoneMap = new Map<string, Milestone>();
+      for (const m of this.achievedMilestones()) {
+        milestoneMap.set(m.id, m);
+      }
+      for (const rm of remote.achieved_milestones || []) {
+        const existing = milestoneMap.get(rm.id);
+        if (!existing) {
+          milestoneMap.set(rm.id, {
+            id: rm.id,
+            title: rm.title,
+            description: rm.description,
+            icon: rm.icon,
+            achievedAt: rm.achievedAt,
+          });
+        } else {
+          if (rm.achievedAt && existing.achievedAt && rm.achievedAt < existing.achievedAt) {
+            existing.achievedAt = rm.achievedAt;
+          }
         }
       }
-    }
-    const mergedMilestones = Array.from(milestoneMap.values());
+      const mergedMilestones = Array.from(milestoneMap.values());
 
-    // 4. Merge last lesson resume state (choose newer updatedAt)
-    const localResume = this.resumeState();
-    const remoteResume = remote.last_lesson;
-    let mergedResume: LessonResumeState | null = localResume;
+      // 4. Merge last lesson resume state (choose newer updatedAt)
+      const localResume = this.resumeState();
+      const remoteResume = remote.last_lesson;
+      let mergedResume: LessonResumeState | null = localResume;
 
-    if (!localResume && remoteResume) {
-      mergedResume = {
-        lessonId: remoteResume.lessonId,
-        lessonTitle: remoteResume.lessonTitle,
-        topicId: remoteResume.topicId,
-        cardIndex: remoteResume.cardIndex,
-        totalCards: remoteResume.totalCards,
-        updatedAt: remoteResume.updatedAt,
-      };
-    } else if (localResume && remoteResume) {
-      if (
-        remoteResume.updatedAt &&
-        (!localResume.updatedAt || remoteResume.updatedAt > localResume.updatedAt)
-      ) {
+      if (!localResume && remoteResume) {
         mergedResume = {
           lessonId: remoteResume.lessonId,
           lessonTitle: remoteResume.lessonTitle,
@@ -428,37 +559,90 @@ export class LearningProgressService {
           totalCards: remoteResume.totalCards,
           updatedAt: remoteResume.updatedAt,
         };
+      } else if (localResume && remoteResume) {
+        if (
+          remoteResume.updatedAt &&
+          (!localResume.updatedAt || remoteResume.updatedAt > localResume.updatedAt)
+        ) {
+          mergedResume = {
+            lessonId: remoteResume.lessonId,
+            lessonTitle: remoteResume.lessonTitle,
+            topicId: remoteResume.topicId,
+            cardIndex: remoteResume.cardIndex,
+            totalCards: remoteResume.totalCards,
+            updatedAt: remoteResume.updatedAt,
+          };
+        }
       }
+
+      // Update local signals
+      this.completedLessonIds.set(mergedLessons);
+      this.completedActivityIds.set(mergedActivities);
+      this.achievedMilestones.set(mergedMilestones);
+      this.resumeState.set(mergedResume);
+
+      // Persist to local storage
+      try {
+        const payload: StoredProgressData = {
+          version: 1,
+          lastLesson: mergedResume,
+          completedLessonIds: mergedLessons,
+          completedActivityIds: mergedActivities,
+          achievedMilestones: mergedMilestones,
+        };
+        localStorage.setItem(this.storageKey, JSON.stringify(payload));
+      } catch (e) {
+        console.warn('Error saving merged progress to localStorage:', e);
+      }
+
+      // Push merged state back to server
+      const confirmed = await this.learnerAuth.pushRemoteProgress({
+        last_lesson: mergedResume,
+        completed_lesson_ids: mergedLessons,
+        completed_activity_ids: mergedActivities,
+        achieved_milestones: mergedMilestones,
+        client_updated_at: new Date().toISOString(),
+      });
+
+      if (confirmed) {
+        this.syncStatus.set('synced');
+        this.savePendingSyncFlag(false);
+      } else {
+        this.syncStatus.set('pending_sync');
+        this.savePendingSyncFlag(true);
+      }
+    } catch (err) {
+      console.warn('Progress sync failed:', err);
+      this.syncStatus.set('pending_sync');
+      this.savePendingSyncFlag(true);
     }
+  }
 
-    // Update local signals
-    this.completedLessonIds.set(mergedLessons);
-    this.completedActivityIds.set(mergedActivities);
-    this.achievedMilestones.set(mergedMilestones);
-    this.resumeState.set(mergedResume);
-
-    // Persist to local storage
+  private savePendingSyncFlag(pending: boolean): void {
+    this.hasPendingSync.set(pending);
     try {
-      const payload: StoredProgressData = {
-        version: 1,
-        lastLesson: mergedResume,
-        completedLessonIds: mergedLessons,
-        completedActivityIds: mergedActivities,
-        achievedMilestones: mergedMilestones,
-      };
-      localStorage.setItem(this.storageKey, JSON.stringify(payload));
-    } catch (e) {
-      console.warn('Error saving merged progress to localStorage:', e);
+      if (pending) {
+        localStorage.setItem(this.pendingSyncKey, 'true');
+      } else {
+        localStorage.removeItem(this.pendingSyncKey);
+      }
+    } catch {
+      // ignore
     }
+    this.networkStatus?.setPendingSyncCount(pending ? 1 : 0);
+  }
 
-    // Push merged state back to server
-    await this.learnerAuth.pushRemoteProgress({
-      last_lesson: mergedResume,
-      completed_lesson_ids: mergedLessons,
-      completed_activity_ids: mergedActivities,
-      achieved_milestones: mergedMilestones,
-      client_updated_at: new Date().toISOString(),
-    });
+  private restorePendingSyncFlag(): void {
+    try {
+      const isPending = localStorage.getItem(this.pendingSyncKey) === 'true';
+      this.hasPendingSync.set(isPending);
+      if (isPending) {
+        this.syncStatus.set('pending_sync');
+        this.networkStatus?.setPendingSyncCount(1);
+      }
+    } catch {
+      // ignore
+    }
   }
 
   /**

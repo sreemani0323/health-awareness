@@ -280,9 +280,17 @@ class TestRateLimitRouteCoverage:
     def reset_limiter(self):
         """Reset Flask-Limiter storage between tests to ensure deterministic rates."""
         from backend.platform.rate_limiter import limiter
-        limiter.reset()
+        try:
+            if getattr(limiter, "_storage", None) is not None:
+                limiter.reset()
+        except Exception:
+            pass
         yield
-        limiter.reset()
+        try:
+            if getattr(limiter, "_storage", None) is not None:
+                limiter.reset()
+        except Exception:
+            pass
 
     def test_auth_login_rate_limit_applies(self):
         """POST /api/v1/auth/login enforces 5 attempts per 15 minutes without weakening auth."""

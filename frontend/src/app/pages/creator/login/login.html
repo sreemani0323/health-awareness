@@ -8,55 +8,197 @@
           <path d="M2 12l10 5 10-5"/>
         </svg>
       </div>
-      <h1>Creator Studio</h1>
-      <p class="subtitle">HealthAware Content Authoring</p>
+      @if (isRecoveryMode) {
+        <h1>Reset Password</h1>
+        <p class="subtitle">Account Recovery Verification</p>
+      } @else {
+        <h1>Creator Studio</h1>
+        <p class="subtitle">HealthAware Content &amp; Staff Authoring</p>
+      }
     </div>
 
-    <form (ngSubmit)="onSubmit()" class="login-form">
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          [(ngModel)]="username"
-          name="username"
-          placeholder="Enter your username"
-          autocomplete="username"
-          [disabled]="isLoading"
-        />
+    @if (successMessage) {
+      <div class="success-banner" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="success-icon" aria-hidden="true">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span>{{ successMessage }}</span>
       </div>
+    }
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          placeholder="Enter your password"
-          autocomplete="current-password"
-          [disabled]="isLoading"
-        />
+    @if (errorMessage) {
+      <div class="error-banner" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="error-icon" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
       </div>
+    }
 
-      @if (errorMessage) {
-        <div class="error-banner">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="error-icon">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-          {{ errorMessage }}
+    @if (!isRecoveryMode) {
+      <!-- Standard Login View -->
+      <form (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-group">
+          <label for="username">Username or Email</label>
+          <input
+            id="username"
+            type="text"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="Enter username or email"
+            autocomplete="username"
+            [disabled]="isLoading"
+          />
         </div>
-      }
 
-      <button type="submit" class="login-btn" [disabled]="isLoading">
-        @if (isLoading) {
-          <span class="spinner"></span> Signing in…
-        } @else {
-          Sign In
-        }
-      </button>
-    </form>
+        <div class="form-group">
+          <div class="label-row">
+            <label for="password">Password</label>
+            <button
+              type="button"
+              class="link-btn text-sm"
+              (click)="toggleRecoveryMode(true)"
+              id="btn-forgot-password"
+            >
+              Forgot password?
+            </button>
+          </div>
+          <input
+            id="password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            [disabled]="isLoading"
+          />
+        </div>
+
+        <button type="submit" class="login-btn" id="btn-creator-submit" [disabled]="isLoading">
+          @if (isLoading) {
+            <span class="spinner"></span> Signing in…
+          } @else {
+            Sign In
+          }
+        </button>
+      </form>
+
+      <div class="login-footer-links">
+        <p class="role-request-prompt">
+          Need an account?
+          <a routerLink="/staff/apply" class="apply-link" id="link-apply-role">
+            Apply for Contributor or Reviewer Role &rarr;
+          </a>
+        </p>
+        <p class="learner-prompt">
+          Learner looking to sync lessons?
+          <a routerLink="/" class="home-link">Return to Home</a>
+        </p>
+      </div>
+    } @else {
+      <!-- Forgot / Reset Password View -->
+      @if (recoveryStep === 'request') {
+        <form (ngSubmit)="onSendRecoveryCode()" class="login-form">
+          <p class="recovery-instructions">
+            Enter your username or registered email address. We will dispatch a 6-digit verification code to reset your password.
+          </p>
+
+          <div class="form-group">
+            <label for="recovery-identifier">Username or Email</label>
+            <input
+              id="recovery-identifier"
+              type="text"
+              [(ngModel)]="recoveryIdentifier"
+              name="recoveryIdentifier"
+              placeholder="e.g. staff_priya or priya@example.com"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="login-btn" id="btn-send-code" [disabled]="isLoading">
+              @if (isLoading) {
+                <span class="spinner"></span> Sending code…
+              } @else {
+                Send Verification Code
+              }
+            </button>
+            <button
+              type="button"
+              class="secondary-btn"
+              (click)="toggleRecoveryMode(false)"
+              [disabled]="isLoading"
+            >
+              Cancel &amp; Return to Sign In
+            </button>
+          </div>
+        </form>
+      } @else {
+        <form (ngSubmit)="onResetPassword()" class="login-form">
+          <p class="recovery-instructions">
+            Enter the 6-digit code dispatched to your registered address along with your new password.
+          </p>
+
+          <div class="form-group">
+            <label for="recovery-otp">6-Digit Verification Code</label>
+            <input
+              id="recovery-otp"
+              type="text"
+              [(ngModel)]="recoveryOtp"
+              name="recoveryOtp"
+              maxlength="6"
+              placeholder="123456"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input
+              id="new-password"
+              type="password"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              placeholder="Minimum 8 characters"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="confirm-password">Confirm New Password</label>
+            <input
+              id="confirm-password"
+              type="password"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              placeholder="Re-enter new password"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="login-btn" id="btn-update-password" [disabled]="isLoading">
+              @if (isLoading) {
+                <span class="spinner"></span> Updating…
+              } @else {
+                Update Password
+              }
+            </button>
+            <button
+              type="button"
+              class="secondary-btn"
+              (click)="toggleRecoveryMode(false)"
+              [disabled]="isLoading"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      }
+    }
   </div>
 </div>
+

@@ -199,12 +199,16 @@ export class LearnerAuthService {
     const token = this.getToken();
     if (!token) return null;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const resp = await fetch(this.apiConfig.getApiUrl('/learner/progress'), {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
         },
+        signal: controller.signal,
       });
 
       if (resp.status === 401) {
@@ -219,10 +223,15 @@ export class LearnerAuthService {
       const body = await resp.json();
       return body.data as RemoteLearnerProgress;
     } catch (err: any) {
-      console.error('Error fetching remote learner progress:', err);
+      const isTimeout = err?.name === 'AbortError';
+      const cleanMsg = isTimeout
+        ? 'Request timed out while connecting to the server.'
+        : 'Network connection unavailable. Changes are saved locally.';
       this.syncStatus.set('error');
-      this.errorMessage.set(err.message || 'Network error fetching progress');
+      this.errorMessage.set(cleanMsg);
       return null;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -240,6 +249,9 @@ export class LearnerAuthService {
     if (!token) return null;
 
     this.syncStatus.set('syncing');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const resp = await fetch(this.apiConfig.getApiUrl('/learner/progress'), {
         method: 'PUT',
@@ -249,6 +261,7 @@ export class LearnerAuthService {
           Accept: 'application/json',
         },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
       if (resp.status === 401) {
@@ -266,21 +279,26 @@ export class LearnerAuthService {
       this.errorMessage.set(null);
       return body.data as RemoteLearnerProgress;
     } catch (err: any) {
-      console.error('Error pushing remote learner progress:', err);
+      const isTimeout = err?.name === 'AbortError';
+      const cleanMsg = isTimeout
+        ? 'Sync timed out. Progress is safely preserved on this device.'
+        : 'Unable to reach the server. Progress is preserved locally on this device.';
       this.syncStatus.set('error');
-      this.errorMessage.set(err.message || 'Network error saving progress');
+      this.errorMessage.set(cleanMsg);
       return null;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
   /**
-   * Register a new learner account.
+   * Register a new learner account (initiates 6-digit email OTP verification).
    */
   async register(
     displayName: string,
     email: string,
     password: string
-  ): Promise<{ success: boolean; token?: string; user?: LearnerUser; error?: string }> {
+  ): Promise<{ success: boolean; requires_otp?: boolean; message?: string; token?: string; user?: LearnerUser; error?: string }> {
     this.errorMessage.set(null);
     try {
       const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/register'), {
@@ -305,14 +323,97 @@ export class LearnerAuthService {
         return { success: false, error: errorMsg };
       }
 
+      // Check if registration requires OTP challenge (standard secure flow)
+      if (payload.requires_otp) {
+        return {
+          success: true,
+          requires_otp: true,
+          message: payload.message || 'Verification code sent to your email.',
+        };
+      }
+
+      // Direct token fallback if OTP unconfigured
       const token = payload.token || body.token;
       const user = payload.user || body.user;
-      this.setSession(token, user);
+      if (token) {
+        this.setSession(token, user);
+      }
       return { success: true, token, user };
     } catch (err: any) {
       const errorMsg = err.message || 'Network error during registration.';
       this.errorMessage.set(errorMsg);
       return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Verify 6-digit OTP code to complete new learner registration.
+   */
+  async verifySignup(
+    email: string,
+    otp: string
+  ): Promise<{ success: boolean; token?: string; user?: LearnerUser; error?: string }> {
+    this.errorMessage.set(null);
+    try {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/verify-signup'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const body = await resp.json();
+      const payload = body?.data || body;
+      if (!resp.ok) {
+        const errorMsg = body?.error?.message || payload?.error?.message || 'Invalid verification code.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      const token = payload.token || body.token;
+      const user = payload.user || body.user;
+      this.setSession(token, user);
+      return { success: true, token, user };
+    } catch (err: any) {
+      const errorMsg = err.message || 'Network error during verification.';
+      this.errorMessage.set(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * Resend a 6-digit OTP code.
+   */
+  async resendOtp(
+    email: string,
+    purpose: 'signup' | 'reset_password' = 'signup'
+  ): Promise<{ success: boolean; message?: string; error?: string }> {
+    this.errorMessage.set(null);
+    try {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/resend-otp'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ email, purpose }),
+      });
+
+      const body = await resp.json();
+      const payload = body?.data || body;
+      if (!resp.ok) {
+        const errorMsg = body?.error?.message || payload?.error?.message || 'Failed to resend code.';
+        return { success: false, error: errorMsg };
+      }
+
+      return {
+        success: true,
+        message: payload.message || 'A new verification code has been sent to your email.',
+      };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error.' };
     }
   }
 
@@ -357,9 +458,9 @@ export class LearnerAuthService {
   }
 
   /**
-   * Request account recovery / password reset instructions.
+   * Request 6-digit OTP code for password recovery.
    */
-  async recover(email: string): Promise<{ success: boolean; message?: string; error?: string }> {
+  async recover(email: string): Promise<{ success: boolean; requires_otp?: boolean; message?: string; error?: string }> {
     this.errorMessage.set(null);
     try {
       const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/recover'), {
@@ -380,10 +481,49 @@ export class LearnerAuthService {
 
       return {
         success: true,
-        message: payload.message || body.message || 'If an account exists, instructions have been sent.',
+        requires_otp: payload.requires_otp ?? true,
+        message: payload.message || body.message || 'If an account exists, a 6-digit verification code has been sent.',
       };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error during recovery.' };
+    }
+  }
+
+  /**
+   * Reset password using verified 6-digit OTP.
+   */
+  async resetPassword(
+    email: string,
+    otp: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message?: string; error?: string }> {
+    this.errorMessage.set(null);
+    try {
+      const resp = await fetch(this.apiConfig.getApiUrl('/learner/auth/reset-password'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ email, otp, new_password: newPassword }),
+      });
+
+      const body = await resp.json();
+      const payload = body?.data || body;
+      if (!resp.ok) {
+        const errorMsg = body?.error?.message || payload?.error?.message || 'Failed to reset password.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      return {
+        success: true,
+        message: payload.message || 'Password reset successfully.',
+      };
+    } catch (err: any) {
+      const errorMsg = err.message || 'Network error during password reset.';
+      this.errorMessage.set(errorMsg);
+      return { success: false, error: errorMsg };
     }
   }
 }

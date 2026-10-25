@@ -23,6 +23,9 @@ from flask import Flask, g, jsonify, request, session
 from flask_limiter.errors import RateLimitExceeded
 from google.cloud import ndb
 from werkzeug.exceptions import HTTPException
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 from backend.controllers import create_api_blueprint
 from backend.platform.ndb_client import get_ndb_client
@@ -110,9 +113,11 @@ def _register_error_handlers(app: Flask) -> None:
             "ConnectionRefused",
             "TransportError",
             "SocketError",
+            "OperationalError",
+            "InterfaceError",
         )
         if any(term in exc_name for term in outage_indicators) or (
-            "Connection refused" in exc_msg or "Failed to connect" in exc_msg
+            "Connection refused" in exc_msg or "Failed to connect" in exc_msg or "closed unexpectedly" in exc_msg
         ):
             logger.error("Storage connectivity failure [%s]: %s", exc_name, exc_msg)
             return jsonify({
@@ -121,6 +126,36 @@ def _register_error_handlers(app: Flask) -> None:
                     "message": "The storage service is currently unavailable.",
                 }
             }), 503
+
+        # Explicit handling for SQLAlchemy database constraint and operational errors
+        try:
+            from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
+            if isinstance(exc, OperationalError):
+                logger.error("SQLAlchemy operational outage [%s]: %s", exc_name, exc_msg)
+                return jsonify({
+                    "error": {
+                        "code": "SERVICE_UNAVAILABLE",
+                        "message": "The storage service is currently unavailable.",
+                    }
+                }), 503
+            if isinstance(exc, IntegrityError):
+                logger.warning("Database constraint violation [%s]: %s", exc_name, exc_msg)
+                return jsonify({
+                    "error": {
+                        "code": "CONFLICT",
+                        "message": "The operation could not be completed due to a data constraint conflict.",
+                    }
+                }), 409
+            if isinstance(exc, SQLAlchemyError):
+                logger.exception("SQLAlchemy internal error: %s", exc)
+                return jsonify({
+                    "error": {
+                        "code": "INTERNAL_SERVER_ERROR",
+                        "message": "An internal database error occurred.",
+                    }
+                }), 500
+        except ImportError:
+            pass
 
         # Mask internal server errors from client response
         logger.exception("Unhandled server exception: %s", exc)
@@ -137,8 +172,8 @@ def _register_request_lifecycle(app: Flask) -> None:
 
     @app.before_request
     def open_ndb_context():
-        # Liveness check does not require database connection
-        if request.path == "/api/v1/health":
+        # Liveness and readiness checks do not require database connection
+        if request.path in ("/api/v1/health", "/api/v1/health/ready"):
             return None
 
         # Allow tests to skip NDB context if mocking domain services
@@ -258,6 +293,14 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     # 2. Register API blueprint
     app.register_blueprint(create_api_blueprint())
 
+    # Ensure tables exist in development environment
+    if app_env == "development" and not is_testing:
+        try:
+            from backend.storage.db import init_db
+            init_db()
+        except Exception as exc:
+            logger.warning("Could not auto-initialize database on startup: %s", exc)
+
     # 3. Register centralized error handlers
     _register_error_handlers(app)
 
@@ -268,7 +311,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     @app.before_request
     def verify_proxy_secret():
         # 1. Narrow health check exemption (exact GET only)
-        if request.method == "GET" and request.path == "/api/v1/health":
+        if request.method == "GET" and request.path in ("/api/v1/health", "/api/v1/health/ready"):
             return None
 
         # In testing mode without proxy secret configured, allow test calls
@@ -365,6 +408,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         if request.path in (
             "/api/v1/auth/login",
             "/api/v1/health",
+            "/api/v1/health/ready",
             "/api/v1/staff/apply",
             "/api/v1/staff/applications/track",
         ):

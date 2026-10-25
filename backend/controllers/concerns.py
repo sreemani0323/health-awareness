@@ -115,26 +115,42 @@ class ConcernSubmitHandler(MethodView):
             except Exception:
                 return jsonify({"error": {"code": "VALIDATION_ERROR", "message": "Invalid longitude."}}), 400
 
-        # Check for optional photo upload
-        photo_file = request.files.get("photo") if request.files else None
-        attachment_meta = None
+        # Check for optional photo uploads (supports both "photos" list and legacy "photo" single file)
+        photo_files = []
+        if request.files:
+            photo_files = request.files.getlist("photos")
+            if not photo_files and "photo" in request.files:
+                single_photo = request.files.get("photo")
+                if single_photo:
+                    photo_files = [single_photo]
 
-        if photo_file and photo_file.filename:
-            storage = AttachmentStorageService()
-            try:
-                file_bytes = photo_file.read()
-                storage_key, mime_type, file_size, checksum = storage.store_attachment(
-                    file_bytes, photo_file.filename
-                )
-                attachment_meta = {
-                    "storage_key": storage_key,
-                    "mime_type": mime_type,
-                    "file_size": file_size,
-                    "checksum": checksum,
-                    "filename": photo_file.filename,
+        if len(photo_files) > 5:
+            return jsonify({
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "A maximum of 5 photo attachments is permitted per concern.",
                 }
-            except ValueError as ve:
-                return jsonify({"error": {"code": "INVALID_ATTACHMENT", "message": str(ve)}}), 400
+            }), 400
+
+        attachments_meta = []
+        if photo_files:
+            storage = AttachmentStorageService()
+            for pf in photo_files:
+                if pf and pf.filename:
+                    try:
+                        file_bytes = pf.read()
+                        storage_key, mime_type, file_size, checksum = storage.store_attachment(
+                            file_bytes, pf.filename
+                        )
+                        attachments_meta.append({
+                            "storage_key": storage_key,
+                            "mime_type": mime_type,
+                            "file_size": file_size,
+                            "checksum": checksum,
+                            "filename": pf.filename,
+                        })
+                    except ValueError as ve:
+                        return jsonify({"error": {"code": "INVALID_ATTACHMENT", "message": str(ve)}}), 400
 
         with get_db_session() as session:
             report, raw_token = ConcernRepository.create_report(
@@ -150,15 +166,15 @@ class ConcernSubmitHandler(MethodView):
                 longitude=lon_val,
             )
 
-            if attachment_meta:
+            for meta in attachments_meta:
                 ConcernRepository.add_attachment(
                     session=session,
                     report_id=report.report_id,
-                    storage_key=attachment_meta["storage_key"],
-                    content_type=attachment_meta["mime_type"],
-                    file_size_bytes=attachment_meta["file_size"],
-                    sha256_checksum=attachment_meta["checksum"],
-                    original_filename=attachment_meta["filename"],
+                    storage_key=meta["storage_key"],
+                    content_type=meta["mime_type"],
+                    file_size_bytes=meta["file_size"],
+                    sha256_checksum=meta["checksum"],
+                    original_filename=meta["filename"],
                 )
 
             ref_id = report.reference_id

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ComingSoonService } from '../../services/coming-soon.service';
 import { LearningProgressService, PracticalActivity } from '../../services/learning-progress.service';
 import { LearnerAuthService } from '../../services/learner-auth.service';
+import { AppDistributionService } from '../../services/app-distribution.service';
 
 @Component({
   selector: 'ha-home',
@@ -17,6 +18,11 @@ export class HomeComponent {
   private readonly comingSoonService = inject(ComingSoonService);
   readonly progressService = inject(LearningProgressService);
   readonly learnerAuth = inject(LearnerAuthService, { optional: true });
+  readonly distributionService = inject(AppDistributionService);
+
+  openAndroidModal(): void {
+    this.distributionService.openModal();
+  }
 
   readonly newsletterEmail = signal<string>('');
   readonly newsletterSuccess = signal<string | null>(null);

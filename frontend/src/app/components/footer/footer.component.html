@@ -3,6 +3,7 @@
      Reference: core/templates/base-components/oppia-footer.component.html
                 core/templates/components/button-directives/social-buttons.component.html
      =================================================================== -->
+@if (!isNative) {
 <footer class="oppia-footer" role="contentinfo" id="site-footer">
   <!-- Main footer container -->
   <div class="oppia-footer-container container">
@@ -171,13 +172,13 @@
             type="button"
             class="oppia-android-app-badge-btn"
             (click)="onComingSoonClick('Android App on Google Play')"
-            aria-label="Get HealthAware on Google Play (Coming Soon)"
+            aria-label="HealthAware Android App (Direct APK & Forthcoming Release)"
             id="footer-google-play-btn"
           >
             <img
               class="oppia-android-app-button"
               src="/assets/images/android/android-landing-google-play.svg"
-              alt="Get it on Google Play"
+              alt="HealthAware Android App - Direct APK & Forthcoming Release"
             >
           </button>
         </div>
@@ -205,6 +206,7 @@
     </div>
   </div>
 </footer>
+}
 
 <!-- Coming Soon Toast (shared across footer interactions) -->
 @if (comingSoonMessage()) {

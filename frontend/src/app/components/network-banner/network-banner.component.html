@@ -1,0 +1,63 @@
+@if ((!networkStatus.isOnline() || networkStatus.isDegraded()) && !dismissed()) {
+  <aside
+    class="network-banner"
+    [class.network-banner--offline]="!networkStatus.isOnline()"
+    [class.network-banner--degraded]="networkStatus.isOnline() && networkStatus.isDegraded()"
+    role="status"
+    aria-live="polite"
+    aria-label="Network status banner"
+    id="network-status-banner"
+  >
+    <div class="network-banner-container container">
+      <div class="network-banner-content">
+        <span class="network-banner-icon" aria-hidden="true">
+          @if (!networkStatus.isOnline()) {
+            📶
+          } @else {
+            ⚡
+          }
+        </span>
+        <div class="network-banner-text">
+          @if (!networkStatus.isOnline()) {
+            <strong class="network-banner-title">You're reading offline.</strong>
+            <span class="network-banner-desc">
+              Lessons and quizzes remain available. Your progress is saved locally and will sync once reconnected.
+            </span>
+            @if (networkStatus.pendingSyncCount() > 0) {
+              <span class="pending-sync-badge">
+                {{ networkStatus.pendingSyncCount() }} progress update{{ networkStatus.pendingSyncCount() === 1 ? '' : 's' }} queued
+              </span>
+            }
+          } @else {
+            <strong class="network-banner-title">Service connection is limited.</strong>
+            <span class="network-banner-desc">
+              The server is responding slowly or undergoing maintenance. Changes are saved locally on this device.
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="network-banner-actions">
+        <button
+          type="button"
+          class="network-banner-btn network-banner-btn--retry"
+          (click)="retryConnection()"
+          [disabled]="checking()"
+          id="btn-retry-connection"
+          aria-label="Check server connection"
+        >
+          {{ checking() ? 'Checking…' : 'Check Connection' }}
+        </button>
+        <button
+          type="button"
+          class="network-banner-btn network-banner-btn--dismiss"
+          (click)="dismiss()"
+          aria-label="Dismiss banner"
+          title="Dismiss banner"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  </aside>
+}

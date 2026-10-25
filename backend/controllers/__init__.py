@@ -16,6 +16,8 @@ from backend.controllers.admin import (
     AdminUserStatusHandler,
 )
 from backend.controllers.auth import (
+    AuthRecoverHandler,
+    AuthResetPasswordHandler,
     LoginHandler,
     LogoutHandler,
     MeHandler,
@@ -38,7 +40,7 @@ from backend.controllers.creator import (
     CreatorVersionDetailHandler,
     CreatorVersionListHandler,
 )
-from backend.controllers.health import HealthCheckHandler
+from backend.controllers.health import HealthCheckHandler, HealthReadinessHandler
 from backend.controllers.learner import LearnerProgressHandler
 from backend.controllers.lessons import LessonDetailHandler
 from backend.controllers.topics import (
@@ -82,13 +84,26 @@ def create_api_blueprint() -> Blueprint:
 
     from backend.controllers.learner_auth import (
         LearnerRegisterHandler,
+        LearnerVerifySignupHandler,
+        LearnerResendOtpHandler,
         LearnerLoginHandler,
         LearnerMeHandler,
         LearnerRecoverHandler,
+        LearnerResetPasswordHandler,
     )
     bp.add_url_rule(
         "/learner/auth/register",
         view_func=LearnerRegisterHandler.as_view("learner_auth_register"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/learner/auth/verify-signup",
+        view_func=LearnerVerifySignupHandler.as_view("learner_auth_verify_signup"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/learner/auth/resend-otp",
+        view_func=LearnerResendOtpHandler.as_view("learner_auth_resend_otp"),
         methods=["POST"],
     )
     bp.add_url_rule(
@@ -106,10 +121,20 @@ def create_api_blueprint() -> Blueprint:
         view_func=LearnerRecoverHandler.as_view("learner_auth_recover"),
         methods=["POST"],
     )
+    bp.add_url_rule(
+        "/learner/auth/reset-password",
+        view_func=LearnerResetPasswordHandler.as_view("learner_auth_reset_password"),
+        methods=["POST"],
+    )
 
     bp.add_url_rule(
         "/health",
         view_func=HealthCheckHandler.as_view("health_check"),
+        methods=["GET"],
+    )
+    bp.add_url_rule(
+        "/health/ready",
+        view_func=HealthReadinessHandler.as_view("health_readiness"),
         methods=["GET"],
     )
 
@@ -153,6 +178,43 @@ def create_api_blueprint() -> Blueprint:
     bp.add_url_rule(
         "/auth/mfa/disable",
         view_func=MfaDisableHandler.as_view("auth_mfa_disable"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/recover",
+        view_func=AuthRecoverHandler.as_view("auth_recover"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/reset-password",
+        view_func=AuthResetPasswordHandler.as_view("auth_reset_password"),
+        methods=["POST"],
+    )
+
+    from backend.controllers.role_request import (
+        RoleRequestInitiateHandler,
+        RoleRequestVerifyEmailHandler,
+        RoleRequestSendSmsHandler,
+        RoleRequestCompleteHandler,
+    )
+    bp.add_url_rule(
+        "/auth/role-request/initiate",
+        view_func=RoleRequestInitiateHandler.as_view("auth_role_request_initiate"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/role-request/verify-email",
+        view_func=RoleRequestVerifyEmailHandler.as_view("auth_role_request_verify_email"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/role-request/send-sms-otp",
+        view_func=RoleRequestSendSmsHandler.as_view("auth_role_request_send_sms"),
+        methods=["POST"],
+    )
+    bp.add_url_rule(
+        "/auth/role-request/complete",
+        view_func=RoleRequestCompleteHandler.as_view("auth_role_request_complete"),
         methods=["POST"],
     )
 

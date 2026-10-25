@@ -225,6 +225,19 @@
   font-size: 15px;
   font-weight: 700;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.topic-module-circle-badge--completed {
+  background-color: #059669;
+  color: #ffffff;
+  font-size: 17px;
+}
+
+.topic-module-circle-badge--in-progress {
+  background-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
 }
 
 .topic-lesson-card-header-info {
@@ -487,8 +500,9 @@
 }
 
 .topic-lesson-completed-badge {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
   font-size: 12px;
   font-weight: 600;
   padding: 2px 8px;
@@ -496,6 +510,75 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.topic-lesson-in-progress-badge {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #0284c7;
+  display: inline-block;
+  animation: pulseDot 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.topic-lesson-not-started-badge {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.topic-lesson-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.topic-lesson-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  height: 38px;
+  padding: 0 12px;
+  font-family: var(--ff-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.topic-lesson-reset-btn:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fca5a5;
 }
 
 .topic-lesson-card-start-button--review {
@@ -506,6 +589,14 @@
 
 .topic-lesson-card-start-button--review:hover {
   background: #e0f2f1;
+}
+
+.topic-lesson-card-start-button--continue {
+  background: #0284c7;
+}
+
+.topic-lesson-card-start-button--continue:hover {
+  background: #0369a1;
 }
 
 /* Responsive */
@@ -852,4 +943,128 @@
   line-height: 1.6;
   max-width: 480px;
   margin: 0 auto;
+}
+
+/* --- Single Chapter Reset Confirmation Modal --- */
+.reset-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.reset-modal-content {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  animation: fadeInUp 0.25s var(--ease-out);
+}
+
+.reset-modal-header {
+  padding: 20px 24px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.reset-modal-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.reset-modal-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #dc2626;
+  text-transform: uppercase;
+}
+
+.reset-modal-title {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.reset-modal-body {
+  padding: 20px 24px;
+}
+
+.reset-modal-desc {
+  font-size: 15px;
+  color: #1e293b;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.reset-modal-subdesc {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 3px solid #cbd5e1;
+}
+
+.reset-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-reset-cancel {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-cancel:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.btn-reset-confirm {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-confirm:hover {
+  background: #b91c1c;
 }

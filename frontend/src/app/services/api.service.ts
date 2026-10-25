@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, catchError, throwError } from 'rxjs';
+import { Observable, map, catchError, throwError, shareReplay } from 'rxjs';
 import { ApiConfigService } from './api-config.service';
 import {
   ApiResponse,
@@ -20,20 +20,29 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly apiConfig = inject(ApiConfigService);
+  private topicsCache$?: Observable<Topic[]>;
+
   private get baseUrl(): string {
     return this.apiConfig.apiBaseUrl;
   }
 
   constructor(private readonly http: HttpClient) {}
 
-  /** GET /api/v1/topics — list published topics. */
-  getTopics(): Observable<Topic[]> {
-    return this.http
-      .get<ApiResponse<Topic[]>>(`${this.baseUrl}/topics`)
-      .pipe(
-        map((res) => res.data),
-        catchError(this.handleError),
-      );
+  /** GET /api/v1/topics — list published topics with shared replay caching. */
+  getTopics(forceRefresh = false): Observable<Topic[]> {
+    if (forceRefresh || !this.topicsCache$) {
+      this.topicsCache$ = this.http
+        .get<ApiResponse<Topic[]>>(`${this.baseUrl}/topics`)
+        .pipe(
+          map((res) => res.data),
+          catchError((err) => {
+            this.topicsCache$ = undefined;
+            return this.handleError(err);
+          }),
+          shareReplay({ bufferSize: 1, refCount: false }),
+        );
+    }
+    return this.topicsCache$;
   }
 
   /** GET /api/v1/topics/:topicId/lessons — list published lessons for a topic. */
@@ -80,6 +89,13 @@ export class ApiService {
         map((res) => res.data),
         catchError(this.handleError),
       );
+  }
+
+  /** GET /api/v1/health/ready — process and database readiness probe. */
+  getReadiness(): Observable<{ status: string; database?: string }> {
+    return this.http
+      .get<{ status: string; database?: string }>(`${this.baseUrl}/health/ready`)
+      .pipe(catchError(this.handleError));
   }
 
   private handleError(error: unknown): Observable<never> {

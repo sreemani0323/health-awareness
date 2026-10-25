@@ -4,6 +4,9 @@ import { Location } from '@angular/common';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component';
+import { NetworkBannerComponent } from './components/network-banner/network-banner.component';
+import { DownloadModalComponent } from './components/download-modal/download-modal.component';
+import { BackendWarmupService } from './services/backend-warmup.service';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -11,7 +14,14 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 @Component({
   selector: 'ha-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, FooterComponent, BottomNavComponent],
+  imports: [
+    RouterOutlet,
+    NavbarComponent,
+    FooterComponent,
+    BottomNavComponent,
+    NetworkBannerComponent,
+    DownloadModalComponent,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -19,10 +29,14 @@ export class App implements OnInit, OnDestroy {
   readonly title = signal('HealthAware');
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  private readonly backendWarmup = inject(BackendWarmupService);
   private backButtonListener?: PluginListenerHandle;
   private appUrlListener?: PluginListenerHandle;
 
   async ngOnInit(): Promise<void> {
+    // 1. Warm backend readiness and prefetch public curriculum non-blockingly
+    this.backendWarmup.warmup().subscribe();
+
     if (!Capacitor.isNativePlatform()) {
       return;
     }
@@ -38,7 +52,7 @@ export class App implements OnInit, OnDestroy {
       this.backButtonListener = await CapApp.addListener('backButton', ({ canGoBack }) => {
         // 1. Dismiss any open modal dialog or overlay
         const openModalCloseBtn = document.querySelector<HTMLElement>(
-          '.modal-close, .auth-modal-close, [data-dismiss-modal], .mobile-menu-close, dialog[open] .close-btn, .dialog-close'
+          '.modal-close, .auth-modal-close, [data-dismiss-modal], .mobile-menu-close, dialog[open] .close-btn, .dialog-close, .ha-modal-close-btn'
         );
         if (openModalCloseBtn) {
           openModalCloseBtn.click();

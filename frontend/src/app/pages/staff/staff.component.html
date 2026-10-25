@@ -15,10 +15,13 @@
         <a routerLink="/creator/login" class="btn btn-primary" id="staff-login-btn">
           Sign In to Staff Account →
         </a>
+        <a routerLink="/staff/apply" class="btn btn-outline" id="staff-apply-role-btn">
+          Apply for Staff / Reviewer Role
+        </a>
         <a routerLink="/" class="link-home">Return to HealthAware Home</a>
       </div>
       <p class="staff-notice">
-        Note: Staff accounts cannot be self-registered. They must be provisioned by a HealthAware administrator.
+        Note: Staff and reviewer accounts require application, contact verification (email and SMS OTP), and administrator approval.
       </p>
     </div>
   } @else if (currentUser(); as user) {

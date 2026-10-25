@@ -565,6 +565,101 @@ export class CreatorApiService {
       );
   }
 
+  // --- Staff / Creator Password Recovery ---
+
+  recoverPassword(identifier: string): Observable<{ message: string }> {
+    return this.http
+      .post<ApiResponse<{ message: string }>>(
+        `${this.baseUrl}/auth/recover`,
+        { identifier },
+        { withCredentials: true },
+      )
+      .pipe(
+        map((res) => res.data),
+        catchError(this.handleError),
+      );
+  }
+
+  resetPassword(identifier: string, otp: string, newPassword: string): Observable<{ success: boolean; message: string }> {
+    return this.http
+      .post<ApiResponse<{ success: boolean; message: string }>>(
+        `${this.baseUrl}/auth/reset-password`,
+        { identifier, otp, new_password: newPassword },
+        { withCredentials: true },
+      )
+      .pipe(
+        map((res) => res.data),
+        catchError(this.handleError),
+      );
+  }
+
+  // --- Verified Role Request & Multi-Step Registration ---
+
+  initiateRoleRequest(payload: {
+    applicant_name: string;
+    applicant_email: string;
+    applicant_phone: string;
+    requested_role: string;
+    organization?: string;
+    professional_title?: string;
+    credential_reference?: string;
+    portfolio_url?: string;
+    statement_of_purpose: string;
+    evidence_standards_acknowledged: boolean;
+    child_safety_acknowledged: boolean;
+  }): Observable<{ status: string; email: string; message: string }> {
+    return this.http
+      .post<ApiResponse<{ status: string; email: string; message: string }>>(
+        `${this.baseUrl}/auth/role-request/initiate`,
+        payload,
+      )
+      .pipe(
+        map((res) => res.data),
+        catchError(this.handleError),
+      );
+  }
+
+  verifyRoleRequestEmail(email: string, otp: string): Observable<{ email_verified: boolean; phone: string; masked_phone: string; message: string }> {
+    return this.http
+      .post<ApiResponse<{ email_verified: boolean; phone: string; masked_phone: string; message: string }>>(
+        `${this.baseUrl}/auth/role-request/verify-email`,
+        { email, otp },
+      )
+      .pipe(
+        map((res) => res.data),
+        catchError(this.handleError),
+      );
+  }
+
+  sendRoleRequestSms(email: string, phone: string): Observable<{ sms_challenge_sent: boolean; masked_phone: string; message: string }> {
+    return this.http
+      .post<ApiResponse<{ sms_challenge_sent: boolean; masked_phone: string; message: string }>>(
+        `${this.baseUrl}/auth/role-request/send-sms-otp`,
+        { email, phone },
+      )
+      .pipe(
+        map((res) => res.data),
+        catchError(this.handleError),
+      );
+  }
+
+  completeRoleRequest(payload: {
+    email: string;
+    phone: string;
+    sms_otp: string;
+    password: string;
+  }): Observable<{ reference_id: string; tracking_token: string; status: string; requested_role: string; message: string }> {
+    return this.http
+      .post<ApiResponse<{ reference_id: string; tracking_token: string; status: string; requested_role: string; message: string }>>(
+        `${this.baseUrl}/auth/role-request/complete`,
+        payload,
+      )
+      .pipe(
+        map((res) => res.data),
+        catchError(this.handleError),
+      );
+  }
+
   private handleError(error: unknown): Observable<never> {
     console.error('Creator API request failed:', error);
     return throwError(() => error);

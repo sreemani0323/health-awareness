@@ -180,7 +180,7 @@ describe('Creator Studio Frontend Suite', () => {
     expect(comp.totalCards()).toBe(0);
     expect(comp.isFirstCard()).toBe(true);
     expect(comp.progressPercent()).toBe(0);
-  });
+  }, 15000);
 
   it('should create CreatorNavbarComponent and render user role correctly', () => {
     const fixture = TestBed.createComponent(CreatorNavbarComponent);

@@ -68,6 +68,10 @@ backend/.env
 frontend/.env
 *.pem
 *.key
+*.jks
+*.keystore
+keystore.properties
+*.jks.enc
 
 # Database SQL Backups & Dumps
 *.sql

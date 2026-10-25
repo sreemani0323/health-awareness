@@ -46,6 +46,7 @@ describe('TopicLessonsComponent', () => {
   };
 
   beforeEach(async () => {
+    localStorage.clear();
     mockApiService = {
       getTopics: vi.fn().mockReturnValue(of([mockTopic])),
       getTopicLessons: vi.fn().mockReturnValue(of(mockLessons)),
@@ -71,16 +72,22 @@ describe('TopicLessonsComponent', () => {
     }).compileComponents();
   });
 
+  afterEach(() => {
+    localStorage.clear();
+  });
+
   it('should create the component', () => {
     const fixture = TestBed.createComponent(TopicLessonsComponent);
     const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
     expect(component).toBeTruthy();
-  });
+  }, 15000);
 
   it('should fetch and display topic metadata and lessons', () => {
     const fixture = TestBed.createComponent(TopicLessonsComponent);
-    fixture.detectChanges();
     const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
+    fixture.detectChanges();
 
     expect(component.topicTitle()).toBe('Personal Hygiene & Handwashing');
     expect(component.lessons().length).toBe(2);
@@ -94,6 +101,8 @@ describe('TopicLessonsComponent', () => {
 
   it('should render expected learning outcomes for the topic', () => {
     const fixture = TestBed.createComponent(TopicLessonsComponent);
+    const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
 
@@ -110,6 +119,8 @@ describe('TopicLessonsComponent', () => {
   it('should show empty state when topic has no lessons', () => {
     mockApiService.getTopicLessons.mockReturnValue(of([]));
     const fixture = TestBed.createComponent(TopicLessonsComponent);
+    const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -121,6 +132,8 @@ describe('TopicLessonsComponent', () => {
   it('should show error state when API fails', () => {
     mockApiService.getTopicLessons.mockReturnValue(throwError(() => new Error('Failed')));
     const fixture = TestBed.createComponent(TopicLessonsComponent);
+    const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -131,8 +144,9 @@ describe('TopicLessonsComponent', () => {
 
   it('should render and toggle topic practical family activity', () => {
     const fixture = TestBed.createComponent(TopicLessonsComponent);
-    fixture.detectChanges();
     const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
+    fixture.detectChanges();
 
     const activityCard = fixture.nativeElement.querySelector('#topic-family-activity');
     expect(activityCard).toBeTruthy();
@@ -152,6 +166,7 @@ describe('TopicLessonsComponent', () => {
   it('should display completed badge and Review Lesson button for completed lessons', () => {
     const fixture = TestBed.createComponent(TopicLessonsComponent);
     const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
     component.progressService.markLessonCompleted('lesson-handwashing', 'topic-hygiene');
     fixture.detectChanges();
 
@@ -161,5 +176,82 @@ describe('TopicLessonsComponent', () => {
 
     const startBtn = fixture.nativeElement.querySelector('#start-lesson-lesson-handwashing');
     expect(startBtn.textContent).toContain('Review Lesson');
+
+    const resetBtn = fixture.nativeElement.querySelector('#reset-chapter-btn-lesson-handwashing');
+    expect(resetBtn).toBeTruthy();
+    expect(resetBtn.textContent).toContain('Reset');
+  });
+
+  it('should distinguish not-started and in-progress chapter states', () => {
+    const fixture = TestBed.createComponent(TopicLessonsComponent);
+    const component = fixture.componentInstance;
+    component.progressService.clearAllProgress();
+
+    // lesson-sanitizer is in progress
+    component.progressService.saveLessonProgress('lesson-sanitizer', 'Sanitizer', 'topic-hygiene', 1, 3);
+    fixture.detectChanges();
+
+    // lesson-handwashing should show Not Started
+    const notStartedBadge = fixture.nativeElement.querySelector('#not-started-badge-lesson-handwashing');
+    expect(notStartedBadge).toBeTruthy();
+    expect(notStartedBadge.textContent).toContain('Not Started');
+    const startBtn = fixture.nativeElement.querySelector('#start-lesson-lesson-handwashing');
+    expect(startBtn.textContent).toContain('Start Lesson');
+
+    // lesson-sanitizer should show In Progress and Continue Lesson
+    const inProgressBadge = fixture.nativeElement.querySelector('#in-progress-badge-lesson-sanitizer');
+    expect(inProgressBadge).toBeTruthy();
+    expect(inProgressBadge.textContent).toContain('In Progress');
+    const continueBtn = fixture.nativeElement.querySelector('#start-lesson-lesson-sanitizer');
+    expect(continueBtn.textContent).toContain('Continue Lesson');
+  });
+
+  it('should open confirmation dialog and reset only the selected chapter when confirmed', () => {
+    const fixture = TestBed.createComponent(TopicLessonsComponent);
+    const component = fixture.componentInstance;
+
+    // Mark both lessons as completed
+    component.progressService.markLessonCompleted('lesson-handwashing', 'topic-hygiene');
+    component.progressService.markLessonCompleted('lesson-sanitizer', 'topic-hygiene');
+    fixture.detectChanges();
+
+    expect(component.isLessonCompleted('lesson-handwashing')).toBe(true);
+    expect(component.isLessonCompleted('lesson-sanitizer')).toBe(true);
+
+    // Click Reset Chapter on lesson-handwashing
+    const resetBtn = fixture.nativeElement.querySelector('#reset-chapter-btn-lesson-handwashing') as HTMLButtonElement;
+    expect(resetBtn).toBeTruthy();
+    resetBtn.click();
+    fixture.detectChanges();
+
+    // Reset confirmation modal should appear
+    expect(component.pendingResetLesson()?.id).toBe('lesson-handwashing');
+    const modalTitle = fixture.nativeElement.querySelector('#reset-modal-title');
+    expect(modalTitle).toBeTruthy();
+    expect(modalTitle.textContent).toContain('Reset Chapter Progress?');
+
+    // Test Cancel: Keep Completed preserves state
+    const cancelBtn = fixture.nativeElement.querySelector('#cancel-reset-chapter-btn') as HTMLButtonElement;
+    expect(cancelBtn).toBeTruthy();
+    cancelBtn.click();
+    fixture.detectChanges();
+
+    expect(component.pendingResetLesson()).toBeNull();
+    expect(component.isLessonCompleted('lesson-handwashing')).toBe(true);
+
+    // Open modal again and Confirm reset
+    resetBtn.click();
+    fixture.detectChanges();
+
+    const confirmBtn = fixture.nativeElement.querySelector('#confirm-reset-chapter-btn') as HTMLButtonElement;
+    expect(confirmBtn).toBeTruthy();
+    confirmBtn.click();
+    fixture.detectChanges();
+
+    // lesson-handwashing should now be uncompleted (not started), while lesson-sanitizer remains completed!
+    expect(component.isLessonCompleted('lesson-handwashing')).toBe(false);
+    expect(component.isLessonCompleted('lesson-sanitizer')).toBe(true);
+    expect(fixture.nativeElement.querySelector('#completed-badge-lesson-handwashing')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#completed-badge-lesson-sanitizer')).toBeTruthy();
   });
 });

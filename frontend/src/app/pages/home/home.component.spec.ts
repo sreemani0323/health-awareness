@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { HomeComponent } from './home.component';
 import { ComingSoonService } from '../../services/coming-soon.service';
 import { LearningProgressService, PRACTICAL_ACTIVITIES } from '../../services/learning-progress.service';
@@ -12,7 +14,13 @@ describe('HomeComponent', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [HomeComponent],
-      providers: [provideRouter([]), ComingSoonService, LearningProgressService],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        ComingSoonService,
+        LearningProgressService,
+      ],
     }).compileComponents();
 
     comingSoonService = TestBed.inject(ComingSoonService);
@@ -54,7 +62,19 @@ describe('HomeComponent', () => {
 
     const childPhoto = compiled.querySelector('.splash-main-img-desktop');
     expect(childPhoto).toBeTruthy();
-    expect(childPhoto?.getAttribute('src')).toContain('main_photo.jpg');
+    expect(childPhoto?.getAttribute('src')).toContain('main_photo.png');
+  });
+
+  it('should open Android distribution modal when clicking Access the Android App hero button', () => {
+    const fixture = TestBed.createComponent(HomeComponent);
+    const component = fixture.componentInstance;
+    const openModalSpy = vi.spyOn(component.distributionService, 'openModal');
+    fixture.detectChanges();
+
+    const androidBtn = fixture.nativeElement.querySelector('#hero-android-btn');
+    androidBtn.click();
+
+    expect(openModalSpy).toHaveBeenCalled();
   });
 
   it('should render Resume Lesson in hero when valid progress exists', () => {

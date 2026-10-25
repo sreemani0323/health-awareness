@@ -468,18 +468,55 @@ class LoginHandler(BaseHandler):
         # 2. Authenticate against PostgreSQL first
         user = None
         pg_user_found = False
+        pending_app_reason = None
         try:
             from backend.storage.db import get_db_session
-            from backend.storage.postgres_models import UserModel as PgUserModel
+            from backend.storage.postgres_models import UserModel as PgUserModel, StaffApplicationModel
             from backend.platform.security import verify_password
             with get_db_session() as db_sess:
-                pg_u = db_sess.query(PgUserModel).filter_by(username=username).first()
+                # Direct username match
+                pg_u = db_sess.query(PgUserModel).filter(
+                    (PgUserModel.username == username) | (PgUserModel.username == username.lower())
+                ).first()
+
+                # If not found directly and username looks like email, check staff applications
+                if pg_u is None and "@" in username:
+                    app_approved = (
+                        db_sess.query(StaffApplicationModel)
+                        .filter_by(applicant_email=username.lower(), status="approved")
+                        .first()
+                    )
+                    if app_approved and app_approved.provisioned_user_id:
+                        pg_u = db_sess.query(PgUserModel).filter_by(user_id=app_approved.provisioned_user_id).first()
+                    else:
+                        app_pending = (
+                            db_sess.query(StaffApplicationModel)
+                            .filter(
+                                StaffApplicationModel.applicant_email == username.lower(),
+                                StaffApplicationModel.status.in_(["pending_review", "under_review", "more_info_requested"]),
+                            )
+                            .first()
+                        )
+                        if app_pending:
+                            pending_app_reason = "Your role application is currently under review by an administrator. Please check your application status."
+                        else:
+                            app_rejected = (
+                                db_sess.query(StaffApplicationModel)
+                                .filter_by(applicant_email=username.lower(), status="rejected")
+                                .first()
+                            )
+                            if app_rejected:
+                                pending_app_reason = f"Your role application was declined: {app_rejected.rejection_reason or 'Application not approved'}."
+
                 if pg_u is not None:
                     pg_user_found = True
                     if pg_u.is_active and verify_password(password, pg_u.password_hash):
                         user = pg_u.to_domain()
         except Exception:
             pass
+
+        if pending_app_reason:
+            return self.render_error("FORBIDDEN", pending_app_reason, 403)
 
         # Fall back to Datastore domain services ONLY if not already handled in PostgreSQL
         if user is None and not pg_user_found:
@@ -878,4 +915,143 @@ class MeHandler(BaseHandler):
         })
         _issue_csrf_token(resp)
         return resp, status
+
+
+class AuthRecoverHandler(BaseHandler):
+    """POST /api/v1/auth/recover — Request password reset OTP for staff/creator/reviewer account."""
+
+    decorators = [limiter.limit("10 per hour")]
+
+    def post(self) -> tuple[Response, int]:
+        data = request.get_json(silent=True) or {}
+        identifier = str(data.get("identifier") or data.get("email") or data.get("username") or "").strip()
+        if not identifier:
+            return self.render_error("BAD_REQUEST", "Username or email is required.", 400)
+
+        generic_msg = (
+            "If an active account is associated with this username or email, "
+            "a verification code has been dispatched."
+        )
+
+        from datetime import datetime, timezone
+        from backend.storage.db import get_db_session
+        from backend.storage.postgres_models import UserModel as PgUserModel, StaffApplicationModel
+        from backend.platform.otp_service import create_otp_challenge, send_challenge_email
+
+        target_email = None
+        user_id = None
+        with get_db_session() as sess:
+            pg_u = sess.query(PgUserModel).filter(
+                (PgUserModel.username == identifier) | (PgUserModel.username == identifier.lower())
+            ).first()
+
+            if pg_u:
+                user_id = pg_u.user_id
+                if "@" in pg_u.username:
+                    target_email = pg_u.username
+                else:
+                    app = sess.query(StaffApplicationModel).filter_by(provisioned_user_id=pg_u.user_id).first()
+                    if app and app.applicant_email:
+                        target_email = app.applicant_email
+            elif "@" in identifier:
+                app = sess.query(StaffApplicationModel).filter_by(applicant_email=identifier.lower(), status="approved").first()
+                if app and app.provisioned_user_id:
+                    user_id = app.provisioned_user_id
+                    target_email = app.applicant_email
+
+            if target_email and user_id:
+                try:
+                    challenge, otp = create_otp_challenge(
+                        sess,
+                        email=target_email,
+                        purpose="staff_reset_password",
+                        pending_payload={"user_id": user_id, "email": target_email, "identifier": identifier},
+                    )
+                    sess.commit()
+                    send_challenge_email(target_email, otp, "reset_password")
+                except Exception as exc:
+                    sess.rollback()
+                    logger.error("Failed to initiate staff password recovery: %s", exc)
+
+        return self.render_json({"message": generic_msg})
+
+
+class AuthResetPasswordHandler(BaseHandler):
+    """POST /api/v1/auth/reset-password — Verify OTP and set new password for staff/creator account."""
+
+    decorators = [limiter.limit("10 per hour")]
+
+    def post(self) -> tuple[Response, int]:
+        data = request.get_json(silent=True) or {}
+        identifier = str(data.get("identifier") or data.get("email") or data.get("username") or "").strip()
+        otp = str(data.get("otp") or "").strip()
+        new_password = str(data.get("new_password") or "").strip()
+
+        if not identifier or not otp or not new_password:
+            return self.render_error("BAD_REQUEST", "identifier, otp, and new_password are required.", 400)
+
+        from backend.controllers.role_request import validate_password_strength
+        is_strong, pwd_err = validate_password_strength(new_password)
+        if not is_strong:
+            return self.render_error("BAD_REQUEST", pwd_err or "Password too weak.", 400)
+
+        from datetime import datetime, timezone
+        from backend.storage.db import get_db_session
+        from backend.storage.postgres_models import UserModel as PgUserModel, StaffApplicationModel
+        from backend.platform.otp_service import verify_otp_challenge
+        from backend.platform.security import hash_password
+
+        with get_db_session() as sess:
+            target_email = None
+            user_id = None
+            pg_u = sess.query(PgUserModel).filter(
+                (PgUserModel.username == identifier) | (PgUserModel.username == identifier.lower())
+            ).first()
+
+            if pg_u:
+                user_id = pg_u.user_id
+                if "@" in pg_u.username:
+                    target_email = pg_u.username
+                else:
+                    app = sess.query(StaffApplicationModel).filter_by(provisioned_user_id=pg_u.user_id).first()
+                    if app and app.applicant_email:
+                        target_email = app.applicant_email
+            elif "@" in identifier:
+                app = sess.query(StaffApplicationModel).filter_by(applicant_email=identifier.lower(), status="approved").first()
+                if app and app.provisioned_user_id:
+                    user_id = app.provisioned_user_id
+                    target_email = app.applicant_email
+
+            if not target_email or not user_id:
+                return self.render_error("UNAUTHORIZED", "Invalid verification code or user not found.", 401)
+
+            is_valid, err_msg, challenge = verify_otp_challenge(
+                sess,
+                email=target_email,
+                purpose="staff_reset_password",
+                provided_otp=otp,
+            )
+            if not is_valid:
+                sess.commit()
+                return self.render_error("UNAUTHORIZED", err_msg or "Invalid verification code.", 401)
+
+            user_row = sess.query(PgUserModel).filter_by(user_id=user_id).first()
+            if user_row:
+                user_row.password_hash = hash_password(new_password)
+                user_row.must_change_password = False
+                user_row.updated_at = datetime.now(timezone.utc)
+
+            try:
+                from backend.platform.mfa_service import get_mfa_service
+                get_mfa_service().revoke_all_sessions(user_id)
+            except Exception:
+                pass
+
+            sess.commit()
+
+        return self.render_json({
+            "success": True,
+            "message": "Password updated successfully. You can now log in with your new password.",
+        })
+
 
