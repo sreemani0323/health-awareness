@@ -184,6 +184,9 @@ def init_db(engine: Optional[Engine] = None) -> None:
                 conn.execute(text(
                     "ALTER TABLE staff_applications ADD COLUMN IF NOT EXISTS tracking_token_expires_at TIMESTAMP WITH TIME ZONE;"
                 ))
+                conn.execute(text(
+                    "DROP TABLE IF EXISTS sms_otp_challenges CASCADE;"
+                ))
     except Exception as exc:
         logger.warning("Error running idempotent column migrations in init_db: %s", exc)
 

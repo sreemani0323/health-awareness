@@ -1,12 +1,11 @@
-"""Controllers for role-request registration, multi-step contact verification, and approval intake.
+"""Controllers for role-request registration, email verification, and approval intake.
 
 Enforces:
 - Learners have a streamlined single-step email OTP registration.
 - Non-learner applicants (Contributor, Reviewer, Staff) must:
-  1. Specify the requested role.
-  2. Normalize and verify mobile number via SMS OTP.
-  3. Verify email via Email OTP.
-  4. Complete password setup only after both verifications succeed.
+  1. Specify the requested role and application details.
+  2. Verify email via Email OTP.
+  3. Pre-provision account password during email verification.
 - Submissions create an application awaiting authoritative administrator review.
 - Client role requests NEVER grant privileges directly.
 """
@@ -14,7 +13,6 @@ Enforces:
 from __future__ import annotations
 
 import logging
-import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -28,15 +26,11 @@ from backend.domain.staff_application_service import (
 )
 from backend.platform.otp_service import (
     create_otp_challenge,
-    create_sms_otp_challenge,
     send_challenge_email,
-    send_challenge_sms,
     verify_otp_challenge,
-    verify_sms_otp_challenge,
 )
 from backend.platform.rate_limiter import get_trusted_client_ip, limiter
 from backend.platform.security import hash_password
-from backend.platform.sms_service import mask_phone_number, normalize_phone_number
 from backend.storage.db import get_db_session
 from backend.storage.postgres_models import StaffApplicationModel, UserModel
 
@@ -72,7 +66,7 @@ class RoleRequestInitiateHandler(BaseHandler):
         data = request.get_json(silent=True) or {}
         name = str(data.get("name") or data.get("applicant_name") or "").strip()
         email = str(data.get("email") or data.get("applicant_email") or "").strip().lower()
-        phone = str(data.get("phone") or data.get("applicant_phone") or "").strip()
+        phone = str(data.get("phone") or data.get("applicant_phone") or "").strip() or None
         role = str(data.get("role") or data.get("requested_role") or "").strip().lower()
         sop = str(data.get("statement_of_purpose") or "").strip()
         ev_ack = bool(data.get("evidence_standards_acknowledged"))
@@ -82,12 +76,6 @@ class RoleRequestInitiateHandler(BaseHandler):
             return self.render_error("BAD_REQUEST", "Full name is required.", 400)
         if not email or "@" not in email:
             return self.render_error("BAD_REQUEST", "A valid email address is required.", 400)
-        if not phone:
-            return self.render_error("BAD_REQUEST", "Mobile phone number is required.", 400)
-
-        is_valid_phone, norm_phone, phone_err = normalize_phone_number(phone)
-        if not is_valid_phone:
-            return self.render_error("BAD_REQUEST", phone_err or "Invalid phone number.", 400)
 
         if role not in ALLOWED_REQUEST_ROLES:
             return self.render_error(
@@ -129,7 +117,7 @@ class RoleRequestInitiateHandler(BaseHandler):
             pending_payload = {
                 "name": name,
                 "email": email,
-                "phone": norm_phone,
+                "phone": phone,
                 "requested_role": role,
                 "organization": str(data.get("organization") or "").strip() or None,
                 "professional_title": str(data.get("professional_title") or "").strip() or None,
@@ -187,100 +175,28 @@ class RoleRequestVerifyEmailHandler(BaseHandler):
                 sess.commit()
                 return self.render_error("UNAUTHORIZED", err_msg or "Invalid verification code.", 401)
 
-            payload = challenge.pending_payload or {}
-            norm_phone = payload.get("phone", "")
             sess.commit()
 
         return self.render_json({
             "email_verified": True,
-            "phone": norm_phone,
-            "masked_phone": mask_phone_number(norm_phone),
-            "message": "Email verified successfully. Please proceed to mobile SMS verification.",
-        })
-
-
-class RoleRequestSendSmsHandler(BaseHandler):
-    """POST /api/v1/auth/role-request/send-sms-otp — Step 3: Dispatch SMS OTP to mobile number."""
-
-    decorators = [limiter.limit("10 per hour")]
-
-    def post(self) -> tuple[Response, int]:
-        data = request.get_json(silent=True) or {}
-        email = str(data.get("email") or "").strip().lower()
-        phone = str(data.get("phone") or "").strip()
-
-        if not email:
-            return self.render_error("BAD_REQUEST", "email is required.", 400)
-
-        with get_db_session() as sess:
-            # Confirm email was verified
-            from backend.storage.postgres_models import EmailOtpChallengeModel
-            verified_email_challenge = (
-                sess.query(EmailOtpChallengeModel)
-                .filter(
-                    EmailOtpChallengeModel.email == email,
-                    EmailOtpChallengeModel.purpose == "role_request_email",
-                    EmailOtpChallengeModel.is_verified == True,  # noqa: E712
-                )
-                .order_by(EmailOtpChallengeModel.created_at.desc())
-                .first()
-            )
-            if not verified_email_challenge:
-                return self.render_error(
-                    "FORBIDDEN",
-                    "Email verification must be completed before requesting mobile SMS verification.",
-                    403,
-                )
-
-            payload = verified_email_challenge.pending_payload or {}
-            target_phone = phone or payload.get("phone", "")
-
-            is_valid_phone, norm_phone, phone_err = normalize_phone_number(target_phone)
-            if not is_valid_phone:
-                return self.render_error("BAD_REQUEST", phone_err or "Invalid phone number.", 400)
-
-            try:
-                challenge, otp = create_sms_otp_challenge(
-                    sess,
-                    phone_number=norm_phone,
-                    purpose="role_request_sms",
-                    pending_payload={"email": email, "phone": norm_phone},
-                )
-                sess.commit()
-            except Exception as exc:
-                sess.rollback()
-                logger.error("Failed to create SMS OTP challenge: %s", exc)
-                return self.render_error("SERVICE_UNAVAILABLE", "Failed to initiate SMS verification.", 503)
-
-        sms_sent = send_challenge_sms(norm_phone, otp, "role_request")
-        if not sms_sent:
-            return self.render_error(
-                "SERVICE_UNAVAILABLE",
-                "SMS delivery service is unconfigured or unavailable. Mobile OTP cannot be dispatched.",
-                503,
-            )
-
-        return self.render_json({
-            "sms_challenge_sent": True,
-            "masked_phone": mask_phone_number(norm_phone),
-            "message": f"Verification code sent to {mask_phone_number(norm_phone)} via SMS.",
+            "message": "Email verified successfully.",
         })
 
 
 class RoleRequestCompleteHandler(BaseHandler):
-    """POST /api/v1/auth/role-request/complete — Step 4: Verify SMS OTP, set password, & submit role request."""
+    """POST /api/v1/auth/role-request/complete — Step 3: Verify Email OTP (if provided), set password, & submit role request."""
 
     decorators = [limiter.limit("10 per hour")]
 
     def post(self) -> tuple[Response, int]:
         data = request.get_json(silent=True) or {}
         email = str(data.get("email") or "").strip().lower()
-        phone = str(data.get("phone") or "").strip()
-        sms_otp = str(data.get("sms_otp") or data.get("otp") or "").strip()
+        email_otp = str(data.get("email_otp") or data.get("otp") or data.get("sms_otp") or "").strip()
         password = str(data.get("password") or "").strip()
+        phone = str(data.get("phone") or "").strip() or None
 
-        if not email or not sms_otp or not password:
-            return self.render_error("BAD_REQUEST", "email, sms_otp, and password are required.", 400)
+        if not email or not password:
+            return self.render_error("BAD_REQUEST", "email and password are required.", 400)
 
         # Validate password strength
         is_strong, pwd_err = validate_password_strength(password)
@@ -289,37 +205,40 @@ class RoleRequestCompleteHandler(BaseHandler):
 
         with get_db_session() as sess:
             from backend.storage.postgres_models import EmailOtpChallengeModel
-            # 1. Confirm email challenge is verified
-            email_chal = (
-                sess.query(EmailOtpChallengeModel)
-                .filter(
-                    EmailOtpChallengeModel.email == email,
-                    EmailOtpChallengeModel.purpose == "role_request_email",
-                    EmailOtpChallengeModel.is_verified == True,  # noqa: E712
+            # 1. If email_otp is provided, verify it directly
+            if email_otp:
+                is_valid_email, email_err, email_chal = verify_otp_challenge(
+                    sess,
+                    email=email,
+                    purpose="role_request_email",
+                    provided_otp=email_otp,
                 )
-                .order_by(EmailOtpChallengeModel.created_at.desc())
-                .first()
-            )
+                if not is_valid_email:
+                    sess.commit()
+                    return self.render_error("UNAUTHORIZED", email_err or "Invalid verification code.", 401)
+            else:
+                # Confirm prior verification
+                email_chal = (
+                    sess.query(EmailOtpChallengeModel)
+                    .filter(
+                        EmailOtpChallengeModel.email == email,
+                        EmailOtpChallengeModel.purpose == "role_request_email",
+                        EmailOtpChallengeModel.is_verified == True,  # noqa: E712
+                    )
+                    .order_by(EmailOtpChallengeModel.created_at.desc())
+                    .first()
+                )
+                if not email_chal:
+                    return self.render_error("FORBIDDEN", "Email verification required before completing registration.", 403)
+
             if not email_chal or not email_chal.pending_payload:
-                return self.render_error("FORBIDDEN", "Email verification record not found.", 403)
+                return self.render_error("FORBIDDEN", "Application data not found. Please initiate again.", 403)
 
             payload = email_chal.pending_payload
-            norm_phone = phone or payload.get("phone", "")
-
-            # 2. Verify SMS OTP
-            is_valid_sms, sms_err, sms_chal = verify_sms_otp_challenge(
-                sess,
-                phone_number=norm_phone,
-                purpose="role_request_sms",
-                provided_otp=sms_otp,
-            )
-            if not is_valid_sms:
-                sess.commit()
-                return self.render_error("UNAUTHORIZED", sms_err or "Invalid SMS verification code.", 401)
-
+            target_phone = phone or payload.get("phone")
             sess.commit()
 
-        # 3. Create staff application record via StaffApplicationService
+        # 2. Create staff application record via StaffApplicationService
         service = get_staff_application_service()
         pwd_hash = hash_password(password)
 
@@ -331,7 +250,7 @@ class RoleRequestCompleteHandler(BaseHandler):
                 statement_of_purpose=payload["statement_of_purpose"],
                 evidence_standards_acknowledged=payload["evidence_standards_acknowledged"],
                 child_safety_acknowledged=payload["child_safety_acknowledged"],
-                applicant_phone=norm_phone,
+                applicant_phone=target_phone,
                 organization=payload.get("organization"),
                 professional_title=payload.get("professional_title"),
                 credential_reference=payload.get("credential_reference"),
@@ -346,8 +265,6 @@ class RoleRequestCompleteHandler(BaseHandler):
                     checklist = dict(app_row.verification_checklist or {})
                     checklist.update({
                         "email_verified": True,
-                        "mobile_verified": True,
-                        "verified_phone": norm_phone,
                         "verified_email": email,
                         "verified_at": datetime.now(timezone.utc).isoformat(),
                         "pre_provisioned_password_hash": pwd_hash,
@@ -368,7 +285,7 @@ class RoleRequestCompleteHandler(BaseHandler):
             "requested_role": getattr(app.requested_role, "value", str(app.requested_role)),
             "message": (
                 "Your role application has been submitted successfully! "
-                "Both your email and mobile number are verified. "
+                "Your email address is verified. "
                 "Your application is now awaiting administrator review."
             ),
         })

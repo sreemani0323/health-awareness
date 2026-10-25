@@ -172,18 +172,6 @@ erDiagram
         json pending_payload
         datetime created_at
     }
-
-    sms_otp_challenges {
-        string challenge_id PK
-        string phone_number "E.164 normalized phone number"
-        string purpose "role_request_sms, password_recovery_sms"
-        string code_hash "SHA-256 of 6-digit code"
-        int attempts "Incremented per verify attempt"
-        datetime expires_at
-        boolean is_verified
-        json pending_payload
-        datetime created_at
-    }
 ```
 
 ### 4. Key Workflows & State Invariants
@@ -204,21 +192,18 @@ erDiagram
 3. Other completed chapters, badges, and milestones remain untouched.
 4. Changes synchronize locally to `localStorage` and trigger an asynchronous delta merge with the backend when authenticated.
 
-#### 4.3 Multi-Step Role Request & Verification Flow
+#### 4.3 Multi-Step Role Request & Verification Flow (Pure Email-Based)
 1. **Initiate Request** (`POST /api/v1/auth/role-request/initiate`):
-   - Enforces valid role, minimum 30-char SOP, E.164 phone number, and required health/learner declarations.
+   - Enforces valid role, minimum 30-char SOP, and required health/learner safety declarations.
    - Dispatches Email OTP challenge via `otp_service.send_challenge_email`.
 2. **Verify Email OTP** (`POST /api/v1/auth/role-request/verify-email`):
-   - Validates 6-digit email OTP. On match, marks `is_verified=True` and returns masked phone.
-3. **Dispatch SMS OTP** (`POST /api/v1/auth/role-request/send-sms-otp`):
-   - Verifies prior email verification; generates cryptographic 6-digit code, hashes into `sms_otp_challenges`.
-   - Delivers via free-tier SMS provider (`TwilioSmsProvider`, `Fast2SmsProvider`, or `DevelopmentSmsProvider`).
-4. **Complete Registration** (`POST /api/v1/auth/role-request/complete`):
-   - Verifies SMS OTP. Validates password strength (min 8 chars, uppercase, lowercase, number/symbol).
+   - Validates 6-digit email OTP. On match, marks `is_verified=True`.
+3. **Complete Registration** (`POST /api/v1/auth/role-request/complete`):
+   - Verifies email OTP (or confirms prior verification). Validates password strength (min 8 chars, uppercase, lowercase, number/symbol).
    - Hashes password using bcrypt / pbkdf2_sha256.
-   - Creates `StaffApplicationModel` in `pending_review` status with `verification_checklist` containing `email_verified=True`, `mobile_verified=True`, and `pre_provisioned_password_hash`.
+   - Creates `StaffApplicationModel` in `pending_review` status with `verification_checklist` containing `email_verified=True` and `pre_provisioned_password_hash`.
    - Generates and returns tracking credentials (`reference_id` and `tracking_token`).
-5. **Admin Approval & Activation** (`POST /api/v1/admin/staff-applications/<id>/approve`):
+4. **Admin Approval & Activation** (`POST /api/v1/admin/staff-applications/<id>/approve`):
    - Authorized admin reviews application.
    - Server creates/activates `UserModel` with approved role and sets password to `pre_provisioned_password_hash`.
    - `must_change_password` set to `False` since user securely pre-provisioned their password during registration.

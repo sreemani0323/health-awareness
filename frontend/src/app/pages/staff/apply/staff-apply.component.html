@@ -5,12 +5,12 @@
       <div class="header-badge">Role Request &amp; Staff Vetting</div>
       <h1 class="header-title">Apply for HealthAware Staff &amp; Reviewer Roles</h1>
       <p class="header-subtitle">
-        Join public health specialists, educators, and community triage officers. All applications undergo multi-stage contact verification and administrative review before permissions are granted.
+        Join public health specialists, educators, and community triage officers. All applications undergo contact verification and administrative review before permissions are granted.
       </p>
       <div class="notice-banner">
         <span class="notice-icon">ℹ️</span>
         <span class="notice-text">
-          <strong>Verification Notice:</strong> Submitting an application does not grant staff or reviewer privileges. All non-learner roles require verified email and mobile numbers, password pre-provisioning, and authoritative administrator approval.
+          <strong>Verification Notice:</strong> Submitting an application does not grant staff or reviewer privileges. All non-learner roles require verified email, password pre-provisioning, and authoritative administrator approval.
         </span>
       </div>
     </header>
@@ -22,18 +22,13 @@
         <div class="step-label">Role &amp; Details</div>
       </div>
       <div class="step-divider" [class.completed]="currentStep() !== 'details'"></div>
-      <div class="step-item" [class.active]="currentStep() === 'email_otp'" [class.completed]="currentStep() === 'sms_otp_and_password' || currentStep() === 'success'">
+      <div class="step-item" [class.active]="currentStep() === 'email_otp'" [class.completed]="currentStep() === 'success'">
         <div class="step-circle">2</div>
-        <div class="step-label">Email OTP</div>
-      </div>
-      <div class="step-divider" [class.completed]="currentStep() === 'sms_otp_and_password' || currentStep() === 'success'"></div>
-      <div class="step-item" [class.active]="currentStep() === 'sms_otp_and_password'" [class.completed]="currentStep() === 'success'">
-        <div class="step-circle">3</div>
-        <div class="step-label">SMS OTP &amp; Password</div>
+        <div class="step-label">Email OTP &amp; Password</div>
       </div>
       <div class="step-divider" [class.completed]="currentStep() === 'success'"></div>
       <div class="step-item" [class.active]="currentStep() === 'success'">
-        <div class="step-circle">4</div>
+        <div class="step-circle">3</div>
         <div class="step-label">Admin Approval</div>
       </div>
     </nav>
@@ -54,7 +49,7 @@
       </div>
     }
 
-    <!-- STEP 4: Success State: Reference & Tracking Token Display -->
+    <!-- STEP 3: Success State: Reference & Tracking Token Display -->
     @if (currentStep() === 'success') {
       <div class="success-card">
         <div class="success-icon-wrap">
@@ -64,7 +59,7 @@
         </div>
         <h2 class="success-title">Application Submitted for Administrator Review</h2>
         <p class="success-desc">
-          Your contact information has been verified and your account credentials pre-provisioned. An authorized administrator will review your credentials and qualifications. Once approved, your account will be activated immediately.
+          Your email address has been verified and your account credentials pre-provisioned. An authorized administrator will review your credentials and qualifications. Once approved, your account will be activated immediately.
         </p>
 
         <div class="credentials-box">
@@ -98,29 +93,36 @@
               }
             </button>
             <button type="button" class="btn-track" (click)="goToStatus()" id="btn-go-to-status">
-              <span>Inspect Application Status →</span>
+              🔍 Track Application Status →
             </button>
           </div>
+        </div>
+
+        <div class="success-footer-actions">
+          <a routerLink="/" class="link-home">Return to Home</a>
         </div>
       </div>
     }
 
-    <!-- STEP 1: Details & Role Selection Form -->
+    <!-- STEP 1: Application Form Details -->
     @if (currentStep() === 'details') {
-      <form class="apply-form" (ngSubmit)="submitApplication()">
+      <form class="apply-form" (ngSubmit)="submitApplication()" novalidate>
         <!-- Step 1: Role Selection -->
         <section class="form-section">
-          <h2 class="section-title">1. Select Requested Role <span class="required">*</span></h2>
-          <p class="section-subtitle">Applicants specify their desired role. An authorized administrator decides whether the request is granted.</p>
+          <h2 class="section-title">1. Select Desired Staff Role</h2>
+          <p class="section-subtitle">Choose the role that best matches your qualifications and capacity.</p>
 
-          <div class="role-grid">
+          <div class="roles-grid" role="radiogroup" aria-label="Staff Role Options">
             @for (role of roles; track role.id) {
               <div
                 class="role-card"
                 [class.selected]="requestedRole() === role.id"
                 (click)="selectRole(role.id)"
-                role="button"
+                (keydown.enter)="selectRole(role.id)"
+                (keydown.space)="selectRole(role.id)"
                 tabindex="0"
+                role="radio"
+                [attr.aria-checked]="requestedRole() === role.id"
               >
                 <div class="role-card-header">
                   <span class="role-icon">{{ role.icon }}</span>
@@ -143,7 +145,7 @@
         <!-- Step 2: Personal & Contact Details -->
         <section class="form-section">
           <h2 class="section-title">2. Identity &amp; Contact Details</h2>
-          <p class="section-subtitle">Non-learner applicants must provide both email and a mobile number for two-channel OTP challenge verification.</p>
+          <p class="section-subtitle">Provide your legal name and email address for verification.</p>
 
           <div class="form-grid">
             <div class="form-group">
@@ -175,7 +177,7 @@
             </div>
 
             <div class="form-group full-width">
-              <label for="applicant-phone" class="form-label">Mobile Phone Number (E.164 format) <span class="required">*</span></label>
+              <label for="applicant-phone" class="form-label">Phone Number (Optional)</label>
               <input
                 id="applicant-phone"
                 type="tel"
@@ -183,10 +185,9 @@
                 [ngModel]="applicantPhone()"
                 (ngModelChange)="applicantPhone.set($event)"
                 name="applicantPhone"
-                placeholder="e.g. +91 98765 43210 or 9876543210"
-                required
+                placeholder="e.g. +91 98765 43210 (Optional)"
               />
-              <span class="field-hint">Mobile number required for non-learner SMS OTP verification.</span>
+              <span class="field-hint">Optional contact number for editorial or administrative coordination.</span>
             </div>
           </div>
         </section>
@@ -245,7 +246,7 @@
                 [ngModel]="portfolioUrl()"
                 (ngModelChange)="portfolioUrl.set($event)"
                 name="portfolioUrl"
-                placeholder="https://..."
+                placeholder="https://hospital.org/staff/ananya-sharma"
               />
             </div>
           </div>
@@ -253,8 +254,8 @@
 
         <!-- Step 4: Statement of Purpose -->
         <section class="form-section">
-          <h2 class="section-title">4. Statement of Purpose &amp; Motivation <span class="required">*</span></h2>
-          <p class="section-subtitle">Explain your background, why you wish to contribute to HealthAware, and your subject expertise.</p>
+          <h2 class="section-title">4. Statement of Purpose <span class="required">*</span></h2>
+          <p class="section-subtitle">Describe your public health focus, clinical experience, or why you want to contribute (minimum 30 characters).</p>
 
           <div class="form-group">
             <textarea
@@ -264,86 +265,86 @@
               [ngModel]="statementOfPurpose()"
               (ngModelChange)="statementOfPurpose.set($event)"
               name="statementOfPurpose"
-              placeholder="Provide at least 30 characters explaining your relevant experience and motivation..."
+              placeholder="Explain how your expertise will support evidence-based public health education and community safety..."
+              minlength="30"
               required
             ></textarea>
-            <span class="char-count" [class.valid]="statementOfPurpose().trim().length >= 30">
-              {{ statementOfPurpose().trim().length }} / 30 minimum characters
-            </span>
+            <div class="char-count" [class.valid]="statementOfPurpose().length >= 30">
+              {{ statementOfPurpose().length }} / 30 characters minimum
+            </div>
           </div>
         </section>
 
-        <!-- Step 5: Standards Acknowledgement -->
+        <!-- Step 5: Attestations & Standards -->
         <section class="form-section">
-          <h2 class="section-title">5. Evidence-Based Standards &amp; Declarations <span class="required">*</span></h2>
-          <p class="section-subtitle">HealthAware strictly adheres to verified medical guidelines and youth learner protection.</p>
+          <h2 class="section-title">5. Evidence Standards &amp; Learner Safety Attestation</h2>
+          <p class="section-subtitle">All HealthAware content must meet strict clinical and safety thresholds.</p>
 
-          <div class="declarations-box">
-            <label class="checkbox-label">
+          <div class="attestation-list">
+            <label class="checkbox-label" for="ack-evidence">
               <input
+                id="ack-evidence"
                 type="checkbox"
+                class="form-checkbox"
                 [ngModel]="evidenceStandardsAcknowledged()"
                 (ngModelChange)="evidenceStandardsAcknowledged.set($event)"
                 name="evidenceStandardsAcknowledged"
-                id="chk-evidence-standards"
                 required
               />
               <span class="checkbox-text">
-                I agree to adhere strictly to <strong>HealthAware’s evidence-based standards</strong>. All educational statements must cite WHO, ICMR, MoHFW, or reputable peer-reviewed health literature, and I will not promote unverified commercial health treatments.
+                <strong>Evidence-Based Content Standards:</strong> I agree that all clinical information, triage advice, and educational content must cite authoritative sources (WHO, ICMR, MoHFW, CDC, or peer-reviewed literature).
               </span>
             </label>
 
-            <label class="checkbox-label">
+            <label class="checkbox-label" for="ack-safety">
               <input
+                id="ack-safety"
                 type="checkbox"
+                class="form-checkbox"
                 [ngModel]="childSafetyAcknowledged()"
                 (ngModelChange)="childSafetyAcknowledged.set($event)"
                 name="childSafetyAcknowledged"
-                id="chk-child-safety"
                 required
               />
               <span class="checkbox-text">
-                I agree to adhere to <strong>learner safety and non-commercial guidelines</strong>. I understand that submitting a request does not grant privileges until reviewed and approved by authorized administration.
+                <strong>Learner Safety &amp; Non-Exploitation Policy:</strong> I certify that I will adhere to child safety standards, respectful communication, and ethical handling of citizen-reported data without commercial use.
               </span>
             </label>
           </div>
         </section>
 
-        <!-- Actions -->
+        <!-- Form Actions -->
         <div class="form-actions">
-          <a routerLink="/staff/application-status" class="btn-check-existing">
-            Already applied? Check Status →
-          </a>
-
           <button
             type="submit"
             class="btn-submit"
-            [disabled]="submitting() || statementOfPurpose().trim().length < 30 || !applicantPhone().trim() || !evidenceStandardsAcknowledged() || !childSafetyAcknowledged()"
-            id="btn-proceed-verification"
+            [disabled]="submitting() || statementOfPurpose().length < 30 || !evidenceStandardsAcknowledged() || !childSafetyAcknowledged()"
+            id="btn-submit-application"
           >
             @if (submitting()) {
-              <span>Initiating Verification...</span>
+              <span>Initiating Email Verification...</span>
             } @else {
-              <span>Proceed to Contact Verification →</span>
+              <span>Submit &amp; Verify Email →</span>
             }
           </button>
+          <a routerLink="/" class="btn-cancel">Cancel</a>
         </div>
       </form>
     }
 
-    <!-- STEP 2: Email OTP Verification View -->
+    <!-- STEP 2: Email OTP Verification & Account Password View -->
     @if (currentStep() === 'email_otp') {
       <div class="verification-card">
         <div class="verification-header">
-          <div class="verification-icon email-icon">✉️</div>
-          <h2 class="section-title">Step 2: Verify Your Email Address</h2>
+          <div class="verification-icon">📧</div>
+          <h2 class="section-title">Step 2: Verify Email Address &amp; Set Password</h2>
           <p class="section-subtitle">
-            A 6-digit verification code has been dispatched to <strong>{{ applicantEmail() }}</strong>.
+            A 6-digit verification code has been dispatched to <strong>{{ applicantEmail() }}</strong>. Enter the code and set your account password below.
           </p>
         </div>
 
         <div class="form-group centered-group">
-          <label for="email-otp-input" class="form-label">Enter 6-Digit Email Verification Code</label>
+          <label for="email-otp-input" class="form-label">Enter 6-Digit Email Verification Code <span class="required">*</span></label>
           <input
             id="email-otp-input"
             type="text"
@@ -355,24 +356,7 @@
             [disabled]="submitting()"
             autocomplete="one-time-code"
           />
-        </div>
-
-        <div class="verification-actions">
-          <button
-            type="button"
-            class="btn-submit"
-            (click)="verifyEmailOtp()"
-            [disabled]="submitting() || emailOtp().trim().length < 6"
-            id="btn-verify-email-otp"
-          >
-            @if (submitting()) {
-              <span>Verifying Email...</span>
-            } @else {
-              <span>Verify Email &amp; Proceed to Mobile OTP →</span>
-            }
-          </button>
-
-          <div class="sub-actions">
+          <div class="resend-row">
             <button
               type="button"
               class="link-btn-text"
@@ -383,51 +367,6 @@
                 <span>Resend email code in {{ resendCooldown() }}s</span>
               } @else {
                 <span>Resend Email Code</span>
-              }
-            </button>
-            <button type="button" class="link-btn-text text-muted" (click)="backToDetails()">
-              ← Edit Application Details
-            </button>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- STEP 3: SMS OTP Verification & Password Setup View -->
-    @if (currentStep() === 'sms_otp_and_password') {
-      <div class="verification-card">
-        <div class="verification-header">
-          <div class="verification-icon phone-icon">📱</div>
-          <h2 class="section-title">Step 3: Verify Mobile Number &amp; Set Account Password</h2>
-          <p class="section-subtitle">
-            An SMS OTP code has been dispatched to your phone <strong>{{ maskedPhone() || applicantPhone() }}</strong>.
-          </p>
-        </div>
-
-        <div class="form-group centered-group">
-          <label for="sms-otp-input" class="form-label">Enter 6-Digit Mobile SMS OTP <span class="required">*</span></label>
-          <input
-            id="sms-otp-input"
-            type="text"
-            class="form-input otp-input"
-            maxlength="6"
-            placeholder="654321"
-            [ngModel]="smsOtp()"
-            (ngModelChange)="smsOtp.set($event)"
-            [disabled]="submitting()"
-            autocomplete="one-time-code"
-          />
-          <div class="resend-row">
-            <button
-              type="button"
-              class="link-btn-text"
-              (click)="resendSmsOtp()"
-              [disabled]="resendCooldown() > 0 || submitting()"
-            >
-              @if (resendCooldown() > 0) {
-                <span>Resend SMS OTP in {{ resendCooldown() }}s</span>
-              } @else {
-                <span>Resend SMS OTP Code</span>
               }
             </button>
           </div>
@@ -485,18 +424,23 @@
             type="button"
             class="btn-submit"
             (click)="completeRegistration()"
-            [disabled]="submitting() || smsOtp().trim().length < 6 || newPassword().length < 8 || newPassword() !== confirmPassword()"
+            [disabled]="submitting() || emailOtp().trim().length < 6 || newPassword().length < 8 || newPassword() !== confirmPassword()"
             id="btn-complete-role-request"
           >
             @if (submitting()) {
               <span>Submitting Application...</span>
             } @else {
-              <span>Complete Registration &amp; Submit Application</span>
+              <span>Verify Email &amp; Submit Application</span>
             }
           </button>
+
+          <div class="sub-actions">
+            <button type="button" class="link-btn-text text-muted" (click)="backToDetails()">
+              ← Edit Application Details
+            </button>
+          </div>
         </div>
       </div>
     }
   </div>
 </div>
-

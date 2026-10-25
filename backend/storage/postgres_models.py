@@ -693,28 +693,5 @@ class EmailOtpChallengeModel(Base):
     )
 
 
-class SmsOtpChallengeModel(Base):
-    """PostgreSQL / SQLite table for temporary mobile phone SMS verification challenges."""
-
-    __tablename__ = "sms_otp_challenges"
-
-    challenge_id = Column(String(64), primary_key=True)
-    phone_number = Column(String(32), nullable=False, index=True)
-    purpose = Column(String(32), nullable=False, index=True)  # 'signup', 'role_request', or 'reset_password'
-    otp_hash = Column(String(64), nullable=False)  # SHA-256 hash of 6-digit OTP
-    attempts = Column(Integer, nullable=False, default=0)
-    max_attempts = Column(Integer, nullable=False, default=5)
-    is_verified = Column(Boolean, nullable=False, default=False)
-    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
-    pending_payload = Column(JsonType, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False,
-    )
-
-
 
 

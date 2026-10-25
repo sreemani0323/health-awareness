@@ -30,16 +30,12 @@ from backend.app import create_app
 from backend.domain.staff_application_service import get_staff_application_service
 from backend.platform.otp_service import (
     create_otp_challenge,
-    create_sms_otp_challenge,
     verify_otp_challenge,
-    verify_sms_otp_challenge,
 )
 from backend.platform.security import hash_password, verify_password
-from backend.platform.sms_service import DevelopmentSmsProvider, normalize_phone_number
 from backend.storage.db import get_db_session
 from backend.storage.postgres_models import (
     EmailOtpChallengeModel,
-    SmsOtpChallengeModel,
     StaffApplicationModel,
     UserModel,
 )
@@ -91,9 +87,6 @@ def clean_test_data():
     with get_db_session() as sess:
         sess.query(EmailOtpChallengeModel).filter(
             EmailOtpChallengeModel.email.like("%@audit-test.org")
-        ).delete(synchronize_session=False)
-        sess.query(SmsOtpChallengeModel).filter(
-            SmsOtpChallengeModel.phone_number.in_(["+919988776655", "+919123456789"])
         ).delete(synchronize_session=False)
         sess.query(StaffApplicationModel).filter(
             StaffApplicationModel.applicant_email.like("%@audit-test.org")
@@ -191,15 +184,8 @@ def test_non_learner_cannot_log_in_before_administrator_approval(app_client):
         email_chal.is_verified = True
         sess.commit()
 
-    # 3. Create SMS challenge and verify
-    with get_db_session() as sess:
-        sms_chal, raw_sms_otp = create_sms_otp_challenge(sess, phone, "role_request_sms")
-        sess.commit()
-
     resp_complete = app_client.post("/api/v1/auth/role-request/complete", json={
         "email": email,
-        "phone": phone,
-        "sms_otp": raw_sms_otp,
         "password": password,
     })
     assert resp_complete.status_code == 200
@@ -294,14 +280,14 @@ def test_rejected_application_cannot_be_logged_in_or_bypassed(app_client):
 
 def test_otp_attempt_limits_lock_challenge():
     """After 5 incorrect attempts, OTP challenge must lock and disallow further attempts."""
-    phone = "+919988776655"
+    email = "audit_limits@audit-test.org"
     with get_db_session() as sess:
-        chal, raw_otp = create_sms_otp_challenge(sess, phone, "test_attempt_limits")
+        chal, raw_otp = create_otp_challenge(sess, email, "test_attempt_limits")
         sess.commit()
 
         # 5 wrong attempts
         for i in range(1, 6):
-            is_valid, msg, _ = verify_sms_otp_challenge(sess, phone, "test_attempt_limits", "000000")
+            is_valid, msg, _ = verify_otp_challenge(sess, email, "test_attempt_limits", "000000")
             sess.commit()
             assert is_valid is False
             if i < 5:
@@ -310,79 +296,42 @@ def test_otp_attempt_limits_lock_challenge():
                 assert "Too many failed attempts" in msg
 
         # 6th attempt with the CORRECT code must be rejected due to attempt lockout
-        is_valid, msg, _ = verify_sms_otp_challenge(sess, phone, "test_attempt_limits", raw_otp)
+        is_valid, msg, _ = verify_otp_challenge(sess, email, "test_attempt_limits", raw_otp)
         assert is_valid is False
         assert "Too many failed attempts" in msg
 
 
 def test_expired_otp_is_rejected():
     """An expired OTP cannot be accepted under any circumstances."""
-    phone = "+919988776655"
+    email = "audit_expiry@audit-test.org"
     with get_db_session() as sess:
-        chal, raw_otp = create_sms_otp_challenge(sess, phone, "test_expiry")
+        chal, raw_otp = create_otp_challenge(sess, email, "test_expiry")
         chal.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
         sess.commit()
 
-        is_valid, msg, _ = verify_sms_otp_challenge(sess, phone, "test_expiry", raw_otp)
+        is_valid, msg, _ = verify_otp_challenge(sess, email, "test_expiry", raw_otp)
         assert is_valid is False
         assert "expired" in msg.lower()
 
 
 def test_superseded_otp_invalidates_prior_codes():
-    """Issuing a new challenge for the same phone/email invalidates any older unverified challenge."""
-    phone = "+919988776655"
+    """Issuing a new challenge for the same email invalidates any older unverified challenge."""
+    email = "audit_supersede@audit-test.org"
     with get_db_session() as sess:
-        chal1, raw_otp1 = create_sms_otp_challenge(sess, phone, "test_supersede")
+        chal1, raw_otp1 = create_otp_challenge(sess, email, "test_supersede")
         sess.commit()
 
-        chal2, raw_otp2 = create_sms_otp_challenge(sess, phone, "test_supersede")
+        chal2, raw_otp2 = create_otp_challenge(sess, email, "test_supersede")
         sess.commit()
 
         # Older OTP1 must fail
-        is_valid1, msg1, _ = verify_sms_otp_challenge(sess, phone, "test_supersede", raw_otp1)
+        is_valid1, msg1, _ = verify_otp_challenge(sess, email, "test_supersede", raw_otp1)
         assert is_valid1 is False
 
         # Newer OTP2 must succeed
-        is_valid2, msg2, verified_chal = verify_sms_otp_challenge(sess, phone, "test_supersede", raw_otp2)
+        is_valid2, msg2, verified_chal = verify_otp_challenge(sess, email, "test_supersede", raw_otp2)
         assert is_valid2 is True
         assert verified_chal.is_verified is True
-
-
-def test_mock_sms_provider_fails_closed_in_production():
-    """DevelopmentSmsProvider MUST return success=False if APP_ENV or FLASK_ENV is 'production'."""
-    dev_provider = DevelopmentSmsProvider(is_development=True)
-
-    with patch.dict(os.environ, {"APP_ENV": "production", "FLASK_ENV": "production"}):
-        result = dev_provider.send("+919988776655", "HealthAware code: 123456")
-        assert result.success is False
-        assert result.provider == "unconfigured"
-        assert "not configured" in result.error.lower()
-
-
-def test_role_request_send_sms_returns_503_when_provider_fails(app_client):
-    """When SMS provider fails or is unconfigured in production, endpoint returns 503 instead of false 200."""
-    email = "sms_unconfigured@audit-test.org"
-    phone = "+919988776655"
-
-    with get_db_session() as sess:
-        chal, _ = create_otp_challenge(
-            sess,
-            email=email,
-            purpose="role_request_email",
-            pending_payload={"email": email, "phone": phone},
-        )
-        chal.is_verified = True
-        sess.commit()
-
-    # Simulate production environment without SMS provider
-    with patch("backend.controllers.role_request.send_challenge_sms", return_value=False):
-        resp = app_client.post("/api/v1/auth/role-request/send-sms-otp", json={
-            "email": email,
-            "phone": phone,
-        })
-        assert resp.status_code == 503
-        err = resp.get_json()["error"]
-        assert err["code"] == "SERVICE_UNAVAILABLE"
 
 
 # ===========================================================================

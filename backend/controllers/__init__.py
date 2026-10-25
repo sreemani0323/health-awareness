@@ -194,7 +194,6 @@ def create_api_blueprint() -> Blueprint:
     from backend.controllers.role_request import (
         RoleRequestInitiateHandler,
         RoleRequestVerifyEmailHandler,
-        RoleRequestSendSmsHandler,
         RoleRequestCompleteHandler,
     )
     bp.add_url_rule(
@@ -205,11 +204,6 @@ def create_api_blueprint() -> Blueprint:
     bp.add_url_rule(
         "/auth/role-request/verify-email",
         view_func=RoleRequestVerifyEmailHandler.as_view("auth_role_request_verify_email"),
-        methods=["POST"],
-    )
-    bp.add_url_rule(
-        "/auth/role-request/send-sms-otp",
-        view_func=RoleRequestSendSmsHandler.as_view("auth_role_request_send_sms"),
         methods=["POST"],
     )
     bp.add_url_rule(

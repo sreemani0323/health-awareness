@@ -12,7 +12,7 @@ interface RoleOption {
   icon: string;
 }
 
-export type ApplicationStep = 'details' | 'email_otp' | 'sms_otp_and_password' | 'success';
+export type ApplicationStep = 'details' | 'email_otp' | 'success';
 
 @Component({
   selector: 'app-staff-apply',
@@ -49,15 +49,13 @@ export class StaffApplyComponent implements OnDestroy {
   evidenceStandardsAcknowledged = signal<boolean>(false);
   childSafetyAcknowledged = signal<boolean>(false);
 
-  // Step 2 & 3: Verification & Password Fields
+  // Step 2: Verification & Password Fields
   emailOtp = signal<string>('');
-  smsOtp = signal<string>('');
-  maskedPhone = signal<string>('');
   newPassword = signal<string>('');
   confirmPassword = signal<string>('');
   showPassword = signal<boolean>(false);
 
-  // Step 4: Submission Result
+  // Step 3: Submission Result
   submissionResult = signal<{
     reference_id: string;
     tracking_token: string;
@@ -98,9 +96,7 @@ export class StaffApplyComponent implements OnDestroy {
   ];
 
   ngOnDestroy(): void {
-    if (this.cooldownInterval) {
-      clearInterval(this.cooldownInterval);
-    }
+    this.stopCooldown();
   }
 
   selectRole(roleId: string): void {
@@ -108,24 +104,31 @@ export class StaffApplyComponent implements OnDestroy {
   }
 
   toggleShowPassword(): void {
-    this.showPassword.set(!this.showPassword());
+    this.showPassword.update((val) => !val);
   }
 
-  private startCooldown(seconds: number = 60): void {
+  private startCooldown(seconds: number): void {
+    this.stopCooldown();
     this.resendCooldown.set(seconds);
-    if (this.cooldownInterval) clearInterval(this.cooldownInterval);
     this.cooldownInterval = setInterval(() => {
-      const current = this.resendCooldown();
-      if (current <= 1) {
-        this.resendCooldown.set(0);
-        clearInterval(this.cooldownInterval);
+      const cur = this.resendCooldown();
+      if (cur <= 1) {
+        this.stopCooldown();
       } else {
-        this.resendCooldown.set(current - 1);
+        this.resendCooldown.set(cur - 1);
       }
     }, 1000);
   }
 
-  // --- Step 1: Submit Details & Request Email OTP ---
+  private stopCooldown(): void {
+    if (this.cooldownInterval) {
+      clearInterval(this.cooldownInterval);
+      this.cooldownInterval = null;
+    }
+    this.resendCooldown.set(0);
+  }
+
+  // --- Step 1: Submit Application Details & Initiate Email Verification ---
   submitApplication(): void {
     this.errorMessage.set(null);
     this.infoMessage.set(null);
@@ -133,50 +136,55 @@ export class StaffApplyComponent implements OnDestroy {
     const name = this.applicantName().trim();
     const email = this.applicantEmail().trim();
     const phone = this.applicantPhone().trim();
+    const role = this.requestedRole();
     const sop = this.statementOfPurpose().trim();
+    const evAck = this.evidenceStandardsAcknowledged();
+    const csAck = this.childSafetyAcknowledged();
 
     if (!name) {
-      this.errorMessage.set('Please provide your full legal or professional name.');
+      this.errorMessage.set('Please enter your full legal name.');
       return;
     }
     if (!email || !email.includes('@')) {
-      this.errorMessage.set('Please provide a valid contact email address.');
+      this.errorMessage.set('Please enter a valid email address.');
       return;
     }
-    if (!phone || phone.length < 10) {
-      this.errorMessage.set('Please provide a valid mobile number in international or national format (e.g. +91 98765 43210).');
+    if (!role) {
+      this.errorMessage.set('Please select the role you are applying for.');
       return;
     }
     if (sop.length < 30) {
-      this.errorMessage.set('Statement of purpose must be at least 30 characters explaining your background.');
+      this.errorMessage.set('Statement of purpose must be at least 30 characters long.');
       return;
     }
-    if (!this.evidenceStandardsAcknowledged()) {
-      this.errorMessage.set('You must acknowledge HealthAware’s evidence-based health standards.');
+    if (!evAck) {
+      this.errorMessage.set('You must acknowledge evidence-based health standards.');
       return;
     }
-    if (!this.childSafetyAcknowledged()) {
+    if (!csAck) {
       this.errorMessage.set('You must acknowledge learner safety guidelines.');
       return;
     }
 
-    const payload = {
+    this.submitting.set(true);
+
+    this.creatorApi.initiateRoleRequest({
+      name,
       applicant_name: name,
+      email,
       applicant_email: email,
-      applicant_phone: phone,
-      requested_role: this.requestedRole(),
+      phone: phone || undefined,
+      applicant_phone: phone || undefined,
+      role,
+      requested_role: role,
       organization: this.organization().trim() || undefined,
       professional_title: this.professionalTitle().trim() || undefined,
       credential_reference: this.credentialReference().trim() || undefined,
       portfolio_url: this.portfolioUrl().trim() || undefined,
       statement_of_purpose: sop,
-      evidence_standards_acknowledged: this.evidenceStandardsAcknowledged(),
-      child_safety_acknowledged: this.childSafetyAcknowledged(),
-    };
-
-    this.submitting.set(true);
-
-    this.creatorApi.initiateRoleRequest(payload).subscribe({
+      evidence_standards_acknowledged: evAck,
+      child_safety_acknowledged: csAck,
+    }).subscribe({
       next: (res) => {
         this.submitting.set(false);
         this.infoMessage.set(res.message || `Verification code sent to ${email}. Please enter the 6-digit code.`);
@@ -193,85 +201,19 @@ export class StaffApplyComponent implements OnDestroy {
     });
   }
 
-  // --- Step 2: Verify Email OTP ---
-  verifyEmailOtp(): void {
-    this.errorMessage.set(null);
-    this.infoMessage.set(null);
-
-    const email = this.applicantEmail().trim();
-    const otp = this.emailOtp().trim();
-
-    if (!otp || otp.length < 6) {
-      this.errorMessage.set('Please enter the 6-digit verification code received in your email.');
-      return;
-    }
-
-    this.submitting.set(true);
-
-    this.creatorApi.verifyRoleRequestEmail(email, otp).subscribe({
-      next: (res) => {
-        this.maskedPhone.set(res.masked_phone || this.applicantPhone());
-        // Automatically dispatch SMS OTP
-        this.creatorApi.sendRoleRequestSms(email, this.applicantPhone().trim()).subscribe({
-          next: (smsRes) => {
-            this.submitting.set(false);
-            this.infoMessage.set(smsRes.message || 'Email verified! An SMS OTP has been sent to your mobile phone.');
-            this.currentStep.set('sms_otp_and_password');
-            this.startCooldown(60);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          },
-          error: () => {
-            // Even if SMS auto-send had an error, transition to step 3 so user can resend
-            this.submitting.set(false);
-            this.infoMessage.set('Email verified! Please request an SMS code to verify your phone.');
-            this.currentStep.set('sms_otp_and_password');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          },
-        });
-      },
-      error: (err) => {
-        this.submitting.set(false);
-        const errObj = err.error?.error || err.error || {};
-        this.errorMessage.set(errObj.message || 'Invalid or expired email verification code.');
-      },
-    });
-  }
-
-  resendEmailOtp(): void {
-    if (this.resendCooldown() > 0) return;
-    this.submitApplication();
-  }
-
-  resendSmsOtp(): void {
-    if (this.resendCooldown() > 0) return;
-    this.errorMessage.set(null);
-    this.infoMessage.set(null);
-
-    this.creatorApi.sendRoleRequestSms(this.applicantEmail().trim(), this.applicantPhone().trim()).subscribe({
-      next: (res) => {
-        this.infoMessage.set(res.message || 'New SMS verification code dispatched.');
-        this.startCooldown(60);
-      },
-      error: (err) => {
-        const errObj = err.error?.error || err.error || {};
-        this.errorMessage.set(errObj.message || 'Failed to resend SMS code. Please try again.');
-      },
-    });
-  }
-
-  // --- Step 3: Complete Registration (Verify SMS OTP & Set Password) ---
+  // --- Step 2: Complete Registration (Verify Email OTP & Set Password) ---
   completeRegistration(): void {
     this.errorMessage.set(null);
     this.infoMessage.set(null);
 
     const email = this.applicantEmail().trim();
     const phone = this.applicantPhone().trim();
-    const smsOtp = this.smsOtp().trim();
+    const emailOtp = this.emailOtp().trim();
     const pwd = this.newPassword();
     const confirm = this.confirmPassword();
 
-    if (!smsOtp || smsOtp.length < 6) {
-      this.errorMessage.set('Please enter the 6-digit SMS OTP received on your mobile phone.');
+    if (!emailOtp || emailOtp.length < 6) {
+      this.errorMessage.set('Please enter the 6-digit verification code sent to your email.');
       return;
     }
     if (!pwd || pwd.length < 8) {
@@ -291,9 +233,9 @@ export class StaffApplyComponent implements OnDestroy {
 
     this.creatorApi.completeRoleRequest({
       email,
-      phone,
-      sms_otp: smsOtp,
+      email_otp: emailOtp,
       password: pwd,
+      phone: phone || undefined,
     }).subscribe({
       next: (res) => {
         this.submitting.set(false);
@@ -304,9 +246,14 @@ export class StaffApplyComponent implements OnDestroy {
       error: (err) => {
         this.submitting.set(false);
         const errObj = err.error?.error || err.error || {};
-        this.errorMessage.set(errObj.message || 'Failed to complete registration. Please check your SMS code and try again.');
+        this.errorMessage.set(errObj.message || 'Failed to complete registration. Please check your verification code and try again.');
       },
     });
+  }
+
+  resendEmailOtp(): void {
+    if (this.resendCooldown() > 0) return;
+    this.submitApplication();
   }
 
   backToDetails(): void {
@@ -318,8 +265,8 @@ export class StaffApplyComponent implements OnDestroy {
   copyCredentials(): void {
     const res = this.submissionResult();
     if (!res) return;
-    const text = `HealthAware Staff Application\nReference ID: ${res.reference_id}\nTracking Token: ${res.tracking_token}\nTrack at: ${window.location.origin}/staff/application-status`;
-    navigator.clipboard.writeText(text).then(() => {
+    const textToCopy = `HealthAware Application Credentials\nReference ID: ${res.reference_id}\nTracking Token: ${res.tracking_token}\nRequested Role: ${res.requested_role}`;
+    navigator.clipboard.writeText(textToCopy).then(() => {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 3000);
     });
@@ -327,10 +274,12 @@ export class StaffApplyComponent implements OnDestroy {
 
   goToStatus(): void {
     const res = this.submissionResult();
-    if (res) {
+    if (res?.reference_id) {
       this.router.navigate(['/staff/application-status'], {
-        queryParams: { ref: res.reference_id, token: res.tracking_token },
+        queryParams: { reference_id: res.reference_id },
       });
+    } else {
+      this.router.navigate(['/staff/application-status']);
     }
   }
 }

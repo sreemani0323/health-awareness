@@ -596,10 +596,14 @@ export class CreatorApiService {
   // --- Verified Role Request & Multi-Step Registration ---
 
   initiateRoleRequest(payload: {
-    applicant_name: string;
-    applicant_email: string;
-    applicant_phone: string;
-    requested_role: string;
+    applicant_name?: string;
+    name?: string;
+    applicant_email?: string;
+    email?: string;
+    applicant_phone?: string;
+    phone?: string;
+    requested_role?: string;
+    role?: string;
     organization?: string;
     professional_title?: string;
     credential_reference?: string;
@@ -631,23 +635,12 @@ export class CreatorApiService {
       );
   }
 
-  sendRoleRequestSms(email: string, phone: string): Observable<{ sms_challenge_sent: boolean; masked_phone: string; message: string }> {
-    return this.http
-      .post<ApiResponse<{ sms_challenge_sent: boolean; masked_phone: string; message: string }>>(
-        `${this.baseUrl}/auth/role-request/send-sms-otp`,
-        { email, phone },
-      )
-      .pipe(
-        map((res) => res.data),
-        catchError(this.handleError),
-      );
-  }
-
   completeRoleRequest(payload: {
     email: string;
-    phone: string;
-    sms_otp: string;
+    email_otp?: string;
     password: string;
+    phone?: string;
+    sms_otp?: string;
   }): Observable<{ reference_id: string; tracking_token: string; status: string; requested_role: string; message: string }> {
     return this.http
       .post<ApiResponse<{ reference_id: string; tracking_token: string; status: string; requested_role: string; message: string }>>(
