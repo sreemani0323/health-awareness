@@ -13,7 +13,7 @@ This project draws inspiration from the **Oppia Foundation's** educational appro
 
 ---
 
-## Agreed Technology Stack
+##Technology Stack
 
 - **Frontend:** Angular + TypeScript
 - **Backend:** Python
