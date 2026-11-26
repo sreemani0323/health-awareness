@@ -98,14 +98,22 @@ export function getActionableErrorMessage(
       }
       return 'The submitted information contains validation errors. Please check your inputs and try again.';
     }
-    case 429:
+    case 429: {
+      if (error instanceof HttpErrorResponse && error.error?.error?.message) {
+        return sanitizeErrorMessage(error.error.error.message);
+      }
       return 'Too many requests. Please wait a moment before trying again.';
+    }
     case 500:
       return 'An unexpected server error occurred. Our team has been notified. Please try again later.';
     case 502:
       return 'The server gateway is temporarily unreachable. Please check back shortly.';
-    case 503:
+    case 503: {
+      if (error instanceof HttpErrorResponse && error.error?.error?.message) {
+        return sanitizeErrorMessage(error.error.error.message);
+      }
       return 'The service is temporarily unavailable or initializing. Please retry in a moment.';
+    }
     case 504:
       return 'The server took too long to respond. Please check your connection and try again.';
     default:

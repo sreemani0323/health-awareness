@@ -80,7 +80,44 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       redirect: "manual",
     });
 
-    // 8. Reconstruct Response Preserving Set-Cookie & Status with CORS headers
+    // 8. Gracefully Catch Upstream Cold-Start / Hibernation / Free-Tier Rate Limits (e.g. Render spin-down)
+    const renderRouting = upstreamResponse.headers.get("x-render-routing") || "";
+    const isRenderHibernating =
+      upstreamResponse.status === 429 &&
+      (renderRouting.includes("hibernate") ||
+        renderRouting.includes("rate-limited") ||
+        upstreamResponse.headers.has("rndr-id"));
+
+    if (isRenderHibernating) {
+      const hibernateHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Retry-After": "30",
+      };
+      if (isAllowedOrigin) {
+        hibernateHeaders["Access-Control-Allow-Origin"] = origin;
+        hibernateHeaders["Access-Control-Allow-Credentials"] = "true";
+        hibernateHeaders["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD";
+        hibernateHeaders["Access-Control-Allow-Headers"] =
+          "Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN, X-HealthAware-Proxy-Secret";
+        hibernateHeaders["Vary"] = "Origin";
+      }
+
+      return new Response(
+        JSON.stringify({
+          error: {
+            code: "BACKEND_STARTING",
+            message:
+              "The backend server is waking up from standby. Please wait about 30 seconds and try again.",
+          },
+        }),
+        {
+          status: 503,
+          headers: hibernateHeaders,
+        }
+      );
+    }
+
+    // 9. Reconstruct Response Preserving Set-Cookie & Status with CORS headers
     const responseHeaders = new Headers(upstreamResponse.headers);
     if (isAllowedOrigin) {
       responseHeaders.set("Access-Control-Allow-Origin", origin);
