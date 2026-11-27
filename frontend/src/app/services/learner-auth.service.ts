@@ -100,6 +100,52 @@ export class LearnerAuthService {
   }
 
   /**
+   * Safely parses JSON responses from the server, intercepting HTML error pages
+   * (e.g. Render spin-up/cold-start 502/503/504 or Cloudflare WAF pages) without crashing.
+   */
+  private async safeJsonParse<T = any>(
+    resp: Response
+  ): Promise<{ ok: boolean; status: number; body: T | null; errorMsg?: string }> {
+    const contentType = resp.headers?.get?.('content-type') || '';
+    if (contentType && !contentType.includes('application/json') && (contentType.includes('text/html') || contentType.includes('text/plain'))) {
+      if (resp.status === 502 || resp.status === 503 || resp.status === 504 || resp.status === 429) {
+        return {
+          ok: false,
+          status: resp.status,
+          body: null,
+          errorMsg: 'The server is currently waking up from standby (free-tier spin-up). Please wait about 20-30 seconds and try again.',
+        };
+      }
+      return {
+        ok: false,
+        status: resp.status,
+        body: null,
+        errorMsg: `Server returned unexpected response (status ${resp.status}). Please try again in a moment.`,
+      };
+    }
+
+    try {
+      const body = await resp.json();
+      return { ok: resp.ok, status: resp.status, body };
+    } catch {
+      if (resp.status === 502 || resp.status === 503 || resp.status === 504 || resp.status === 429) {
+        return {
+          ok: false,
+          status: resp.status,
+          body: null,
+          errorMsg: 'The server is currently waking up from standby (free-tier spin-up). Please wait about 20-30 seconds and try again.',
+        };
+      }
+      return {
+        ok: false,
+        status: resp.status,
+        body: null,
+        errorMsg: 'The server is waking up or returned non-JSON data. Please wait a moment and try again.',
+      };
+    }
+  }
+
+  /**
    * Helper to decode payload from JWT without external dependencies.
    */
   private decodeJwtPayload(token: string): any {
@@ -220,8 +266,11 @@ export class LearnerAuthService {
         throw new Error(`Failed to fetch remote progress (${resp.status})`);
       }
 
-      const body = await resp.json();
-      return body.data as RemoteLearnerProgress;
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body?.data) {
+        throw new Error(parsed.errorMsg || 'Failed to parse remote progress');
+      }
+      return parsed.body.data as RemoteLearnerProgress;
     } catch (err: any) {
       const isTimeout = err?.name === 'AbortError';
       const cleanMsg = isTimeout
@@ -273,11 +322,14 @@ export class LearnerAuthService {
         throw new Error(`Failed to push progress (${resp.status})`);
       }
 
-      const body = await resp.json();
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body?.data) {
+        throw new Error(parsed.errorMsg || 'Failed to push progress');
+      }
       this.syncStatus.set('synced');
       this.lastSyncedAt.set(new Date().toISOString());
       this.errorMessage.set(null);
-      return body.data as RemoteLearnerProgress;
+      return parsed.body.data as RemoteLearnerProgress;
     } catch (err: any) {
       const isTimeout = err?.name === 'AbortError';
       const cleanMsg = isTimeout
@@ -315,7 +367,14 @@ export class LearnerAuthService {
         }),
       });
 
-      const body = await resp.json();
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body) {
+        const errorMsg = parsed.errorMsg || 'Registration request could not be completed. Please try again.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      const body = parsed.body;
       const payload = body?.data || body;
       if (!resp.ok) {
         const errorMsg = body?.error?.message || payload?.error?.message || 'Registration failed. Please check your details.';
@@ -364,7 +423,14 @@ export class LearnerAuthService {
         body: JSON.stringify({ email, otp }),
       });
 
-      const body = await resp.json();
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body) {
+        const errorMsg = parsed.errorMsg || 'Verification request could not be completed. Please try again.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      const body = parsed.body;
       const payload = body?.data || body;
       if (!resp.ok) {
         const errorMsg = body?.error?.message || payload?.error?.message || 'Invalid verification code.';
@@ -401,7 +467,12 @@ export class LearnerAuthService {
         body: JSON.stringify({ email, purpose }),
       });
 
-      const body = await resp.json();
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body) {
+        return { success: false, error: parsed.errorMsg || 'Failed to resend code.' };
+      }
+
+      const body = parsed.body;
       const payload = body?.data || body;
       if (!resp.ok) {
         const errorMsg = body?.error?.message || payload?.error?.message || 'Failed to resend code.';
@@ -438,7 +509,14 @@ export class LearnerAuthService {
         }),
       });
 
-      const body = await resp.json();
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body) {
+        const errorMsg = parsed.errorMsg || 'Unable to sign in. Please try again.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      const body = parsed.body;
       const payload = body?.data || body;
       if (!resp.ok) {
         const errorMsg = body?.error?.message || payload?.error?.message || 'Invalid email or password.';
@@ -472,7 +550,12 @@ export class LearnerAuthService {
         body: JSON.stringify({ email }),
       });
 
-      const body = await resp.json();
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body) {
+        return { success: false, error: parsed.errorMsg || 'Unable to process recovery request.' };
+      }
+
+      const body = parsed.body;
       const payload = body?.data || body;
       if (!resp.ok) {
         const errorMsg = body?.error?.message || payload?.error?.message || 'Unable to process recovery request.';
@@ -508,7 +591,14 @@ export class LearnerAuthService {
         body: JSON.stringify({ email, otp, new_password: newPassword }),
       });
 
-      const body = await resp.json();
+      const parsed = await this.safeJsonParse(resp);
+      if (!parsed.ok || !parsed.body) {
+        const errorMsg = parsed.errorMsg || 'Failed to reset password.';
+        this.errorMessage.set(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+
+      const body = parsed.body;
       const payload = body?.data || body;
       if (!resp.ok) {
         const errorMsg = body?.error?.message || payload?.error?.message || 'Failed to reset password.';

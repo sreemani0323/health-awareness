@@ -82,13 +82,17 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     // 8. Gracefully Catch Upstream Cold-Start / Hibernation / Free-Tier Rate Limits (e.g. Render spin-down)
     const renderRouting = upstreamResponse.headers.get("x-render-routing") || "";
+    const upstreamContentType = upstreamResponse.headers.get("content-type") || "";
     const isRenderHibernating =
       upstreamResponse.status === 429 &&
       (renderRouting.includes("hibernate") ||
         renderRouting.includes("rate-limited") ||
         upstreamResponse.headers.has("rndr-id"));
+    const isHtmlErrorPage =
+      (upstreamResponse.status === 502 || upstreamResponse.status === 503 || upstreamResponse.status === 504) &&
+      (upstreamContentType.includes("text/html") || upstreamContentType.includes("text/plain"));
 
-    if (isRenderHibernating) {
+    if (isRenderHibernating || isHtmlErrorPage) {
       const hibernateHeaders: Record<string, string> = {
         "Content-Type": "application/json",
         "Retry-After": "30",
@@ -107,7 +111,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
           error: {
             code: "BACKEND_STARTING",
             message:
-              "The backend server is waking up from standby. Please wait about 30 seconds and try again.",
+              "The backend server is waking up from standby (free-tier spin-up). Please wait about 20-30 seconds and try again.",
           },
         }),
         {

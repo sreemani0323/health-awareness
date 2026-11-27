@@ -1,8 +1,8 @@
 ﻿{
-    "fileSizeBytes":  21784964,
+    "fileSizeBytes":  42181788,
     "downloadUrl":  "/download/healthaware-v1.1.apk",
     "applicationId":  "org.healthaware.app",
-    "fileSizeFormatted":  "20.8 MB",
+    "fileSizeFormatted":  "40.2 MB",
     "appName":  "HealthAware",
     "releaseDate":  "2026-11-27",
     "fileName":  "healthaware-v1.1.apk",
@@ -10,9 +10,9 @@
     "versionCode":  2,
     "statusMessage":  "Official signed release build v1.1 is verified and available for direct download.",
     "isAvailable":  true,
-    "targetAndroidVersion":  "Android 16 (API 36)",
+    "targetAndroidVersion":  "Android 15 (API 35)",
     "status":  "published",
     "versionName":  "1.1",
     "requiresManualPermission":  true,
-    "sha256":  "12864C1AF451207940DE9C8353F7F41E9A2A8F4793F555AD43B95714B61B28B8"
+    "sha256":  "A7E8C05E2D2B64749723864E964997D5013C7348FD04B41F2633E58382A79AB8"
 }
