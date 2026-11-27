@@ -252,25 +252,38 @@ A **SHA-256 Checksum** is a 256-bit (64-character hexadecimal) cryptographic has
 * **Deterministic:** Running the hash algorithm on the official file always outputs the exact same string.
 * **Collision-Resistant:** It is computationally impossible to alter the APK without changing the resulting hash string.
 
-### Official HealthAware v1.0 Checksum
-```text
-74CC4F548F33A56F15A290880CA3C82693A1402E881DB05B16B3BD58C690C40D
-```
+### Official HealthAware Release Checksums
+- **v1.1 (Current):** `12864C1AF451207940DE9C8353F7F41E9A2A8F4793F555AD43B95714B61B28B8` (healthaware-v1.1.apk)
+- **v1.0 (Legacy):** `74CC4F548F33A56F15A290880CA3C82693A1402E881DB05B16B3BD58C690C40D` (healthaware-v1.0.apk)
 
 ### How Users Can Verify Integrity Before Installing
 
 #### On Windows (PowerShell or Command Prompt):
 ```powershell
-certutil -hashfile healthaware-v1.0.apk SHA256
+certutil -hashfile healthaware-v1.1.apk SHA256
 ```
 
 #### On Linux or macOS (Terminal):
 ```bash
-sha256sum healthaware-v1.0.apk
+sha256sum healthaware-v1.1.apk
 ```
 
 #### Verification Result:
-If the terminal output matches `74CC4F548F33A56F15A290880CA3C82693A1402E881DB05B16B3BD58C690C40D`, the user is 100% guaranteed that the APK is authentic, complete, and free from tampering or download corruption.
+If the terminal output matches `12864C1AF451207940DE9C8353F7F41E9A2A8F4793F555AD43B95714B61B28B8`, the user is 100% guaranteed that the APK is authentic, complete, and free from tampering or download corruption.
+
+---
+
+### Troubleshooting: "App not installed" Error
+If Android displays **"App not installed"** when tapping the downloaded APK, the root causes and resolutions are:
+1. **Signature Mismatch (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`)**:
+   - If an existing development/debug build (or an older APK signed with a different key) is already on the device, Android strictly refuses to overwrite it for security reasons.
+   - **Fix:** Long-press the HealthAware app icon on your phone and select **Uninstall**. Then tap the newly downloaded APK to install fresh.
+2. **"Install Unknown Apps" Blocked**:
+   - On Android 8.0+, browser downloads require per-app installation permission.
+   - **Fix:** On the prompt, tap **Settings** → toggle **Allow from this source** → tap Back and install.
+3. **Play Protect Warning**:
+   - Since HealthAware is an independent open-source release, Google Play Protect displays *"Unrecognized app"*.
+   - **Fix:** Tap **More details** → **Install anyway**.
 
 ---
 
