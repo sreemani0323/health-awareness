@@ -107,7 +107,7 @@ export function getActionableErrorMessage(
     case 500:
       return 'An unexpected server error occurred. Our team has been notified. Please try again later.';
     case 502:
-      return 'The server gateway is temporarily unreachable. Please check back shortly.';
+      return 'The server gateway is waking up from standby (free-tier cold start). Please wait about 20-30 seconds and refresh.';
     case 503: {
       if (error instanceof HttpErrorResponse && error.error?.error?.message) {
         return sanitizeErrorMessage(error.error.error.message);
